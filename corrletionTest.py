@@ -2,6 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import wfdb
 
+
+from methodLibrary import *
 from scipy.signal import correlate
 
 # Example signals (replace with your real signals)
@@ -23,26 +25,37 @@ otherRecord = wfdb.rdrecord(otherFilePath)
 
 
 fs = eegRecord.fs #This is based on the EEG and ECG are in the same sample rate
-#EEG signal recording
+#signal recording
 eegIndex = eegRecord.sig_name.index('Fp1')
 eegSignal = eegRecord.p_signal[:, eegIndex]
-#ECG signal recording
 ecgIndex = ecgRecord.sig_name.index('ECG')
 ecgSignal = ecgRecord.p_signal[:, ecgIndex]
 
-
 #Filter
+sosEcg= signal.butter(4, [0.5,5], btype='bandpass', output='sos', fs=500)
+
+sosEegAlpha = signal.butter(4, [8,13], btype='bandpass', output='sos', fs=500)
+sosEegBeta  = signal.butter(4, [14,30], btype='bandpass', output='sos', fs=500)
+sosEegGamma = signal.butter(4, [31,50], btype='bandpass', output='sos', fs=500)
+sosEegDelta = signal.butter(4, [1,3], btype='bandpass', output='sos', fs=500)
+sosEegTheta = signal.butter(4, [4,7], btype='bandpass', output='sos', fs=500)
 
 
-#artifacts 
 
 
+filteredEcg = signal.sosfiltfilt(sosEcg, ecgSignal)
+
+eegAlpha = signal.sosfiltfilt(sosEegAlpha, eegSignal)
+eegBeta  = signal.sosfiltfilt(sosEegBeta, eegSignal)
+eegGamma = signal.sosfiltfilt(sosEegGamma, eegSignal)
+eegDelta = signal.sosfiltfilt(sosEegDelta, eegSignal)
+eegTheta = signal.sosfiltfilt(sosEegTheta, eegSignal)
 
 # Cross-correlation
-correlation = correlate(ecgSignal, eegSignal, mode='full')
+correlation = correlate(filteredEcg, eegDelta, mode='full')
 
 # Calculate time delays for the cross-correlation
-lags = np.arange(-len(ecgSignal) + 1, len(ecgSignal))
+lags = np.arange(-len(filteredEcg) + 1, len(eegDelta))
 
 
 
@@ -51,14 +64,14 @@ lags = np.arange(-len(ecgSignal) + 1, len(ecgSignal))
 plt.figure(figsize=(12, 6))
 # Plot ECG signal
 plt.subplot(3, 1, 1)
-plt.plot( ecgSignal, label='ECG Signal')
+plt.plot( filteredEcg, label='ECG Signal')
 plt.title('ECG Signal')
 plt.xlabel('Time (s)')
 plt.ylabel('Amplitude')
 
 # Plot EEG signal
 plt.subplot(3, 1, 2)
-plt.plot( eegSignal, label='EEG Signal', color='orange')
+plt.plot( eegDelta, label='EEG Signal', color='orange')
 plt.title('EEG Signal')
 plt.xlabel('Time (s)')
 plt.ylabel('Amplitude')

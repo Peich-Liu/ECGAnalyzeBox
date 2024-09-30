@@ -1,17 +1,53 @@
-import scipy.signal
+import numpy as np
+import pandas as pd 
+import scipy.signal as signal
 from scipy.signal import butter, filtfilt
 
-def butter_bandpass(lowcut, highcut, fs, order=4):
-    nyquist = 0.5 * fs  # Nyquist frequency
-    low = lowcut / nyquist
-    high = highcut / nyquist
-    b, a = butter(order, [low, high], btype='band')
-    return b, a
+def bandPass(data, zi, lowCut, highCut, fs, order=4):
+    nyq = fs
+    low = lowCut / nyq
+    high = highCut / nyq
+    sos = signal.butter(order, [lowCut, highCut], btype='band',output='sos',fs=fs)
+    sig, zi = signal.sosfilt(sos, data, zi=zi)
+    return sig, zi
 
-def bandpass_filter(data, lowcut, highcut, fs, order=4):
-    b, a = butter_bandpass(lowcut, highcut, fs, order=order)
-    y = filtfilt(b, a, data)
-    return y
+def lowPass(data, zi, lowCut, fs, order=4):
+    nyq = fs
+    low = lowCut / nyq
+    sos = signal.butter(order, lowCut, btype='low',output='sos',fs=fs)
+    sig, zi = signal.sosfilt(sos, data, zi=zi)
+    return sig, zi
+
+def highPass(data, zi, highCut, fs, order=4):
+    nyq = fs
+    high = highCut / nyq
+    sos = signal.butter(order, highCut, btype='high',output='sos',fs=fs)
+    sig, zi = signal.sosfilt(sos, data, zi=zi)
+    return sig, zi
+
+def filterSignalwithoutMean(data, zi=None, low=None, high=None, fs=250):
+    data = np.array(data)
+    if low != 0 and high != 0:
+        return bandPass(data, zi,low, high, fs, order=4)
+    elif low == 0 and high != 0:
+        return lowPass(data, zi,high, fs, order=4)
+    elif high == 0 and low != 0:
+        return highPass(data, zi,low, fs, order=4)
+    elif low == 0 and high == 0:
+        return data
+
+def filterSignal(data, zi=None, low=None, high=None, fs=250, order=4, diff=False):
+    data = np.array(data)
+    data -= np.mean(data)
+    if low != 0 and high != 0:
+        return bandPass(data, zi,low, high, fs, order=4)
+    elif low == 0 and high != 0:
+        return lowPass(data, zi,high, fs, order=4)
+    elif high == 0 and low != 0:
+        return highPass(data, zi,low, fs, order=4)
+    elif low == 0 and high == 0:
+        return data
+
 
 # # Example usage:
 # # ECG typically in range 0.5-50 Hz
