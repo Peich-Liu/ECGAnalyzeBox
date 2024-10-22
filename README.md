@@ -1,4 +1,5 @@
 # ECGSignalAnalyzeBox
+**DO NOT** store the data in this repo
 **The tasks**
 1. an analysis of arterial pressures
 2. an analysis of ECG focused on Heart Rate Variability
