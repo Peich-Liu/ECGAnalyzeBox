@@ -1,1 +1,1 @@
-# ECG-EEGSignalAnalyzeBox
+# ECGSignalAnalyzeBox
