@@ -10,7 +10,8 @@ import matplotlib.pyplot as plt
 from scipy.signal import find_peaks
 from scipy.signal import welch
 from scipy.integrate import simpson
-
+from statsmodels.tsa.ar_model import AutoReg
+import neurokit2 as nk
 #Data input -- at here, we assume that it is a dat, hea file
 ##############################################################################
 ##Load the record and annotation file (this will load the .dat and .hea file)#
@@ -32,7 +33,7 @@ rrIntervalSamples = np.diff(peaks)
 # Convert RR intervals to time
 samplingRate = record.fs
 rrIntervalsSecond = rrIntervalSamples / samplingRate
-
+print(rrIntervalSamples)
 ##########################################################################
 ##This is a simply visualization of the ECG signal with detected R-peaks##
 ##########################################################################
@@ -84,3 +85,36 @@ print(f"RMSSD: {rmssd:.4f} seconds")
 print(f"SD1 (Poincare): {sd1:.4f}")
 print(f"SD2 (Poincare): {sd2:.4f}")
 
+###########################
+##Freq Domain measurments##
+###########################
+
+arOrder = 10
+arModel = AutoReg(rrIntervalsSecond, lags=arOrder, old_names=False).fit()
+arParams = arModel.params
+freqs, psd = welch(rrIntervalsSecond, fs=samplingRate, nperseg=len(rrIntervalsSecond))
+
+plt.figure(figsize=(10, 6))
+plt.semilogy(freqs, psd)
+plt.title('Power Spectral Density (PSD) of RR Intervals')
+plt.xlabel('Frequency (Hz)')
+plt.ylabel('Power Spectral Density')
+plt.legend()
+plt.show()
+
+# LF and HF
+lf_band = (0.04, 0.15)
+hf_band = (0.15, 0.4)
+lf = np.trapz(psd[(freqs >= lf_band[0]) & (freqs <= lf_band[1])])
+hf = np.trapz(psd[(freqs >= hf_band[0]) & (freqs <= hf_band[1])])
+
+print(f"LF: {lf}, HF: {hf}, LF/HF ratio: {lf/hf}")
+
+# # 计算SD1和SD2
+# hrv_nonlinear = nk.hrv_nonlinear(rrIntervalsSecond, show=True)
+
+# # 输出SD1和SD2
+# sd1 = hrv_nonlinear['HRV_SD1'][0]
+# sd2 = hrv_nonlinear['HRV_SD2'][0]
+
+# print(f"SD1: {sd1}, SD2: {sd2}")
