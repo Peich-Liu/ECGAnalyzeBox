@@ -38,13 +38,13 @@ print(rrIntervalSamples)
 ##This is a simply visualization of the ECG signal with detected R-peaks##
 ##########################################################################
 # Visual the ECG in 3000 sample with RR interval
-# plt.plot(ecgSignal[:3000])  
-# plt.scatter(peaks[:10], ecgSignal[peaks[:10]], color='red', label='R-peaks')
-# plt.title('ECG Signal with Detected R-peaks')
-# plt.xlabel('Samples')
-# plt.ylabel('Amplitude')
-# plt.legend()
-# plt.show()
+plt.plot(ecgSignal[:3000])  
+plt.scatter(peaks[:10], ecgSignal[peaks[:10]], color='red', label='R-peaks')
+plt.title('ECG Signal with Detected R-peaks')
+plt.xlabel('Samples')
+plt.ylabel('Amplitude')
+plt.legend()
+plt.show()
 
 # Visual the whole ECG with RR interval
 # plt.plot(ecgSignal)  # Plot first 3000 samples

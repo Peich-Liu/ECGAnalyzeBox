@@ -1,7 +1,11 @@
 import numpy as np
 import pandas as pd 
 import scipy.signal as signal
+import wfdb
+import os
 from scipy.signal import butter, filtfilt
+import matplotlib.pyplot as plt
+
 
 def bandPass(data, zi, lowCut, highCut, fs, order=4):
     nyq = fs
@@ -48,18 +52,41 @@ def filterSignal(data, zi=None, low=None, high=None, fs=250, order=4, diff=False
     elif low == 0 and high == 0:
         return data
 
+#Multi-File loading -- it is a test based on mit dataset, so, the data is not right
+def readPatientRecords(patient_id, data_dir):
+    patient_prefix = patient_id[:2]
+    records = []
+    annotations = []
 
-# # Example usage:
-# # ECG typically in range 0.5-50 Hz
-# lowcut_ecg = 0.5
-# highcut_ecg = 50.0
+    for file in os.listdir(data_dir):
+        if file.startswith(patient_prefix) and file.endswith('.dat'):
+            record_base = os.path.splitext(file)[0]
+            
+            record = wfdb.rdrecord(os.path.join(data_dir, record_base))
+            records.append(record)
+            
+            # annotation_file = os.path.join(data_dir, f"{record_base}.atr")
+            # if os.path.exists(annotation_file):
+            #     annotation = wfdb.rdann(os.path.join(data_dir, record_base), 'atr')
+            #     annotations.append(annotation)
+    
+    return records, annotations
 
-# # EEG typically in range 0.5-40 Hz
-# lowcut_eeg = 0.5
-# highcut_eeg = 40.0
+def concatenateSignals(records, start, end):
+    allSignals = []
+    for record in records:
+        allSignals.append(record.p_signal[:, 0])
 
-# fs = 500  # Sampling frequency, for example
+    concatenatedSignal = np.concatenate(allSignals)
+    return concatenatedSignal[start:end]
 
-# # Assuming you have ecg_signal and eeg_signal
-# filtered_ecg = bandpass_filter(ecg_signal, lowcut_ecg, highcut_ecg, fs)
-# filtered_eeg = bandpass_filter(eeg_signal, lowcut_eeg, highcut_eeg, fs)
+def visualizeSignal(signal):
+    time = range(len(signal))
+    
+    plt.figure(figsize=(12, 6))
+    plt.plot(time, signal)
+    plt.title('Concatenated ECG Signal Visualization')
+    plt.xlabel('Time (samples)')
+    plt.ylabel('Amplitude')
+    plt.grid(True)
+    plt.show()
