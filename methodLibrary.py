@@ -5,7 +5,14 @@ import wfdb
 import os
 from scipy.signal import butter, filtfilt
 import matplotlib.pyplot as plt
-
+import wfdb
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.signal import find_peaks
+from scipy.signal import welch
+from scipy.integrate import simpson
+from statsmodels.tsa.ar_model import AutoReg
+import neurokit2 as nk
 
 def bandPass(data, zi, lowCut, highCut, fs, order=4):
     nyq = fs
@@ -80,6 +87,39 @@ def concatenateSignals(records, start, end):
     concatenatedSignal = np.concatenate(allSignals)
     return concatenatedSignal[start:end]
 
+def bandpass_filter(signal, low_cutoff, high_cutoff, sampling_rate):
+    # Design a bandpass filter with the given cutoffs and sampling rate
+    nyquist = 0.5 * sampling_rate
+    low = low_cutoff / nyquist
+    high = high_cutoff / nyquist
+    b, a = butter(4, [low, high], btype='band')
+    # Apply the filter to the signal using filtfilt to avoid phase distortion
+    filtered_signal = filtfilt(b, a, signal)
+    return filtered_signal
+
+def remove_artifacts(signal, threshold=0.5):
+    # Simple artifact removal by thresholding: replace values above a threshold with the median of the signal
+    median_value = np.median(signal)
+    signal[np.abs(signal) > threshold] = median_value
+    return signal
+
+def concatenateandProcessSignals(records, start, end, low_cutoff=0.5, high_cutoff=10, sampling_rate=250):
+    allSignals = []
+    for record in records:
+        # Extract the ECG signal from each record (assuming the signal is in the first channel)
+        allSignals.append(record.p_signal[:, 0])
+
+    # Concatenate all extracted signals into a single signal
+    concatenatedSignal = np.concatenate(allSignals)
+    ## Here, add the filter and artifacts processing for concatenatedSignal[start:end]
+    filteredSignal = bandpass_filter(concatenatedSignal[start:end], low_cutoff, high_cutoff, sampling_rate)
+
+    # Artifacts processing: Apply an artifact removal technique, such as thresholding or signal interpolation
+    processedSignal = remove_artifacts(filteredSignal)
+
+    # Return the filtered and artifact-processed segment of the signal from start to end
+    return processedSignal
+
 def visualizeSignal(signal):
     time = range(len(signal))
     
@@ -90,3 +130,39 @@ def visualizeSignal(signal):
     plt.ylabel('Amplitude')
     plt.grid(True)
     plt.show()
+
+
+def visualizeSignalinGUI(signal):
+
+
+    # Plot the ECG signal in the GUI
+    figure = plt.Figure(figsize=(10, 4), dpi=100)
+    ax = figure.add_subplot(111)
+    ax.plot(signal)
+    ax.set_title('ECG Signal')
+    ax.set_xlabel('Samples')
+    ax.set_ylabel('Amplitude')
+    ax.grid()
+
+    return figure
+
+
+
+
+def calculateSignalProperties(signal):
+    #under constraction
+    # peaks, _ = find_peaks(signal, distance=200)
+    # rrIntervalSamples = np.diff(peaks)
+    # # Convert RR intervals to time
+    # samplingRate = record.fs
+    # rrIntervalsSecond = rrIntervalSamples / samplingRate
+    # print(rrIntervalSamples)
+    # Placeholder function for calculating ECG signal properties
+    # Replace this with actual calculations as needed
+    properties = {
+        "Mean Amplitude": np.mean(signal),
+        "Max Amplitude": np.max(signal),
+        "Min Amplitude": np.min(signal),
+        "Standard Deviation": np.std(signal)
+    }
+    return properties

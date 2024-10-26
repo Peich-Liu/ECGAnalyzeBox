@@ -9,7 +9,9 @@ records, annotations = readPatientRecords(patient_id, data_directory)
 start = 0
 end = 5000
 if records:
-    concatenated_signal = concatenateSignals(records, start, end)
+    concatenated_signal = concatenateandProcessSignals(records, start, end)
+    # concatenated_signal = concatenateSignals(records, start, end)
+
     # print(len(concatenated_signal))
     visualizeSignal(concatenated_signal)
 else:
