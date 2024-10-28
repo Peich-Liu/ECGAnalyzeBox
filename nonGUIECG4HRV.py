@@ -1,11 +1,13 @@
 '''
-This is the ECG based hrv analysis.
+This is the non GUI ECG based hrv analysis.
 Two main parts now,
     1.RR interval analysis
     2.AR based PSD analysis 
 '''
 import wfdb
 import numpy as np
+import matplotlib
+matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 from scipy.signal import find_peaks
 from scipy.signal import welch
@@ -33,7 +35,7 @@ rrIntervalSamples = np.diff(peaks)
 # Convert RR intervals to time
 samplingRate = record.fs
 rrIntervalsSecond = rrIntervalSamples / samplingRate
-print(rrIntervalSamples)
+# print(rrIntervalSamples)
 ##########################################################################
 ##This is a simply visualization of the ECG signal with detected R-peaks##
 ##########################################################################
@@ -59,31 +61,31 @@ plt.show()
 ##Time Domain measurments##
 ###########################
 
-# 1. Heart Rate (HR)
-hr = 60 / rrIntervalsSecond
-meanHR = np.mean(hr)
+# # 1. Heart Rate (HR)
+# hr = 60 / rrIntervalsSecond
+# meanHR = np.mean(hr)
 
-# 2. InterBeat Interval (IBI) = RR intervals
-ibi = rrIntervalsSecond  # Interbeat interval is just RR intervals
+# # 2. InterBeat Interval (IBI) = RR intervals
+# ibi = rrIntervalsSecond  # Interbeat interval is just RR intervals
 
-# 3. SDNN (Standard deviation of RR intervals)
-sdnn = np.std(rrIntervalsSecond)
+# # 3. SDNN (Standard deviation of RR intervals)
+# sdnn = np.std(rrIntervalsSecond)
 
-# 4. RMSSD (Root Mean Square of Successive Differences)
-rrDiff = np.diff(rrIntervalsSecond)  # Differences between successive RR intervals
-rmssd = np.sqrt(np.mean(rrDiff**2))
+# # 4. RMSSD (Root Mean Square of Successive Differences)
+# rrDiff = np.diff(rrIntervalsSecond)  # Differences between successive RR intervals
+# rmssd = np.sqrt(np.mean(rrDiff**2))
 
-# 7. Poincare analysis (SD1, SD2)
-sd1 = np.sqrt(np.var(rrDiff) / 2)
-sd2 = np.sqrt(2 * np.var(rrIntervalsSecond) - np.var(rrDiff) / 2)
+# # 7. Poincare analysis (SD1, SD2)
+# sd1 = np.sqrt(np.var(rrDiff) / 2)
+# sd2 = np.sqrt(2 * np.var(rrIntervalsSecond) - np.var(rrDiff) / 2)
 
-# Print the results
-print(f"Heart Rate (HR): {meanHR:.2f} bpm")
-print(f"InterBeat Interval (IBI): {ibi}")
-print(f"SDNN: {sdnn:.4f} seconds")
-print(f"RMSSD: {rmssd:.4f} seconds")
-print(f"SD1 (Poincare): {sd1:.4f}")
-print(f"SD2 (Poincare): {sd2:.4f}")
+# # Print the results
+# print(f"Heart Rate (HR): {meanHR:.2f} bpm")
+# print(f"InterBeat Interval (IBI): {ibi}")
+# print(f"SDNN: {sdnn:.4f} seconds")
+# print(f"RMSSD: {rmssd:.4f} seconds")
+# print(f"SD1 (Poincare): {sd1:.4f}")
+# print(f"SD2 (Poincare): {sd2:.4f}")
 
 ###########################
 ##Freq Domain measurments##

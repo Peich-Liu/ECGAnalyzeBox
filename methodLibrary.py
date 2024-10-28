@@ -70,14 +70,18 @@ def readPatientRecords(patient_id, data_dir):
             record_base = os.path.splitext(file)[0]
             
             record = wfdb.rdrecord(os.path.join(data_dir, record_base))
+            #here assume all the fs is same in the same signal
+            fs = record.fs
             records.append(record)
+
+
             
             # annotation_file = os.path.join(data_dir, f"{record_base}.atr")
             # if os.path.exists(annotation_file):
             #     annotation = wfdb.rdann(os.path.join(data_dir, record_base), 'atr')
             #     annotations.append(annotation)
     
-    return records, annotations
+    return records, fs, annotations
 
 def concatenateSignals(records, start, end):
     allSignals = []
@@ -147,22 +151,30 @@ def visualizeSignalinGUI(signal):
     return figure
 
 
-
-
-def calculateSignalProperties(signal):
+def calculateSignalProperties(signal, fs):
     #under constraction
-    # peaks, _ = find_peaks(signal, distance=200)
-    # rrIntervalSamples = np.diff(peaks)
-    # # Convert RR intervals to time
-    # samplingRate = record.fs
-    # rrIntervalsSecond = rrIntervalSamples / samplingRate
-    # print(rrIntervalSamples)
-    # Placeholder function for calculating ECG signal properties
-    # Replace this with actual calculations as needed
+
+    #0. RR interval
+    peaks, _ = find_peaks(signal, distance=200)
+    rrIntervalSamples = np.diff(peaks)
+    samplingRate = fs
+    rrIntervalsSecond = rrIntervalSamples / samplingRate
+
+    # 1. Mean Heart Rate (HR)
+    hr = 60 / rrIntervalsSecond
+    meanHR = np.mean(hr)
+
+    # 2. SDNN (Standard deviation of RR intervals)
+    sdnn = np.std(rrIntervalsSecond)
+
+    # 3. RMSSD (Root Mean Square of Successive Differences)
+    rrDiff = np.diff(rrIntervalsSecond)  # Differences between successive RR intervals
+    rmssd = np.sqrt(np.mean(rrDiff**2))
+
     properties = {
-        "Mean Amplitude": np.mean(signal),
-        "Max Amplitude": np.max(signal),
-        "Min Amplitude": np.min(signal),
-        "Standard Deviation": np.std(signal)
+        # "RR Interval Second": rrIntervalsSecond,
+        "Heart Rate":meanHR,
+        "Standard deviation of RR intervals(SDNN)":sdnn,
+        "Root Mean Square of Successive Differences(RMSSD)":rmssd,
     }
     return properties
