@@ -1,5 +1,7 @@
 # ECGSignalAnalyzeBox
 **DO NOT** store the data in this repo
+## Update 28.10
+The oldMain works well. It is a only ECG framework.
 ## Environment
 Use this code to create your environment:
 ```
