@@ -82,13 +82,38 @@ def readPatientRecords(patient_id, data_dir):
             #here assume all the fs is same in the same signal
             fs = record.fs
             records.append(record)
-
+            print(record.sig_name)
             # annotation_file = os.path.join(data_dir, f"{record_base}.atr")
             # if os.path.exists(annotation_file):
             #     annotation = wfdb.rdann(os.path.join(data_dir, record_base), 'atr')
             #     annotations.append(annotation)
     
     return records, fs, annotations
+
+#Multi-File loading -- it is a test based on mit dataset, so, the data is not right
+def readPatientRecords2(patient_id, data_dir):
+    patient_prefix = patient_id[:5]
+    records = []
+    annotations = []
+
+    for file in os.listdir(data_dir):
+        file_base = os.path.splitext(file)[0]
+        if file_base.endswith(patient_prefix) and file.endswith('.dat'):
+            record_base = os.path.splitext(file)[0]
+            load_file = os.path.join(data_dir, record_base)
+            print("loading file", load_file)
+            record = wfdb.rdrecord(load_file)
+            #here assume all the fs is same in the same signal
+            records.append(record)
+            print(record.sig_name)
+
+
+            # annotation_file = os.path.join(data_dir, f"{record_base}.atr")
+            # if os.path.exists(annotation_file):
+            #     annotation = wfdb.rdann(os.path.join(data_dir, record_base), 'atr')
+            #     annotations.append(annotation)
+    
+    return records, annotations
 
 def concatenateSignals(records, start, end):
     allSignals = []
@@ -124,6 +149,28 @@ def concatenateSignals(records, start, end, low_cutoff=0.5, high_cutoff=10, samp
     concatenatedSignal = np.concatenate(allSignals, axis=0)
     # Return the filtered and artifact-processed segment of the signal from start to end
     return concatenatedSignal[start:end, :]
+
+def concatenateECG(records, start, end, low_cutoff=0.5, high_cutoff=10, sampling_rate=250):
+    allSignals = []
+    for record in records:
+        # Extract the ECG signal from each record (assuming the signal is in the first channel)
+        ecgIndex = record.sig_name.index('ECG')
+        print(ecgIndex)
+        allSignals.append(record.p_signal[:, ecgIndex])
+    # Concatenate all extracted signals into a single signal
+    concatenatedSignal = np.concatenate(allSignals)
+    return concatenatedSignal[start:end]
+
+def concatenateAP(records, start, end, low_cutoff=0.5, high_cutoff=10, sampling_rate=250):
+    allSignals = []
+    for record in records:
+        # Extract the ECG signal from each record (assuming the signal is in the first channel)
+        apIndex = record.sig_name.index('BP')
+        allSignals.append(record.p_signal[:, apIndex])
+    # Concatenate all extracted signals into a single signal
+    concatenatedSignal = np.concatenate(allSignals)
+
+    return concatenatedSignal[start:end]
 
 def concatenateandProcessSignals(records, start, end, low_cutoff=0.5, high_cutoff=10, sampling_rate=250):
     allSignals = []
@@ -242,8 +289,8 @@ def PSDAnalyze(ecgSignal, fs):
     # ar_model = AutoReg(rr_intervals_centered, lags=order).fit()
     # ar_coefficients = ar_model.params
     # sampling_rate = 4 
-    # frequencies, response = signal.freqz([1], np.concatenate(([1], -ar_coefficients[1:])), worN=512, fs=sampling_rate)
-    # power_spectrum = np.abs(response) ** 2
+    # freq, response = signal.freqz([1], np.concatenate(([1], -ar_coefficients[1:])), worN=512, fs=sampling_rate)
+    # psd = np.abs(response) ** 2
 
     mask = (freq >= 0) & (freq <= 0.5)
     freq = freq[mask]
@@ -316,3 +363,26 @@ def getFigure(figure, canvas_frame):
     toolbar = NavigationToolbar2Tk(canvas, canvas_frame)
     toolbar.update()
     toolbar.pack(side=tk.BOTTOM, fill=tk.X)
+
+def plot_signals(cba_instance, canvas_frame):
+    figure = plt.figure(figsize=(8, 6), dpi=100)
+
+    # Create two subplots
+    ax1 = figure.add_subplot(211)
+    ax2 = figure.add_subplot(212, sharex=ax1)  # Share the x-axis with ax1
+
+    # Plot ECG signal
+    ax1.plot(np.arange(len(cba_instance.ecg_signal)), cba_instance.ecg_signal, label="ECG Signal", color='b')
+    ax1.set_title("Loaded ECG Signal")
+    ax1.set_ylabel("Amplitude")
+    ax1.legend()
+
+    # Plot AP signal
+    ax2.plot(np.arange(len(cba_instance.ap_signal)), cba_instance.ap_signal, label="AP Signal", color='r')
+    ax2.set_title("Loaded AP Signal")
+    ax2.set_xlabel("Time (samples)")
+    ax2.set_ylabel("Amplitude")
+    ax2.legend()
+
+    # Use the getFigure function to display the figure
+    getFigure(figure, canvas_frame)
