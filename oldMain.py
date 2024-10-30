@@ -111,7 +111,7 @@ def main():
             return
         try:
             # Calculate and display signal properties
-            properties = calculateSignalProperties(selected_channel_signal, fs) # The algorithm of the time domain anaylsis is here
+            properties = calculateEcgSignalProperties(selected_channel_signal, fs) # The algorithm of the time domain anaylsis is here
             displaySignalProperties(properties, properties_frame)
         except ValueError:
             messagebox.showerror("Input Error", "No signal loaded to filter. Please load data first.")

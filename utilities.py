@@ -244,7 +244,7 @@ def visualizeSignalinGUISelectChannel(signals, selected_channel):
 
     return figure
 
-def calculateSignalProperties(signal, fs):
+def calculateEcgSignalProperties(signal, fs):
     #under constraction
 
     #0. RR interval
@@ -264,14 +264,38 @@ def calculateSignalProperties(signal, fs):
     rrDiff = np.diff(rrIntervalsSecond)  # Differences between successive RR intervals
     rmssd = np.sqrt(np.mean(rrDiff**2))
 
+    # 4. SD1/SD2, put here temporily 
+    sd1, sd2, rr_mean = calculate_sd1_sd2(rrIntervalSamples)
+    figure = plot_poincare(rrIntervalSamples, sd1, sd2, rr_mean)
+
     properties = {
         # "RR Interval Second": rrIntervalsSecond,
         "Heart Rate":meanHR,
-        "Standard deviation of RR intervals(SDNN)":sdnn,
-        "Root Mean Square of Successive Differences(RMSSD)":rmssd,
+        "SDNN":sdnn,
+        "RMSSD":rmssd,
     }
-    return properties
+    return properties, figure
 
+def calculateApSignalProperties(signal, fs):
+    #1. Systolic and Diastolic
+    sbp = np.max(signal) #Systolic
+    dbp = np.min(signal) #Diastolic
+    pp = sbp - dbp      
+
+    #2. Mean arterial pressure
+    map = (sbp + 2 * dbp) / 3
+
+    #3. SD of Pressures
+    sd = np.std(signal)
+
+    properties = {
+    "Systolic":sbp,
+    "Diastolic":dbp,
+    "Mean arterial pressure":map,
+    "SD of Pressures":sd,
+    }
+    
+    return properties
 
 def PSDAnalyze(ecgSignal, fs):
     peaks, info = nk.ecg_peaks(ecgSignal, sampling_rate=fs, correct_artifacts=True)
@@ -297,6 +321,46 @@ def PSDAnalyze(ecgSignal, fs):
     psd = psd[mask]
 
     return freq, psd
+
+def calculate_sd1_sd2(rr_intervals):
+    # Calculate mean of RR intervals
+    rr_mean = np.mean(rr_intervals)
+
+    # Calculate RR interval pairs (RR_n, RR_n+1)
+    rr_n = rr_intervals[:-1]
+    rr_n1 = rr_intervals[1:]
+
+    # Calculate SD1 and SD2
+    diff_rr = rr_n1 - rr_n
+    sd1 = np.sqrt(np.var(diff_rr) / 2)
+    sd2 = np.sqrt(2 * np.var(rr_intervals) - sd1 ** 2)
+
+    return sd1, sd2, rr_mean
+
+def plot_poincare(rr_intervals, sd1, sd2, rr_mean):
+    rr_n = rr_intervals[:-1]
+    rr_n1 = rr_intervals[1:]
+
+    figure = plt.figure(figsize=(3,3))
+    plt.scatter(rr_n, rr_n1, c='b', alpha=0.6, label='RR Intervals')
+
+    # Plot average RR line
+    plt.axvline(x=rr_mean, color='g', linestyle='--', label='Avg R-R interval')
+    plt.axhline(y=rr_mean, color='g', linestyle='--')
+
+    # Plot SD1 and SD2 ellipse
+    angle = 45  # The angle for SD1 and SD2
+    ellipse = plt.matplotlib.patches.Ellipse((rr_mean, rr_mean), 2*sd2, 2*sd1, angle=angle,
+                                             edgecolor='r', facecolor='none', linestyle='-', linewidth=2, label='SD1/SD2 Ellipse')
+    plt.gca().add_patch(ellipse)
+
+    plt.xlabel('RR(n) (seconds)')
+    plt.ylabel('RR(n+1) (seconds)')
+    plt.title('Poincare Plot')
+    plt.legend()
+    plt.grid(True)
+    plt.axis('equal')
+    return figure
 
 def visualPSD(freq, psd):
     ulf_range = (0.0, 0.0033)

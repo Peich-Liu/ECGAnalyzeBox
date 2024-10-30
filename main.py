@@ -13,7 +13,7 @@ class CBATools:
     def __init__(self, root):
         self.root = root
         self.root.title("ECG Signal Processing GUI")
-        self.root.geometry("1000x1000")
+        self.root.geometry("1000x1200")
 
         self.whole_signal = None
         self.ecg_signal = None
@@ -90,19 +90,21 @@ class CBATools:
             lambda: tda.calculateEcgTimeDomainValue(
                 self,
                 self.fs,
-                time_domain_page_components["properties_frame"]
+                time_domain_page_components["properties_frame_ecg"],
+                time_domain_page_components["sd_canvas_frame"]
+
             ),
             lambda: tda.calculateApTimeDomainValue(
                 self,
                 self.fs,
-                time_domain_page_components["properties_frame"]
+                time_domain_page_components["properties_frame_ap"]
             )
         )
 
 
         frequency_domain_page_components = fda.create_frequency_domain_page(
             notebook,
-            lambda: fda.perform_frequency_analysis(
+            lambda: fda.perform_frequency_analysis_psd(
                 self,
                 self.fs,
                 frequency_domain_page_components["freq_canvas_frame"]
