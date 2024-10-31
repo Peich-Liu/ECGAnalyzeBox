@@ -13,7 +13,7 @@ class CBATools:
     def __init__(self, root):
         self.root = root
         self.root.title("ECG Signal Processing GUI")
-        self.root.geometry("1000x1200")
+        self.root.geometry("1200x1000")
 
         self.whole_signal = None
         self.ecg_signal = None

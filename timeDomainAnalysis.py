@@ -64,7 +64,7 @@ def create_time_domain_page(notebook, ecg_time_domain_command, ap_time_domain_co
     # Frame for frequency analysis visualization, 放置在 time_domain_page 中
     sd_canvas_frame = ttk.Frame(time_domain_page)
     sd_canvas_frame.config(width=150, height=100)
-    sd_canvas_frame.place(x=10, y=280, width=350, height=350)
+    sd_canvas_frame.place(x=10, y=280, width=350, height=400)
 
     # Add a vertical separator between the left and right frames
     separator = ttk.Separator(time_domain_page, orient="vertical")
@@ -72,7 +72,7 @@ def create_time_domain_page(notebook, ecg_time_domain_command, ap_time_domain_co
 
     # Frame for displaying AP signal properties 
     properties_frame_ap = ttk.Frame(time_domain_page)
-    properties_frame_ap.place(x=390, y=70, width=350, height=400)
+    properties_frame_ap.place(x=390, y=70, width=350, height=450)
 
     return {
         "properties_frame_ecg": properties_frame_ecg,
