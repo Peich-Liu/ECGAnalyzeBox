@@ -22,6 +22,7 @@ import tkinter as tk
 from tkinter import filedialog, simpledialog, messagebox
 from tkinter import ttk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
+from matplotlib.patches import Rectangle
 
 def bandPass(data, zi, lowCut, highCut, fs, order=4):
     nyq = fs
@@ -392,25 +393,6 @@ def visualPSD(freq, psd):
     # 将图例放在图表的外部右侧
     ax.legend(loc='upper left', bbox_to_anchor=(1, 1))  # 图例在图外右侧
     figure.tight_layout()  # 自动调整子图以适应图例
-    # figure = plt.figure(figsize=(5, 2))
-    # plt.plot(freq, psd, color='black', linewidth=1, label='Power Spectral Density')
-
-    # plt.fill_between(freq, psd, where=((freq >= ulf_range[0]) & (freq <= ulf_range[1])),
-    #                 color='purple', alpha=0.5, label='ULF')
-    # plt.fill_between(freq, psd, where=((freq >= vlf_range[0]) & (freq <= vlf_range[1])),
-    #                 color='blue', alpha=0.5, label='VLF')
-    # plt.fill_between(freq, psd, where=((freq >= lf_range[0]) & (freq <= lf_range[1])),
-    #                 color='green', alpha=0.5, label='LF')
-    # plt.fill_between(freq, psd, where=((freq >= hf_range[0]) & (freq <= hf_range[1])),
-    #                 color='orange', alpha=0.5, label='HF')
-    # plt.fill_between(freq, psd, where=((freq >= vhf_range[0]) & (freq <= vhf_range[1])),
-    #                 color='red', alpha=0.5, label='VHF')
-
-    # plt.title('Power Spectral Density (PSD) for Frequency Domains')
-    # plt.xlabel('Frequency (Hz)')
-    # plt.ylabel('Spectrum (ms^2/Hz)')
-    # plt.legend()
-    # plt.show()
     return figure
 
 def getFigure(figure, canvas_frame):
@@ -450,3 +432,73 @@ def plot_signals(cba_instance, canvas_frame):
 
     # Use the getFigure function to display the figure
     getFigure(figure, canvas_frame)
+
+def plot_can_interact(cba_instance, canvas_frame):
+    fig = plt.figure(figsize=(5, 3), dpi=100)
+    ax1 = fig.add_subplot(211)
+    ax2 = fig.add_subplot(212, sharex=ax1)
+    
+    x = np.arange(len(cba_instance.ecg_signal))
+    ax1.plot(x, cba_instance.ecg_signal, label="ECG Signal")
+    ax1.set_ylabel("ECG Amplitude")
+    ax1.legend()
+
+    ax2.plot(x, cba_instance.ap_signal, label="AP Signal", color="orange")
+    ax2.set_xlabel("Time (samples)")
+    ax2.set_ylabel("AP Amplitude")
+    ax2.legend()
+    
+    # 将图形嵌入到Tkinter的Canvas中
+    canvas = FigureCanvasTkAgg(fig, master=canvas_frame)
+    canvas.draw()
+    canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+    toolbar = NavigationToolbar2Tk(canvas, canvas_frame)
+    toolbar.update()
+    canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+    
+    # 初始化矩形框变量
+    rect1 = None
+    rect2 = None
+    is_drawing = False
+    start_x = None
+
+    # 定义事件处理函数
+    def on_press(event):
+        nonlocal is_drawing, start_x, rect1, rect2
+        if event.inaxes not in [ax1, ax2]:  # 确保事件在绘图区内
+            return
+        is_drawing = True
+        start_x = event.xdata
+        # 创建同步的矩形框
+        rect1 = Rectangle((start_x, ax1.get_ylim()[0]), 0, np.diff(ax1.get_ylim())[0],
+                          edgecolor='r', facecolor='none')
+        rect2 = Rectangle((start_x, ax2.get_ylim()[0]), 0, np.diff(ax2.get_ylim())[0],
+                          edgecolor='r', facecolor='none')
+        ax1.add_patch(rect1)
+        ax2.add_patch(rect2)
+    
+    def on_drag(event):
+        nonlocal rect1, rect2
+        if not is_drawing or event.inaxes not in [ax1, ax2]:
+            return
+        width = event.xdata - start_x
+        rect1.set_width(width)
+        rect2.set_width(width)
+        canvas.draw()
+    
+    def on_release(event):
+        nonlocal is_drawing
+        is_drawing = False
+        x_min = int(rect1.get_x())
+        x_max = int(rect1.get_x() + rect1.get_width())
+        
+        # 计算选定时间区间内的平均值
+        ecg_mean = np.mean(cba_instance.ecg_signal[x_min:x_max]) if x_max > x_min else 0
+        ap_mean = np.mean(cba_instance.ap_signal[x_min:x_max]) if x_max > x_min else 0
+        messagebox.showinfo("平均值", f"时间区间内ECG信号平均值: {ecg_mean:.2f}\n时间区间内AP信号平均值: {ap_mean:.2f}")
+
+    # 绑定鼠标事件
+    canvas.mpl_connect("button_press_event", on_press)
+    canvas.mpl_connect("motion_notify_event", on_drag)
+    canvas.mpl_connect("button_release_event", on_release)
+

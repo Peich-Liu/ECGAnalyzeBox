@@ -1,11 +1,11 @@
 import tkinter as tk
 from tkinter import ttk
-# import main_guiLayout as gl
 import dataLoader as dl
 import signalProcessing as sp
 import timeDomainAnalysis as tda
 import freqDomainAnalysis as fda
 import visulaztionOverview as vo
+import guiController as gui
 from utilities import *
 
 
@@ -15,60 +15,50 @@ class CBATools:
         self.root.title("ECG Signal Processing GUI")
         self.root.geometry("1200x1000")
 
+        self.guiWindow = gui.guiWindow(self.root)
+
         self.whole_signal = None
         self.ecg_signal = None
         self.ap_signal = None
-
-
         self.selected_channel_signal = None 
         self.fs = 250 #Change it after get fs 
 
         notebook = ttk.Notebook(self.root)
         notebook.pack(fill=tk.BOTH, expand=True)
 
-        load_data_page_components = dl.create_load_data_page(
-            notebook,
+        load_data_page_components = self.guiWindow.create_load_data_page(
+            # notebook,
             lambda: dl.load_ecg_data(
             self,
             load_data_page_components["patient_id_entry"],
             load_data_page_components["start_entry"],
             load_data_page_components["end_entry"],
-            # load_data_page_components["canvas_frame_ecg"]
-            # load_data_page_components["channel_selector"],
-            # load_data_page_components["load_data_canvas_frame"]
             ),
             lambda: dl.load_ap_data(
             self,
             load_data_page_components["patient_id_entry"],
             load_data_page_components["start_entry"],
             load_data_page_components["end_entry"],
-            # load_data_page_components["canvas_frame_ap"]
-            # load_data_page_components["channel_selector"],
-            # load_data_page_components["load_data_canvas_frame"]
             ),
             lambda: dl.load_ecg_data(
             self,
             load_data_page_components["patient_id_entry"],
             load_data_page_components["start_entry"],
             load_data_page_components["end_entry"],
-            # load_data_page_components["channel_selector"],
-            # load_data_page_components["load_data_canvas_frame"]
             ),
-            lambda: plot_signals(
+            lambda: vo.vis_data(
             self,
-            load_data_page_components["canvas_frame_ecg"]
-            # load_data_page_components["channel_selector"],
-            # load_data_page_components["load_data_canvas_frame"]
+            load_data_page_components["interactive_plot"],
+            ),
+            lambda: vo.updateInteract(
+            load_data_page_components["interactive_plot"],
             )
+
             
         )
-        '''Change here later'''
-        # visualization_page_components = vo.create_visual_page(
-        #     notebook,
-        # )
 
-        signal_processing_page_components = sp.create_signal_processing_page(
-            notebook,
+        signal_processing_page_components = self.guiWindow.create_signal_processing_page(
+            # notebook,
             lambda: sp.filter_signal(
                 self,
                 signal_processing_page_components["lowcut_entry"],
@@ -85,8 +75,7 @@ class CBATools:
             
         )
 
-        time_domain_page_components = tda.create_time_domain_page(
-            notebook,
+        time_domain_page_components = self.guiWindow.create_time_domain_page(
             lambda: tda.calculateEcgTimeDomainValue(
                 self,
                 self.fs,
@@ -102,8 +91,7 @@ class CBATools:
         )
 
 
-        frequency_domain_page_components = fda.create_frequency_domain_page(
-            notebook,
+        frequency_domain_page_components = self.guiWindow.create_frequency_domain_page(
             lambda: fda.perform_frequency_analysis_psd(
                 self,
                 self.fs,
