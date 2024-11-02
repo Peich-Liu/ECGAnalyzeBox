@@ -53,8 +53,6 @@ class CBATools:
             lambda: vo.updateInteract(
             load_data_page_components["interactive_plot"],
             )
-
-            
         )
 
         signal_processing_page_components = self.guiWindow.create_signal_processing_page(
