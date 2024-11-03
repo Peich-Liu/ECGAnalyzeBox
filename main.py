@@ -20,6 +20,7 @@ class CBATools:
         self.whole_signal = None
         self.ecg_signal = None
         self.ap_signal = None
+
         self.selected_channel_signal = None 
         self.fs = 250 #Change it after get fs 
 
@@ -96,6 +97,30 @@ class CBATools:
                 frequency_domain_page_components["freq_canvas_frame"]
             )
         )
+    @property
+    def ecg_signal(self):
+        return self._ecg_signal
+
+    @ecg_signal.setter
+    def ecg_signal(self, value):
+        self._ecg_signal = value
+        self.on_signal_change("ecg")
+
+    @property
+    def ap_signal(self):
+        return self._ap_signal
+
+    @ap_signal.setter
+    def ap_signal(self, value):
+        self._ap_signal = value
+        self.on_signal_change("ap")
+
+    def on_signal_change(self, signal_type):
+        if signal_type == "ecg" or signal_type == "ap":
+            if self._ecg_signal is not None and self._ap_signal is not None:
+                # 如果两个信号都有数据，则更新绘图
+                self.guiWindow.interactive_plot.plot_signals(self._ecg_signal, self._ap_signal)
+
     def update_ecg_signal(self, signal, sampling_rate):
         self.ecg_signal = signal
         self.fs = sampling_rate

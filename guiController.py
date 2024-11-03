@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 import visulaztionOverview as vo
+from functools import partial
 
 class guiWindow:
     def __init__(self, root):
@@ -10,9 +11,29 @@ class guiWindow:
         
         # 创建一个Notebook容器
         self.notebook = ttk.Notebook(root)
-        self.notebook.pack(fill="both", expand=True)
+        self.notebook.pack(fill="both", expand=False)
         
         self.interactive_plot = None
+
+        # Frame for plotting the loaded signal
+        self.canvas_frame_root = ttk.Frame(self.root, width=500, height=200)
+        self.canvas_frame_root.pack(fill=tk.BOTH, expand=False, padx=10, pady=10)
+
+        self.interactive_plot = vo.InteractivePlot(self.canvas_frame_root)
+
+    def mode_changed_load_page(self, interactive_plot, event):
+        """处理模式选择的变化"""
+        selected_mode = self.mode_var.get()
+        if selected_mode == "Create Mode":
+            interactive_plot.toggle_create_mode()
+            print("Create Mode Selected")
+
+        elif selected_mode == "Drag Mode":
+            interactive_plot.toggle_drag_mode()
+            print("Edit Mode Selected")
+
+        elif selected_mode == "Delete Mode":
+            print("View Mode Selected")
 
     def create_load_data_page(self, load_ecg_command, load_ap_command, load_eeg_command, vis_data, interact_update):
         '''data loader interface'''
@@ -24,51 +45,62 @@ class guiWindow:
         ecg_frame = ttk.Frame(load_data_page)
         ecg_frame.pack(side=tk.TOP, fill=tk.X, padx=10, pady=10)
 
-        ttk.Label(ecg_frame, text="Patient ID:").grid(row=0, column=0, padx=5, pady=5)
+        ttk.Label(ecg_frame, text="Select Mode:").grid(row=0, column=0, padx=5, pady=5)
+        
+        self.mode_var = tk.StringVar(value="Select Mode")
+        modes = ["Create Mode", "Drag Mode", "Delete Mode"]  # 模式选项，可以根据需要扩展
+        self.mode_combobox = ttk.Combobox(ecg_frame, textvariable=self.mode_var, values=modes, state="readonly")
+        self.mode_combobox.grid(row=0, column=1, padx=5, pady=5)
+
+        # # Frame for plotting the loaded signal
+        # canvas_frame_ecg = ttk.Frame(load_data_page, width=500, height=200)
+        # canvas_frame_ecg.pack(fill=tk.BOTH, expand=False, padx=10, pady=10)
+
+        # interactive_plot_ecg = vo.InteractivePlot(canvas_frame_ecg)
+
+        ttk.Label(ecg_frame, text="Patient ID:").grid(row=1, column=0, padx=5, pady=5)
         ecg_patient_id_entry = ttk.Entry(ecg_frame)
-        ecg_patient_id_entry.grid(row=0, column=1, padx=5, pady=5)
+        ecg_patient_id_entry.grid(row=1, column=1, padx=5, pady=5)
         ecg_patient_id_entry.insert(0, "f2o01")
 
-        ttk.Label(ecg_frame, text="Start Sample:").grid(row=0, column=2, padx=5, pady=5)
+        ttk.Label(ecg_frame, text="Start Sample:").grid(row=1, column=2, padx=5, pady=5)
         ecg_start_entry = ttk.Entry(ecg_frame)
-        ecg_start_entry.grid(row=0, column=3, padx=5, pady=5)
+        ecg_start_entry.grid(row=1, column=3, padx=5, pady=5)
         ecg_start_entry.insert(0, "0")
 
-        ttk.Label(ecg_frame, text="End Sample:").grid(row=0, column=4, padx=5, pady=5)
+        ttk.Label(ecg_frame, text="End Sample:").grid(row=1, column=4, padx=5, pady=5)
         ecg_end_entry = ttk.Entry(ecg_frame)
-        ecg_end_entry.grid(row=0, column=5, padx=5, pady=5)
+        ecg_end_entry.grid(row=1, column=5, padx=5, pady=5)
         ecg_end_entry.insert(0, "50000")
 
         load_ecg_button = ttk.Button(ecg_frame, text="Load ECG Data", command=load_ecg_command)
-        load_ecg_button.grid(row=0, column=6, padx=5, pady=5)
+        load_ecg_button.grid(row=1, column=6, padx=5, pady=5)
 
         load_ap_button = ttk.Button(ecg_frame, text="Load AP Data", command=load_ap_command)
-        load_ap_button.grid(row=0, column=7, padx=5, pady=5)
+        load_ap_button.grid(row=1, column=7, padx=5, pady=5)
 
         visual_button = ttk.Button(ecg_frame, text="Visualize Data", command=vis_data)
-        visual_button.grid(row=0, column=8, padx=5, pady=5)
+        visual_button.grid(row=1, column=8, padx=5, pady=5)
 
-        mode_button = ttk.Button(ecg_frame, text="Create a new window", command=interact_update)
-        mode_button.grid(row=1, column=8, padx=5, pady=5)
-        # Separator Line
-        separator1 = ttk.Separator(load_data_page, orient='horizontal')
-        separator1.pack(fill='x', padx=10, pady=5)
-        # Frame for plotting the loaded signal
-        canvas_frame_ecg = ttk.Frame(load_data_page)
-        canvas_frame_ecg.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        # separator1 = ttk.Separator(load_data_page, orient='horizontal')
+        # separator1.pack(fill='x', padx=10, pady=5)
 
-        interactive_plot_ecg = vo.InteractivePlot(canvas_frame_ecg)
+        # self.mode_combobox.bind("<<ComboboxSelected>>", partial(self.mode_changed_load_page, interactive_plot_ecg))
+
+        self.mode_combobox.bind("<<ComboboxSelected>>", partial(self.mode_changed_load_page, self.interactive_plot))
+
 
         return {
             "patient_id_entry": ecg_patient_id_entry,
             "start_entry": ecg_start_entry,
             "end_entry": ecg_end_entry,
-            "canvas_frame_ecg": canvas_frame_ecg,
+            "canvas_frame_ecg": self.canvas_frame_root,
             "load_ecg_button": load_ecg_button,  # Add button to the return dictionary
             "load_ap_button": load_ap_button,     # Add button to the return dictionary
-            "interactive_plot": interactive_plot_ecg
+            "interactive_plot": self.interactive_plot
         }
     
+
     def create_signal_processing_page(self, filter_command, artifact_command, vis_data):
         signal_processing_page = ttk.Frame(self.notebook)
         self.notebook.add(signal_processing_page, text="Signal Processing")
@@ -102,11 +134,6 @@ class guiWindow:
         # Frame for signal visualization
         canvas_frame = ttk.Frame(signal_processing_page)
         canvas_frame.pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True, padx=10, pady=10)
-        
-
-        # # Frame for displaying signal properties
-        # properties_frame = ttk.Frame(signal_processing_page)
-        # properties_frame.pack(side=tk.RIGHT, fill=tk.Y, padx=10, pady=10)
 
         # Return the components needed for interaction
         return {
@@ -115,6 +142,7 @@ class guiWindow:
             "canvas_frame": canvas_frame,
         }
     
+
 
     def create_time_domain_page(self, ecg_time_domain_command, ap_time_domain_command):
         time_domain_page = ttk.Frame(self.notebook)
@@ -148,6 +176,7 @@ class guiWindow:
             "sd_canvas_frame": sd_canvas_frame
         }
     
+
 
     def create_frequency_domain_page(self, frequency_analysis_command):
         frequency_domain_page = ttk.Frame(self.notebook)
