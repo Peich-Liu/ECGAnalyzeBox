@@ -298,6 +298,47 @@ def calculateApSignalProperties(signal, fs):
     
     return properties
 
+def calculateApSignalRangeProperties(signal, fs, selected_ranges):
+    """
+    计算选定范围内的 AP 信号属性。
+    
+    参数:
+    - signal: 完整的 AP 信号数组
+    - fs: 采样频率
+    - selected_ranges: 字典，其中每个键是选框的索引，每个值是选框的 (start, end) 范围
+    
+    返回:
+    - results: 包含每个框选区域的计算属性的字典
+    """
+    print("selected_ranges",selected_ranges)
+    results = {}
+
+    for index, (start, end) in selected_ranges.items():
+        # 提取当前选框的信号片段
+        segment = signal[start:end]
+
+        # 1. Systolic and Diastolic
+        sbp = np.max(segment)  # Systolic
+        dbp = np.min(segment)  # Diastolic
+        pp = sbp - dbp
+
+        # 2. Mean arterial pressure
+        map_value = (sbp + 2 * dbp) / 3
+
+        # 3. SD of Pressures
+        sd = np.std(segment)
+
+        # 将每个框选区域的计算结果存储到字典中
+        results[index] = {
+            "Systolic": sbp,
+            "Diastolic": dbp,
+            "Mean arterial pressure": map_value,
+            "SD of Pressures": sd,
+        }
+        print("resultsAP", results)
+
+    return results
+
 def PSDAnalyze(ecgSignal, fs):
     peaks, info = nk.ecg_peaks(ecgSignal, sampling_rate=fs, correct_artifacts=True)
     # Get the indices of the detected R-peaks
@@ -502,3 +543,24 @@ def plot_can_interact(cba_instance, canvas_frame):
     canvas.mpl_connect("motion_notify_event", on_drag)
     canvas.mpl_connect("button_release_event", on_release)
 
+def displaySignalProperties(properties, properties_frame):
+    # Clear previous properties if they exist
+    for widget in properties_frame.winfo_children():
+        widget.destroy()
+
+    # Display signal properties
+    row = 0
+    for key, value in properties.items():
+        ttk.Label(properties_frame, text=f"{key}: {value}").grid(row=row, column=0, padx=10, pady=5, sticky=tk.W)
+        row += 1
+
+# def return_range(ranges):
+#     print("ranges:", ranges)
+#     return ranges
+# 示例计算函数
+def calculate_mean(ranges):
+    print("计算平均值:", ranges)
+    # 执行计算逻辑...
+
+def calculate_variance(ranges):
+    print("计算方差:", ranges)

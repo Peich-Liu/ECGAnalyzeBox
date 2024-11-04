@@ -6,6 +6,7 @@ import timeDomainAnalysis as tda
 import freqDomainAnalysis as fda
 import visulaztionOverview as vo
 import guiController as gui
+import observer as ob
 from utilities import *
 
 
@@ -15,17 +16,23 @@ class CBATools:
         self.root.title("ECG Signal Processing GUI")
         self.root.geometry("1200x1000")
 
-        self.guiWindow = gui.guiWindow(self.root)
+        self.observer = ob.Observer()
+        self.interactive_plot = vo.InteractivePlot(self.observer)
+        self.guiWindow = gui.guiWindow(self.root, self.observer, self.interactive_plot)
 
         self.whole_signal = None
         self.ecg_signal = None
         self.ap_signal = None
-
         self.selected_channel_signal = None 
+        self.range = None
+
         self.fs = 250 #Change it after get fs 
 
         notebook = ttk.Notebook(self.root)
         notebook.pack(fill=tk.BOTH, expand=True)
+
+        self.observer.subscribe(self.return_range)
+        # self.observer.subscribe(calculate_variance)
 
         load_data_page_components = self.guiWindow.create_load_data_page(
             # notebook,
@@ -85,7 +92,8 @@ class CBATools:
             lambda: tda.calculateApTimeDomainValue(
                 self,
                 self.fs,
-                time_domain_page_components["properties_frame_ap"]
+                time_domain_page_components["properties_frame_ap"],
+                self.range
             )
         )
 
@@ -114,6 +122,12 @@ class CBATools:
     def ap_signal(self, value):
         self._ap_signal = value
         self.on_signal_change("ap")
+
+    def return_range(self, range):
+        self.range = range
+        # self.range = selection_ranges
+        print("ranges:", self.range)
+        # return selection_ranges
 
     def on_signal_change(self, signal_type):
         if signal_type == "ecg" or signal_type == "ap":

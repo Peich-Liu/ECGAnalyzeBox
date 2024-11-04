@@ -7,13 +7,16 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolb
 from matplotlib.figure import Figure
 from matplotlib.patches import Rectangle
 import numpy as np
+from utilities import *
+import time
 
 class InteractivePlot:
-    def __init__(self, canvas_frame):
-        self.canvas_frame = canvas_frame
+    def __init__(self, observer):
+        # self.canvas_frame = canvas_frame
 
         # 初始化交互属性
         # self.fig = Figure(figsize=(10, 6), dpi=100)
+        self.observer = observer
         self.fig = Figure()
         self.ax1 = self.fig.add_subplot(211)
         self.ax2 = self.fig.add_subplot(212, sharex=self.ax1)
@@ -24,26 +27,18 @@ class InteractivePlot:
         self.selected_index = None  # 当前被选中的矩形索引
         self.start_x = None
         self.create_mode = False  # 控制是否允许创建新矩形
-        self.selection_ranges = {}  # 用于存储选择的范围
+        self.selection_ranges = {}  # 存储选择的范围
         self.current_index = 0  # 索引计数器
         self.last_update_time = 0  # 初始化最后一次更新的时间戳
 
-        # 初始化图形和工具栏
-        self.canvas = FigureCanvasTkAgg(self.fig, master=self.canvas_frame)
-        self.canvas.draw()
-        self.canvas.get_tk_widget().pack(fill="both", expand=True)
-        self.add_toolbar()
+        self.last_press_time = 0  # 上次鼠标按下事件的时间戳
+        self.debounce_interval = 0.5  # 去抖时间间隔（秒）
 
-        # 绑定事件
-        self.canvas.mpl_connect("button_press_event", self.on_press)
-        self.canvas.mpl_connect("motion_notify_event", self.on_drag)
-        self.canvas.mpl_connect("button_release_event", self.on_release)
-
-    def add_toolbar(self):
+    def add_toolbar(self, canvas, canvas_frame):
         """添加导航工具栏"""
-        self.toolbar = NavigationToolbar2Tk(self.canvas, self.canvas_frame)
+        self.toolbar = NavigationToolbar2Tk(canvas, canvas_frame)
         self.toolbar.update()
-        self.canvas.get_tk_widget().pack(side="top", fill="both", expand=True)
+        canvas.get_tk_widget().pack(side="top", fill="both", expand=True)
 
     def plot_signals(self, ecg_data, ap_data):
         """更新绘图内容"""
@@ -57,7 +52,7 @@ class InteractivePlot:
         self.ax2.set_xlabel("Time (samples)")
         self.ax2.set_ylabel("AP Amplitude")
         self.ax2.legend()
-        self.canvas.draw()
+        self.fig.canvas.draw()
 
     def toggle_create_mode(self):
         """切换创建模式"""
@@ -73,9 +68,12 @@ class InteractivePlot:
         """鼠标按下事件处理"""
         if event.inaxes not in [self.ax1, self.ax2]:  # 确保事件在绘图区内
             return
+        current_time = time.time()
+        if current_time - self.last_press_time < self.debounce_interval:
+            return
+        self.last_press_time = current_time
 
         if self.create_mode:
-            # 创建模式：新建矩形
             self.is_drawing = True
             self.start_x = event.xdata
             rect1 = Rectangle((self.start_x, self.ax1.get_ylim()[0]), 0, np.diff(self.ax1.get_ylim())[0],
@@ -88,9 +86,10 @@ class InteractivePlot:
             self.selected_index = self.current_index
             self.current_index += 1
 
-        else:
-            # 非创建模式：检查是否点击已有矩形内
+        else:  
             for index, (rect1, rect2) in self.selection_ranges.items():
+                print("self.selection_ranges = ", self.selection_ranges)
+                print("rect1,rect2 = ", rect1, rect2)
                 if rect1.contains(event)[0] or rect2.contains(event)[0]:  # 如果在框框内
                     self.is_dragging = True
                     self.selected_index = index
@@ -108,7 +107,7 @@ class InteractivePlot:
             rect1, rect2 = self.selection_ranges[self.selected_index]
             rect1.set_width(width)
             rect2.set_width(width)
-            self.canvas.draw()
+            self.fig.canvas.draw()
 
         elif self.is_dragging and not self.create_mode:
             # 正在拖动已有的矩形
@@ -116,7 +115,7 @@ class InteractivePlot:
             new_x = event.xdata - self.start_x  # 根据偏移计算新的位置
             rect1.set_x(new_x)
             rect2.set_x(new_x)
-            self.canvas.draw()
+            self.fig.canvas.draw()
 
     def on_release(self, event):
         """鼠标松开事件处理"""
@@ -128,11 +127,23 @@ class InteractivePlot:
             # 完成矩形拖动
             self.is_dragging = False
             self.selected_index = None
+        
+        # 获取更新的选择范围并通知所有订阅者
+        updated_ranges = self.get_selection_ranges()
+        # self.selection_ranges = updated_ranges
+        self.observer.notify(updated_ranges)  # 通知观察者
+
 
     def get_selection_ranges(self):
-        """返回所有选择的范围信息"""
-        return {index: (int(rect1.get_x()), int(rect1.get_x() + rect1.get_width())) 
-                for index, (rect1, rect2) in self.selection_ranges.items()}
+        """返回所有选择的范围信息，确保 rect1 和 rect2 是 Rectangle 对象"""
+        selection_ranges = {}
+        for index, (rect1, rect2) in self.selection_ranges.items():
+            if isinstance(rect1, Rectangle) and isinstance(rect2, Rectangle):
+                selection_ranges[index] = (
+                    int(rect1.get_x()), 
+                    int(rect1.get_x() + rect1.get_width())
+                )
+        return selection_ranges
 
 def vis_data(cba_instance, plot_instance):
     plot_instance.plot_signals(cba_instance.ecg_signal, cba_instance.ap_signal)
