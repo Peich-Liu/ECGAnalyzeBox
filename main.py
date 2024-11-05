@@ -16,23 +16,30 @@ class CBATools:
         self.root.title("ECG Signal Processing GUI")
         self.root.geometry("1200x1000")
 
-        self.observer = ob.Observer()
-        self.interactive_plot = vo.InteractivePlot(self.observer)
-        self.guiWindow = gui.guiWindow(self.root, self.observer, self.interactive_plot)
-
         self.whole_signal = None
         self.ecg_signal = None
         self.ap_signal = None
         self.selected_channel_signal = None 
         self.range = None
+        # self.parameters = None
+
+        self.range_min = None
+        self.range_max = None
 
         self.fs = 250 #Change it after get fs 
 
         notebook = ttk.Notebook(self.root)
         notebook.pack(fill=tk.BOTH, expand=True)
 
+        self.observer = ob.Observer()
+        self.interactive_plot = vo.InteractivePlot(self.observer)
+        self.guiWindow = gui.guiWindow(self.root, self.observer, self.interactive_plot)
+        self.hrv_plot = vo.HRVAnalyzer(self.guiWindow)
+
         self.observer.subscribe(self.return_range)
         self.observer.subscribe(self.update_labels_on_change)
+        self.observer.subscribe(self.hrv_plot.hrv_analysis)
+        self.observer.subscribe(self.hrv_plot.update_range_maxmin)
 
         # self.observer.subscribe(calculate_variance)
 
@@ -128,7 +135,7 @@ class CBATools:
     def return_range(self, range):
         self.range = range
         # self.range = selection_ranges
-        print("ranges:", self.range)
+        # print("ranges:", self.range[0][0])
         # return selection_ranges
 
     def on_signal_change(self, signal_type):
@@ -139,12 +146,7 @@ class CBATools:
 
     # Update labels when new data is available
     def update_labels_on_change(self, range):
-        # for key, range in range.items():
-        #     print(f"Channel {key}: {range}")
-        tda.calculateApTimeDomainValue(self, self.fs, self.guiWindow.dataLoader_properties_frame, range)
-
-        # ecg_result = range
-        # self.guiWindow.ecg_result_label.config(text=f"Window Information: {ecg_result}")
+        tda.calculateApandEcgTimeDomainValue(self, self.fs, self.guiWindow.dataLoader_properties_frame, range)
 
     def update_ecg_signal(self, signal, sampling_rate):
         self.ecg_signal = signal
@@ -153,6 +155,36 @@ class CBATools:
     def update_ap_signal(self, signal, sampling_rate):
         self.ap_signal = signal
         self.fs = sampling_rate
+
+    # def hrv_analysis(self, range):
+    #     x = range[0][0]
+    #     hrv = self.parameters['0']['ECG']['Heart Rate']
+    #     fig = plt.figure()
+    #     ax = fig.add_subplot(111)
+    #     ax.plot(x, hrv, 'o') 
+    #     getFigure(fig, self.guiWindow.canvas_hrv_frame)
+    #     # pass
+    # def update_range_maxmin(self, range):
+    #     # 获取 range[0] 的最大值和最小值
+
+    #     range_max = max(range[0])
+    #     range_min = min(range[0])
+
+    #     if self.range_max is None or self.range_min is None:
+    #         self.range_max = range_max
+    #         self.range_min = range_min
+    #         return
+
+    #     if range_max > self.range_max:
+    #         print(f"最大值已更新：从 {self.range_max} 到 {range_max}")
+    #         self.range_max = range_max
+
+    #     if range_min < self.range_min:
+    #         print(f"最小值已更新：从 {self.range_min} 到 {range_min}")
+    #         self.range_min = range_min
+            
+
+
 
 if __name__ == "__main__":
     root = tk.Tk()

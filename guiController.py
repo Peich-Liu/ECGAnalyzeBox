@@ -21,6 +21,9 @@ class guiWindow:
         self.dataLoader_properties_frame = None
         self.ecg_result_label = None
         self.ap_result_label = None
+        self.canvas_hrv_frame = None
+        
+
 
 
         self.plotObersever = observer
@@ -90,6 +93,15 @@ class guiWindow:
         canvas.mpl_connect("button_press_event", self.interactive_plot.on_press)
         canvas.mpl_connect("motion_notify_event", self.interactive_plot.on_drag)
         canvas.mpl_connect("button_release_event", self.interactive_plot.on_release)
+
+        # self.canvas_hrv = FigureCanvasTkAgg()
+        # self.canvas_hrv.draw()
+        # self.canvas_hrv.get_tk_widget().pack(side="top", fill="both", expand=True)
+
+        self.canvas_hrv_frame = ttk.Frame(load_data_page)
+        self.canvas_hrv_frame.pack(side=tk.TOP, fill=tk.X, padx=10, pady=10)
+
+
 
         self.dataLoader_properties_frame = ttk.Frame(main_container)
         self.dataLoader_properties_frame.pack(side="bottom", fill="x", padx=5, pady=5)

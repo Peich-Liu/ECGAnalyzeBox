@@ -329,9 +329,9 @@ def calculateEcgSignalRangeProperties(signal, fs, selected_ranges):
 
         results[index] = {
             # "RR Interval Second": rrIntervalsSecond,
-            "Heart Rate":meanHR,
-            "SDNN":sdnn,
-            "RMSSD":rmssd,
+            "Heart Rate":f"{meanHR:.2f}",
+            "SDNN":f"{sdnn:.2f}",
+            "RMSSD":f"{rmssd:.2f}",
         }
 
         
@@ -369,12 +369,12 @@ def calculateApSignalRangeProperties(signal, fs, selected_ranges):
 
         # 将每个框选区域的计算结果存储到字典中
         results[index] = {
-            "Systolic": sbp,
-            "Diastolic": dbp,
-            "Mean arterial pressure": map_value,
-            "SD of Pressures": sd,
+            "Systolic": f"{sbp:.2f}",
+            "Diastolic": f"{dbp:.2f}",
+            "Mean arterial pressure": f"{map_value:.2f}",
+            "SD of Pressures": f"{sd:.2f}",
         }
-        print("resultsAP", results)
+        # print("resultsAP", results)
 
     return results
 

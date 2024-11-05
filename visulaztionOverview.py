@@ -9,6 +9,70 @@ from matplotlib.patches import Rectangle
 import numpy as np
 from utilities import *
 import time
+'''画图还有点问题，好像是坐标轴搞错了，明天改一下'''
+class HRVAnalyzer:
+    def __init__(self, gui_window):
+        self.guiWindow = gui_window
+        self.range_max = None
+        self.range_min = None
+        self.max_points = []  # 保存最大值的点
+        self.min_points = []  # 保存最小值的点
+        self.time_series = []  # 保存时间序列的 x 值
+        self.hrv_values = []   # 保存 HRV 值
+        # self.parameters = {'0': {'ECG': {'Heart Rate': 75}}}  # 假设的HRV数据
+        self.parameters = None
+
+        # 初始化图形和Canvas
+        self.fig = Figure(figsize=(5, 4), dpi=100)
+        self.ax = self.fig.add_subplot(111)
+        self.canvas = FigureCanvasTkAgg(self.fig, master=self.guiWindow.canvas_hrv_frame)
+        self.canvas.get_tk_widget().pack(side="top", fill="both", expand=True)
+
+    def hrv_analysis(self, range):
+        # 假设 range[0][0] 表示时间点，HRV 是对应的心率变异值
+        x = range[0][0]
+        hrv = self.parameters['0']['ECG']['Heart Rate']
+
+        # 将新的时间点和 HRV 值添加到序列中
+        self.time_series.append(x)
+        self.hrv_values.append(hrv)
+
+        # 清除并更新图形
+        self.ax.clear()
+        self.ax.plot(self.time_series, self.hrv_values, '-o', label="HRV Time Series")
+        self.ax.set_xlabel("Time")
+        self.ax.set_ylabel("HRV")
+        self.ax.legend()
+
+        getFigure(self.fig, self.guiWindow.canvas_hrv_frame)
+
+    def update_range_maxmin(self, range):
+        # 获取 range[0] 的最大值和最小值
+        range_max = max(range[0])
+        range_min = min(range[0])
+
+        # 初始化最大值和最小值
+        if self.range_max is None or self.range_min is None:
+            self.range_max = range_max
+            self.range_min = range_min
+            self.hrv_analysis(range)  # 更新图形
+            return
+        # 更新最大值
+        if range_max > self.range_max:
+            print(f"最大值已更新：从 {self.range_max} 到 {range_max}")
+            self.range_max = range_max
+            self.max_points.append((range[0][1], range_max))  # 添加新的最大值点
+            self.hrv_analysis(range)  # 更新图形
+
+        # 更新最小值
+        if range_min < self.range_min:
+            print(f"最小值已更新：从 {self.range_min} 到 {range_min}")
+            self.range_min = range_min
+            self.min_points.append((range[0][0], range_min))  # 添加新的最小值点
+            self.hrv_analysis(range)  # 更新图形
+
+
+
 
 class InteractivePlot:
     def __init__(self, observer):
