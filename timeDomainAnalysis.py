@@ -3,14 +3,15 @@ import tkinter as tk
 from tkinter import messagebox
 from utilities import *
 
-def calculateEcgTimeDomainValue(cba_instance, fs,properties_frame, sd_canvas_frame):
+def calculateEcgTimeDomainValue(cba_instance, fs,properties_frame, sd_canvas_frame, selected_ranges):
 
     if cba_instance.ecg_signal is None:
         messagebox.showerror("Error", "No signal loaded to filter. Please load data first.")
         return
     try:
         # Calculate and display signal properties
-        properties, sdFigure = calculateEcgSignalProperties(cba_instance.ecg_signal, fs) # The algorithm of the time domain anaylsis is here
+        # properties, sdFigure = calculateEcgSignalProperties(cba_instance.ecg_signal, fs) # The algorithm of the time domain anaylsis is here
+        properties, sdFigure = calculateEcgSignalRangeProperties(cba_instance.ecg_signal, fs, selected_ranges) # The algorithm of the time domain anaylsis is here
         displaySignalProperties(properties, properties_frame)
         getFigure(sdFigure, sd_canvas_frame)
     except ValueError:

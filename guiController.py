@@ -3,7 +3,9 @@ from tkinter import ttk
 import visulaztionOverview as vo
 from functools import partial
 import observer as ob
-from utilities import *
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
+
+# from utilities import *
 
 class guiWindow:
     def __init__(self, root, observer, interactive_plot):
@@ -16,60 +18,38 @@ class guiWindow:
         self.notebook.pack(fill="both", expand=False)
         
         self.interactive_plot = None
+        self.dataLoader_properties_frame = None
+        self.ecg_result_label = None
+        self.ap_result_label = None
+
 
         self.plotObersever = observer
         self.interactive_plot = interactive_plot
 
-        # self.interactive_plot = vo.InteractivePlot(self.plotObersever)
 
-
-        # self.plotObersever.subscribe(calculate_mean)
-        # self.plotObersever.subscribe(calculate_variance)
-
-    def create_canvas_for_page(self, page):
-        """为指定的页面创建一个Canvas并绑定共享的Figure"""
-        canvas = FigureCanvasTkAgg(self.interactive_plot.fig, master=page)
-        canvas.draw()
-        canvas.get_tk_widget().pack(fill="both", expand=True)
-
-        # 绑定事件
-        canvas.mpl_connect("button_press_event", self.interactive_plot.on_press)
-        canvas.mpl_connect("motion_notify_event", self.interactive_plot.on_drag)
-        canvas.mpl_connect("button_release_event", self.interactive_plot.on_release)
-        return canvas
-    
-    def mode_changed_load_page(self, interactive_plot, event):
-        selected_mode = self.mode_var.get()
-        if selected_mode == "Create Mode":
-            interactive_plot.toggle_create_mode()
-            print("Create Mode Selected")
-
-        elif selected_mode == "Drag Mode":
-            interactive_plot.toggle_drag_mode()
-            print("Edit Mode Selected")
-
-        elif selected_mode == "Delete Mode":
-            print("View Mode Selected")
-
-    '''=========================================================
-    The Data Loading Page,
-    There are 3 buttons, one mode select box, 3 text inputers
-    ========================================================='''
+        
 
     def create_load_data_page(self, load_ecg_command, load_ap_command, load_eeg_command, vis_data, interact_update):
         '''data loader interface'''
         load_data_page = ttk.Frame(self.notebook)
         self.notebook.add(load_data_page, text="Load Data Page")
 
-        # =================== Load ECG =================== #
-        # Create the first frame for Load ECG Button
+    '''=========================================================
+    The Data Loading Page,
+    There are 3 buttons, one mode select box, 3 text inputers
+    ========================================================='''
+    def create_load_data_page(self, load_ecg_command, load_ap_command, load_eeg_command, vis_data, interact_update):
+        '''data loader interface'''
+        load_data_page = ttk.Frame(self.notebook)
+        self.notebook.add(load_data_page, text="Load Data Page")
+
         ecg_frame = ttk.Frame(load_data_page)
         ecg_frame.pack(side=tk.TOP, fill=tk.X, padx=10, pady=10)
 
         ttk.Label(ecg_frame, text="Select Mode:").grid(row=0, column=0, padx=5, pady=5)
-        
+
         self.mode_var = tk.StringVar(value="Select Mode")
-        modes = ["Create Mode", "Drag Mode", "Delete Mode"]  # 模式选项，可以根据需要扩展
+        modes = ["Create Mode", "Drag Mode", "Delete Mode"]
         self.mode_combobox = ttk.Combobox(ecg_frame, textvariable=self.mode_var, values=modes, state="readonly")
         self.mode_combobox.grid(row=0, column=1, padx=5, pady=5)
 
@@ -97,21 +77,55 @@ class guiWindow:
         visual_button = ttk.Button(ecg_frame, text="Visualize Data", command=vis_data)
         visual_button.grid(row=1, column=8, padx=5, pady=5)
 
-        self.create_canvas_for_page(load_data_page)
-        self.mode_combobox.bind("<<ComboboxSelected>>", partial(self.mode_changed_load_page, self.interactive_plot))
+        # 创建一个主容器来控制 canvas 和 properties_frame 的布局
+        main_container = ttk.Frame(load_data_page)
+        main_container.pack(fill="both", expand=True)
 
+        # 创建 canvas 并放置在 main_container 顶部
+        canvas = FigureCanvasTkAgg(self.interactive_plot.fig, master=main_container)
+        canvas.draw()
+        canvas.get_tk_widget().pack(side="top", fill="both", expand=True)
+        
+        # 绑定事件
+        canvas.mpl_connect("button_press_event", self.interactive_plot.on_press)
+        canvas.mpl_connect("motion_notify_event", self.interactive_plot.on_drag)
+        canvas.mpl_connect("button_release_event", self.interactive_plot.on_release)
+
+        self.dataLoader_properties_frame = ttk.Frame(main_container)
+        self.dataLoader_properties_frame.pack(side="bottom", fill="x", padx=5, pady=5)
+
+        self.ecg_result_label = ttk.Label(self.dataLoader_properties_frame, text="Window Information: ")
+        self.ecg_result_label.grid(row=0, column=0, sticky="w")
+
+        
+        self.mode_combobox.bind("<<ComboboxSelected>>", partial(self.mode_changed_load_page, self.interactive_plot))
 
         return {
             "patient_id_entry": ecg_patient_id_entry,
             "start_entry": ecg_start_entry,
             "end_entry": ecg_end_entry,
-            # "canvas_frame_ecg": self.canvas_frame_root,
-            "load_ecg_button": load_ecg_button,  # Add button to the return dictionary
-            "load_ap_button": load_ap_button,     # Add button to the return dictionary
+            "load_ecg_button": load_ecg_button,
+            "load_ap_button": load_ap_button,
             "interactive_plot": self.interactive_plot,
-            # "parameter_info":properties_frame_window
+            "properties_frame":self.dataLoader_properties_frame,
+            "ecg_result_label":self.ecg_result_label,
+            "ap_result_label":self.ap_result_label,
+
         }
     
+    def mode_changed_load_page(self, interactive_plot, event):
+        selected_mode = self.mode_var.get()
+        if selected_mode == "Create Mode":
+            interactive_plot.toggle_create_mode()
+            print("Create Mode Selected")
+
+        elif selected_mode == "Drag Mode":
+            interactive_plot.toggle_drag_mode()
+            print("Edit Mode Selected")
+
+        elif selected_mode == "Delete Mode":
+            print("View Mode Selected")
+
     '''=========================================================
     The Signal Processing Page,
     There are 2 buttons

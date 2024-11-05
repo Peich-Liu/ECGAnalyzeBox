@@ -297,6 +297,45 @@ def calculateApSignalProperties(signal, fs):
     }
     
     return properties
+def calculateEcgSignalRangeProperties(signal, fs, selected_ranges):
+    print("selected_ranges",selected_ranges)
+    results = {}
+
+    for index, (start, end) in selected_ranges.items():
+        segment = signal[start:end]
+
+        #under constraction
+
+        #0. RR interval
+        peaks, _ = find_peaks(segment, distance=200)
+        rrIntervalSamples = np.diff(peaks)
+        samplingRate = fs
+        rrIntervalsSecond = rrIntervalSamples / samplingRate
+
+        # 1. Mean Heart Rate (HR)
+        hr = 60 / rrIntervalsSecond
+        meanHR = np.mean(hr)
+
+        # 2. SDNN (Standard deviation of RR intervals)
+        sdnn = np.std(rrIntervalsSecond)
+
+        # 3. RMSSD (Root Mean Square of Successive Differences)
+        rrDiff = np.diff(rrIntervalsSecond)  # Differences between successive RR intervals
+        rmssd = np.sqrt(np.mean(rrDiff**2))
+
+        # 4. SD1/SD2, put here temporily 
+        sd1, sd2, rr_mean = calculate_sd1_sd2(rrIntervalSamples)
+        figure = plot_poincare(rrIntervalSamples, sd1, sd2, rr_mean)
+
+        results[index] = {
+            # "RR Interval Second": rrIntervalsSecond,
+            "Heart Rate":meanHR,
+            "SDNN":sdnn,
+            "RMSSD":rmssd,
+        }
+
+        
+    return results, figure
 
 def calculateApSignalRangeProperties(signal, fs, selected_ranges):
     """

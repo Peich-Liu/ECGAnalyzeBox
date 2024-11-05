@@ -32,6 +32,8 @@ class CBATools:
         notebook.pack(fill=tk.BOTH, expand=True)
 
         self.observer.subscribe(self.return_range)
+        self.observer.subscribe(self.update_labels_on_change)
+
         # self.observer.subscribe(calculate_variance)
 
         load_data_page_components = self.guiWindow.create_load_data_page(
@@ -86,8 +88,8 @@ class CBATools:
                 self,
                 self.fs,
                 time_domain_page_components["properties_frame_ecg"],
-                time_domain_page_components["sd_canvas_frame"]
-
+                time_domain_page_components["sd_canvas_frame"],
+                self.range
             ),
             lambda: tda.calculateApTimeDomainValue(
                 self,
@@ -134,6 +136,16 @@ class CBATools:
             if self._ecg_signal is not None and self._ap_signal is not None:
                 # 如果两个信号都有数据，则更新绘图
                 self.guiWindow.interactive_plot.plot_signals(self._ecg_signal, self._ap_signal)
+
+    # Update labels when new data is available
+    def update_labels_on_change(self, range):
+        for key, (start, end) in range.items():
+            print(f"Channel {key}: Start = {start}, End = {end}")
+
+        ecg_result = range
+        # ap_result = data.get("ap_result", "No Data")
+        self.guiWindow.ecg_result_label.config(text=f"Window Information: {ecg_result}")
+        # self.guiWindow.ap_result_label.config(text=f"AP Time Domain Result: {ap_result}")
 
     def update_ecg_signal(self, signal, sampling_rate):
         self.ecg_signal = signal
