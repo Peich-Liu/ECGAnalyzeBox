@@ -139,13 +139,12 @@ class CBATools:
 
     # Update labels when new data is available
     def update_labels_on_change(self, range):
-        for key, (start, end) in range.items():
-            print(f"Channel {key}: Start = {start}, End = {end}")
+        # for key, range in range.items():
+        #     print(f"Channel {key}: {range}")
+        tda.calculateApTimeDomainValue(self, self.fs, self.guiWindow.dataLoader_properties_frame, range)
 
-        ecg_result = range
-        # ap_result = data.get("ap_result", "No Data")
-        self.guiWindow.ecg_result_label.config(text=f"Window Information: {ecg_result}")
-        # self.guiWindow.ap_result_label.config(text=f"AP Time Domain Result: {ap_result}")
+        # ecg_result = range
+        # self.guiWindow.ecg_result_label.config(text=f"Window Information: {ecg_result}")
 
     def update_ecg_signal(self, signal, sampling_rate):
         self.ecg_signal = signal
