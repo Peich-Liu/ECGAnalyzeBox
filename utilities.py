@@ -23,6 +23,7 @@ from tkinter import filedialog, simpledialog, messagebox
 from tkinter import ttk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 from matplotlib.patches import Rectangle
+from datetime import datetime
 
 def bandPass(data, zi, lowCut, highCut, fs, order=4):
     nyq = fs
@@ -297,12 +298,24 @@ def calculateApSignalProperties(signal, fs):
     }
     
     return properties
+# def convert_timestamp_to_index(timestamp, fs):
+#     # 假设时间戳格式是 "%H:%M:%S"
+#     time_format = "%H:%M:%S"
+#     time_in_seconds = (datetime.strptime(timestamp, time_format) - datetime(1900, 1, 1)).total_seconds()
+#     return int(time_in_seconds * fs)
+
 def calculateEcgSignalRangeProperties(signal, fs, selected_ranges):
-    print("selected_ranges",selected_ranges)
+    # print("selected_ranges",selected_ranges)
     results = {}
 
     for index, (start, end) in selected_ranges.items():
+        # 将时间戳转换为索引
         segment = signal[start:end]
+
+
+        # start_idx = convert_timestamp_to_index(start, fs)
+        # end_idx = convert_timestamp_to_index(end, fs)
+        # segment = signal[start_idx:end_idx]
 
         #under constraction
 
@@ -355,6 +368,11 @@ def calculateApSignalRangeProperties(signal, fs, selected_ranges):
     for index, (start, end) in selected_ranges.items():
         # 提取当前选框的信号片段
         segment = signal[start:end]
+        # 将时间戳转换为索引
+        # start_idx = convert_timestamp_to_index(start, fs)
+        # end_idx = convert_timestamp_to_index(end, fs)
+        
+        # segment = signal[start_idx:end_idx]
 
         # 1. Systolic and Diastolic
         sbp = np.max(segment)  # Systolic

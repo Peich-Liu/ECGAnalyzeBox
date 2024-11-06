@@ -31,10 +31,10 @@ class CBATools:
         notebook = ttk.Notebook(self.root)
         notebook.pack(fill=tk.BOTH, expand=True)
 
-        self.observer = ob.Observer()
+        self.observer = ob.Observer(self.fs)
         self.interactive_plot = vo.InteractivePlot(self.observer)
         self.guiWindow = gui.guiWindow(self.root, self.observer, self.interactive_plot)
-        self.hrv_plot = vo.HRVAnalyzer(self.guiWindow)
+        self.hrv_plot = vo.AnalyzerPlot(self.guiWindow)
 
         self.observer.subscribe(self.return_range)
         self.observer.subscribe(self.update_labels_on_change)
@@ -133,6 +133,7 @@ class CBATools:
         self.on_signal_change("ap")
 
     def return_range(self, range):
+        print("return_range observer:",range)
         self.range = range
         # self.range = selection_ranges
         # print("ranges:", self.range[0][0])
@@ -155,35 +156,6 @@ class CBATools:
     def update_ap_signal(self, signal, sampling_rate):
         self.ap_signal = signal
         self.fs = sampling_rate
-
-    # def hrv_analysis(self, range):
-    #     x = range[0][0]
-    #     hrv = self.parameters['0']['ECG']['Heart Rate']
-    #     fig = plt.figure()
-    #     ax = fig.add_subplot(111)
-    #     ax.plot(x, hrv, 'o') 
-    #     getFigure(fig, self.guiWindow.canvas_hrv_frame)
-    #     # pass
-    # def update_range_maxmin(self, range):
-    #     # 获取 range[0] 的最大值和最小值
-
-    #     range_max = max(range[0])
-    #     range_min = min(range[0])
-
-    #     if self.range_max is None or self.range_min is None:
-    #         self.range_max = range_max
-    #         self.range_min = range_min
-    #         return
-
-    #     if range_max > self.range_max:
-    #         print(f"最大值已更新：从 {self.range_max} 到 {range_max}")
-    #         self.range_max = range_max
-
-    #     if range_min < self.range_min:
-    #         print(f"最小值已更新：从 {self.range_min} 到 {range_min}")
-    #         self.range_min = range_min
-            
-
 
 
 if __name__ == "__main__":

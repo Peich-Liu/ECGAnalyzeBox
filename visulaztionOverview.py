@@ -9,8 +9,11 @@ from matplotlib.patches import Rectangle
 import numpy as np
 from utilities import *
 import time
-'''画图还有点问题，好像是坐标轴搞错了，明天改一下'''
-class HRVAnalyzer:
+import numpy as np
+import matplotlib.dates as mdates
+from datetime import datetime, timedelta
+
+class AnalyzerPlot:
     def __init__(self, gui_window):
         self.guiWindow = gui_window
         self.range_max = None
@@ -29,25 +32,55 @@ class HRVAnalyzer:
         self.canvas.get_tk_widget().pack(side="top", fill="both", expand=True)
 
     def hrv_analysis(self, range):
-        # 假设 range[0][0] 表示时间点，HRV 是对应的心率变异值
-        x = range[0][0]
-        hrv = self.parameters['0']['ECG']['Heart Rate']
+        print("range[0][0], self.parameters:",range[0][0], self.parameters)
+        # x = range[0][0]
+        # 获取采样点并计算相对时间
+        sample_point = range[0][0]
+        time_delta = timedelta(seconds=sample_point / 250)  # 将采样点转换为时间差
+
+        # 将起始时间设为 `datetime` 对象
+        self.start_time = datetime.strptime("00:00:00", "%H:%M:%S")
+
+        # 计算该采样点的实际时间
+        x = self.start_time + time_delta
+        hrv = float(self.parameters['0']['ECG']['Heart Rate'])
 
         # 将新的时间点和 HRV 值添加到序列中
         self.time_series.append(x)
         self.hrv_values.append(hrv)
 
-        # 清除并更新图形
+        # 清除旧图像
         self.ax.clear()
+
+        print("self.hrv_values",x)
+
+        # 手动设置 y 轴范围，确保所有数据点按正确大小顺序显示
+        # y_min = min(self.hrv_values) - 1  # 设定最小范围并加一些边距
+        # y_max = max(self.hrv_values) + 1  # 设定最大范围并加一些边距
+        # self.ax.set_ylim(y_min, y_max)
+
+        # 绘制已经存在的时间序列数据
         self.ax.plot(self.time_series, self.hrv_values, '-o', label="HRV Time Series")
+
+        # 单独标记最新的点
+        self.ax.plot(x, hrv, 'ro', label="New Point")
+
+        # 设置 x 轴格式为 HH:MM:SS
+        self.ax.xaxis.set_major_formatter(mdates.DateFormatter("%H:%M:%S"))
+        self.ax.xaxis.set_major_locator(mdates.AutoDateLocator())
+
+        # 设置轴标签和图例
         self.ax.set_xlabel("Time")
-        self.ax.set_ylabel("HRV")
+        self.ax.set_ylabel("Heart Rate")
         self.ax.legend()
+        
+        self.canvas.draw()  # 刷新 Canvas 显示最新的图形
 
         getFigure(self.fig, self.guiWindow.canvas_hrv_frame)
 
     def update_range_maxmin(self, range):
         # 获取 range[0] 的最大值和最小值
+        print("update_range_maxmin", range)
         range_max = max(range[0])
         range_min = min(range[0])
 
@@ -90,7 +123,10 @@ class InteractivePlot:
         self.is_dragging = False
         self.selected_index = None  # 当前被选中的矩形索引
         self.start_x = None
+
         self.create_mode = False  # 控制是否允许创建新矩形
+        self.selected_start = {}
+        self.selected_end = {}
         self.selection_ranges = {}  # 存储选择的范围
         self.current_index = 0  # 索引计数器
         self.last_update_time = 0  # 初始化最后一次更新的时间戳
@@ -104,18 +140,37 @@ class InteractivePlot:
         self.toolbar.update()
         canvas.get_tk_widget().pack(side="top", fill="both", expand=True)
 
-    def plot_signals(self, ecg_data, ap_data):
+    def plot_signals(self, ecg_data, ap_data, start_time="00:00:00", sample_interval=0.004):
         """更新绘图内容"""
         self.ax1.clear()
         self.ax2.clear()
-        x = np.arange(len(ecg_data))
-        self.ax1.plot(x, ecg_data, label="ECG Signal")
+        # 将起始时间转化为 datetime 对象
+        start_datetime = datetime.strptime(start_time, "%H:%M:%S")
+        
+        # 创建 x 轴的时间列表
+        time_points = [start_datetime + timedelta(seconds=i * sample_interval) for i in range(len(ecg_data))]
+        
+        # 绘制 ECG 数据
+        self.ax1.plot(time_points, ecg_data, label="ECG Signal")
         self.ax1.set_ylabel("ECG Amplitude")
         self.ax1.legend()
-        self.ax2.plot(x, ap_data, label="AP Signal", color="orange")
-        self.ax2.set_xlabel("Time (samples)")
+        
+        # 绘制 AP 数据
+        self.ax2.plot(time_points, ap_data, label="AP Signal", color="orange")
+        self.ax2.set_xlabel("Time (HH:MM:SS)")
         self.ax2.set_ylabel("AP Amplitude")
         self.ax2.legend()
+        
+        # 设置 x 轴格式
+        self.ax1.xaxis.set_major_formatter(mdates.DateFormatter("%H:%M:%S"))
+        self.ax2.xaxis.set_major_formatter(mdates.DateFormatter("%H:%M:%S"))
+        
+        # 自动格式化 x 轴时间刻度
+        self.ax1.xaxis.set_major_locator(mdates.SecondLocator(interval=10))  # 设置为每 10 秒一个刻度
+        self.ax2.xaxis.set_major_locator(mdates.SecondLocator(interval=10))  # 设置为每 10 秒一个刻度
+
+        # 绘图更新
+        self.fig.autofmt_xdate()  # 自动旋转日期标签
         self.fig.canvas.draw()
 
     def toggle_create_mode(self):
@@ -140,6 +195,11 @@ class InteractivePlot:
         if self.create_mode:
             self.is_drawing = True
             self.start_x = event.xdata
+
+            selected_time = mdates.num2date(event.xdata)
+            self.selected_start[self.current_index] = selected_time.strftime("%H:%M:%S")
+            print("self.selected_start[self.current_index]",self.selected_start[self.current_index])
+
             rect1 = Rectangle((self.start_x, self.ax1.get_ylim()[0]), 0, np.diff(self.ax1.get_ylim())[0],
                               edgecolor='r', facecolor='none')
             rect2 = Rectangle((self.start_x, self.ax2.get_ylim()[0]), 0, np.diff(self.ax2.get_ylim())[0],
@@ -148,20 +208,25 @@ class InteractivePlot:
             self.ax2.add_patch(rect2)
             self.selection_ranges[self.current_index] = (rect1, rect2)
             self.selected_index = self.current_index
-            self.current_index += 1
+
 
         else:  
             for index, (rect1, rect2) in self.selection_ranges.items():
-                print("self.selection_ranges = ", self.selection_ranges)
-                print("rect1,rect2 = ", rect1, rect2)
+                # print("self.selection_ranges = ", self.selection_ranges)
+                # print("rect1,rect2 = ", rect1, rect2)
                 if rect1.contains(event)[0] or rect2.contains(event)[0]:  # 如果在框框内
                     self.is_dragging = True
                     self.selected_index = index
                     self.start_x = event.xdata - rect1.get_x()  # 记录点击位置相对于矩形的偏移
+                    selected_time = mdates.num2date(event.xdata)
+                    self.selected_start[self.current_index] = selected_time.strftime("%H:%M:%S")
+                    print("self.selected_start[self.current_index]",self.selected_start[self.current_index])
                     return
 
     def on_drag(self, event):
         """鼠标拖动事件处理"""
+
+            
         if event.inaxes not in [self.ax1, self.ax2]:
             return
 
@@ -173,6 +238,7 @@ class InteractivePlot:
             rect2.set_width(width)
             self.fig.canvas.draw()
 
+
         elif self.is_dragging and not self.create_mode:
             # 正在拖动已有的矩形
             rect1, rect2 = self.selection_ranges[self.selected_index]
@@ -183,30 +249,43 @@ class InteractivePlot:
 
     def on_release(self, event):
         """鼠标松开事件处理"""
+        # if self.create_mode:
+        #     selected_time = mdates.num2date(event.xdata)# update end
+        #     self.selected_end[self.current_index] = selected_time.strftime("%H:%M:%S")
+
+        #     self.current_index += 1
+
         if self.is_drawing:
             # 完成矩形创建
             self.is_drawing = False
+            selected_time = mdates.num2date(event.xdata)# update end
+            self.selected_end[self.current_index] = selected_time.strftime("%H:%M:%S")
 
         elif self.is_dragging:
             # 完成矩形拖动
             self.is_dragging = False
             self.selected_index = None
+            selected_time = mdates.num2date(event.xdata)# update end
+            self.selected_end[self.current_index] = selected_time.strftime("%H:%M:%S")
         
         # 获取更新的选择范围并通知所有订阅者
         updated_ranges = self.get_selection_ranges()
         # self.selection_ranges = updated_ranges
         self.observer.notify(updated_ranges)  # 通知观察者
 
-
     def get_selection_ranges(self):
-        """返回所有选择的范围信息，确保 rect1 和 rect2 是 Rectangle 对象"""
         selection_ranges = {}
-        for index, (rect1, rect2) in self.selection_ranges.items():
-            if isinstance(rect1, Rectangle) and isinstance(rect2, Rectangle):
-                selection_ranges[index] = (
-                    int(rect1.get_x()), 
-                    int(rect1.get_x() + rect1.get_width())
-                )
+
+
+        # for index, (start, end) in zip(self.selected_start.items(), self.selected_end.items()):
+        for index, start in self.selected_start.items():
+            end = self.selected_end.get(index)
+
+            # 将时间格式化为 HH:MM:SS
+            selection_ranges[index] = (start, end)
+            
+            print("selection_ranges",selection_ranges)
+
         return selection_ranges
 
 def vis_data(cba_instance, plot_instance):
