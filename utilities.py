@@ -351,17 +351,6 @@ def calculateEcgSignalRangeProperties(signal, fs, selected_ranges):
     return results, figure
 
 def calculateApSignalRangeProperties(signal, fs, selected_ranges):
-    """
-    计算选定范围内的 AP 信号属性。
-    
-    参数:
-    - signal: 完整的 AP 信号数组
-    - fs: 采样频率
-    - selected_ranges: 字典，其中每个键是选框的索引，每个值是选框的 (start, end) 范围
-    
-    返回:
-    - results: 包含每个框选区域的计算属性的字典
-    """
     print("selected_ranges",selected_ranges)
     results = {}
 
@@ -615,9 +604,12 @@ def displaySignalProperties(properties, properties_frame):
 #     print("ranges:", ranges)
 #     return ranges
 # 示例计算函数
-def calculate_mean(ranges):
-    print("计算平均值:", ranges)
-    # 执行计算逻辑...
+# def calculate_mean(ranges):
+#     print("计算平均值:", ranges)
+#     # 执行计算逻辑...
 
-def calculate_variance(ranges):
-    print("计算方差:", ranges)
+# def calculate_variance(ranges):
+#     print("计算方差:", ranges)
+
+def show_windowInfo(ranges):
+    print("show_windowInfo",ranges)

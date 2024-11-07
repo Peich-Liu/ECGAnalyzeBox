@@ -40,6 +40,7 @@ class CBATools:
         self.observer.subscribe(self.update_labels_on_change)
         self.observer.subscribe(self.hrv_plot.hrv_analysis)
         self.observer.subscribe(self.hrv_plot.update_range_maxmin)
+        self.observer.subscribe(show_windowInfo)
 
         # self.observer.subscribe(calculate_variance)
 

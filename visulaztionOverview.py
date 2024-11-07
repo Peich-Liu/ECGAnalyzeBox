@@ -1,6 +1,3 @@
-'''
-Develop here later after having the signal
-'''
 import tkinter as tk
 from tkinter import ttk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
@@ -22,7 +19,6 @@ class AnalyzerPlot:
         self.min_points = []  # 保存最小值的点
         self.time_series = []  # 保存时间序列的 x 值
         self.hrv_values = []   # 保存 HRV 值
-        # self.parameters = {'0': {'ECG': {'Heart Rate': 75}}}  # 假设的HRV数据
         self.parameters = None
 
         # 初始化图形和Canvas
@@ -32,8 +28,7 @@ class AnalyzerPlot:
         self.canvas.get_tk_widget().pack(side="top", fill="both", expand=True)
 
     def hrv_analysis(self, range):
-        print("range[0][0], self.parameters:",range[0][0], self.parameters)
-        # x = range[0][0]
+        print("hrv_analysis, range[0][0]:",range)
         # 获取采样点并计算相对时间
         sample_point = range[0][0]
         time_delta = timedelta(seconds=sample_point / 250)  # 将采样点转换为时间差
@@ -54,24 +49,19 @@ class AnalyzerPlot:
 
         print("self.hrv_values",x)
 
-        # 手动设置 y 轴范围，确保所有数据点按正确大小顺序显示
-        # y_min = min(self.hrv_values) - 1  # 设定最小范围并加一些边距
-        # y_max = max(self.hrv_values) + 1  # 设定最大范围并加一些边距
-        # self.ax.set_ylim(y_min, y_max)
-
         # 绘制已经存在的时间序列数据
-        self.ax.plot(self.time_series, self.hrv_values, '-o', label="HRV Time Series")
+        self.ax.plot(self.time_series, self.hrv_values, '-o', label="Heart Rate Time Series")
 
         # 单独标记最新的点
-        self.ax.plot(x, hrv, 'ro', label="New Point")
+        self.ax.plot(x, hrv, 'ro', label="Current Point")
 
         # 设置 x 轴格式为 HH:MM:SS
         self.ax.xaxis.set_major_formatter(mdates.DateFormatter("%H:%M:%S"))
         self.ax.xaxis.set_major_locator(mdates.AutoDateLocator())
 
         # 设置轴标签和图例
-        self.ax.set_xlabel("Time")
-        self.ax.set_ylabel("Heart Rate")
+        self.ax.set_xlabel("Time (HH:MM:SS)")
+        self.ax.set_ylabel("Heart Rate (BPM)")
         self.ax.legend()
         
         self.canvas.draw()  # 刷新 Canvas 显示最新的图形
@@ -103,6 +93,10 @@ class AnalyzerPlot:
             self.range_min = range_min
             self.min_points.append((range[0][0], range_min))  # 添加新的最小值点
             self.hrv_analysis(range)  # 更新图形
+
+
+
+
 
 
 
@@ -152,13 +146,13 @@ class InteractivePlot:
         
         # 绘制 ECG 数据
         self.ax1.plot(time_points, ecg_data, label="ECG Signal")
-        self.ax1.set_ylabel("ECG Amplitude")
+        self.ax1.set_ylabel("ECG Amplitude(mV)")
         self.ax1.legend()
         
         # 绘制 AP 数据
         self.ax2.plot(time_points, ap_data, label="AP Signal", color="orange")
         self.ax2.set_xlabel("Time (HH:MM:SS)")
-        self.ax2.set_ylabel("AP Amplitude")
+        self.ax2.set_ylabel("AP Amplitude (mmHg)")
         self.ax2.legend()
         
         # 设置 x 轴格式
@@ -249,11 +243,6 @@ class InteractivePlot:
 
     def on_release(self, event):
         """鼠标松开事件处理"""
-        # if self.create_mode:
-        #     selected_time = mdates.num2date(event.xdata)# update end
-        #     self.selected_end[self.current_index] = selected_time.strftime("%H:%M:%S")
-
-        #     self.current_index += 1
 
         if self.is_drawing:
             # 完成矩形创建

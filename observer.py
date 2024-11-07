@@ -21,6 +21,8 @@ class Observer:
     def convert_to_sample_points(self, data):
         """将时间范围格式的数据转换为采样点格式"""
         sample_point_ranges = {}
+        print("convert_to_sample_points(start,end, range)", data)
+
         for index, (start, end) in data.items():
             # print("convert_to_sample_points",data)
             # 假设时间格式是 "%H:%M:%S"
@@ -35,7 +37,6 @@ class Observer:
             end_sample = int(end_seconds * self.fs)
   
             sample_point_ranges[index] = (start_sample, end_sample)
-            print("convert_to_sample_points(start,end, range)",start_sample, end_sample, sample_point_ranges[index])
 
         return sample_point_ranges
 
