@@ -19,7 +19,7 @@ def calculate_rr_intervals(ecg_signal, sampling_rate=1000):
     rr_intervals = np.diff(peaks) / sampling_rate * 1000  # Convert to milliseconds
     return rr_intervals, peaks
 
-sampling_rate = 1000
+sampling_rate = 250
 rr_intervals, peaks = calculate_rr_intervals(ecgSignal, sampling_rate)
 
 # ---------------------------- Quality Check ----------------------------
@@ -115,6 +115,23 @@ def correct_hrv_metrics(rr_intervals):
     plt.title('Comparison of Original and Corrected HF Power')
     plt.show()
     
-    return cv_sdnn, cv_rmssd, cv_hf
-cv_sdnn, cv_rmssd, cv_hf = correct_hrv_metrics(rr_intervals)
+    return cv_sdnn, cv_rmssd, cv_hf, sdnn
 
+
+cv_sdnn, cv_rmssd, cv_hf, sdnn = correct_hrv_metrics(rr_intervals)
+
+
+# Step 1: 计算 HR (以 bpm 为单位)
+hr_values = 60000 / rr_intervals  # HR values in bpm based on RR intervals in ms
+
+# Step 2: 计算 SDNN (RR intervals 的标准差，已经计算)
+# sdnn = np.std(rr_intervals)
+
+# Step 3: 计算相关性
+# 使用 NumPy 计算 SDNN 和 HR 的皮尔逊相关系数
+correlation = np.corrcoef([sdnn] * len(hr_values), hr_values)[0, 1]
+correlation_cv = np.corrcoef([cv_sdnn] * len(hr_values), hr_values)[0, 1]
+
+
+print(f"SDNN and HR correlation: {correlation:.2f}")
+print(f"cvSDNN and HR correlation: {correlation_cv:.2f}")

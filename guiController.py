@@ -69,7 +69,7 @@ class guiWindow:
         ttk.Label(ecg_frame, text="End Sample:").grid(row=1, column=4, padx=5, pady=5)
         ecg_end_entry = ttk.Entry(ecg_frame)
         ecg_end_entry.grid(row=1, column=5, padx=5, pady=5)
-        ecg_end_entry.insert(0, "50000")
+        ecg_end_entry.insert(0, "100000")
 
         load_ecg_button = ttk.Button(ecg_frame, text="Load ECG Data", command=load_ecg_command)
         load_ecg_button.grid(row=1, column=6, padx=5, pady=5)
