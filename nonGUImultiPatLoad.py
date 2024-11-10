@@ -7,7 +7,7 @@ from scipy import signal
 import pandas as pd
 from scipy.stats import pearsonr
 
-patient_id = 'f2o01'
+patient_id = 'f2o02'
 data_directory = r'C:\Users\60427\Desktop\fantasia-database-1.0.0/'
 records, annotations = readPatientRecords2(patient_id, data_directory)
 start = 0
