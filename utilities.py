@@ -23,6 +23,7 @@ from tkinter import filedialog, simpledialog, messagebox
 from tkinter import ttk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 from matplotlib.patches import Rectangle
+from datetime import datetime
 
 def bandPass(data, zi, lowCut, highCut, fs, order=4):
     nyq = fs
@@ -297,6 +298,92 @@ def calculateApSignalProperties(signal, fs):
     }
     
     return properties
+# def convert_timestamp_to_index(timestamp, fs):
+#     # 假设时间戳格式是 "%H:%M:%S"
+#     time_format = "%H:%M:%S"
+#     time_in_seconds = (datetime.strptime(timestamp, time_format) - datetime(1900, 1, 1)).total_seconds()
+#     return int(time_in_seconds * fs)
+
+def calculateEcgSignalRangeProperties(signal, fs, selected_ranges):
+    # print("selected_ranges",selected_ranges)
+    results = {}
+
+    for index, (start, end) in selected_ranges.items():
+        # 将时间戳转换为索引
+        segment = signal[start:end]
+
+
+        # start_idx = convert_timestamp_to_index(start, fs)
+        # end_idx = convert_timestamp_to_index(end, fs)
+        # segment = signal[start_idx:end_idx]
+
+        #under constraction
+
+        #0. RR interval
+        peaks, _ = find_peaks(segment, distance=200)
+        rrIntervalSamples = np.diff(peaks)
+        samplingRate = fs
+        rrIntervalsSecond = rrIntervalSamples / samplingRate
+
+        # 1. Mean Heart Rate (HR)
+        hr = 60 / rrIntervalsSecond
+        meanHR = np.mean(hr)
+
+        # 2. SDNN (Standard deviation of RR intervals)
+        sdnn = np.std(rrIntervalsSecond)
+
+        # 3. RMSSD (Root Mean Square of Successive Differences)
+        rrDiff = np.diff(rrIntervalsSecond)  # Differences between successive RR intervals
+        rmssd = np.sqrt(np.mean(rrDiff**2))
+
+        # 4. SD1/SD2, put here temporily 
+        sd1, sd2, rr_mean = calculate_sd1_sd2(rrIntervalSamples)
+        figure = plot_poincare(rrIntervalSamples, sd1, sd2, rr_mean)
+
+        results[index] = {
+            # "RR Interval Second": rrIntervalsSecond,
+            "Heart Rate":f"{meanHR:.2f}",
+            "SDNN":f"{sdnn:.2f}",
+            "RMSSD":f"{rmssd:.2f}",
+        }
+
+        
+    return results, figure
+
+def calculateApSignalRangeProperties(signal, fs, selected_ranges):
+    print("selected_ranges",selected_ranges)
+    results = {}
+
+    for index, (start, end) in selected_ranges.items():
+        # 提取当前选框的信号片段
+        segment = signal[start:end]
+        # 将时间戳转换为索引
+        # start_idx = convert_timestamp_to_index(start, fs)
+        # end_idx = convert_timestamp_to_index(end, fs)
+        
+        # segment = signal[start_idx:end_idx]
+
+        # 1. Systolic and Diastolic
+        sbp = np.max(segment)  # Systolic
+        dbp = np.min(segment)  # Diastolic
+        pp = sbp - dbp
+
+        # 2. Mean arterial pressure
+        map_value = (sbp + 2 * dbp) / 3
+
+        # 3. SD of Pressures
+        sd = np.std(segment)
+
+        # 将每个框选区域的计算结果存储到字典中
+        results[index] = {
+            "Systolic": f"{sbp:.2f}",
+            "Diastolic": f"{dbp:.2f}",
+            "Mean arterial pressure": f"{map_value:.2f}",
+            "SD of Pressures": f"{sd:.2f}",
+        }
+        # print("resultsAP", results)
+
+    return results
 
 def PSDAnalyze(ecgSignal, fs):
     peaks, info = nk.ecg_peaks(ecgSignal, sampling_rate=fs, correct_artifacts=True)
@@ -502,3 +589,27 @@ def plot_can_interact(cba_instance, canvas_frame):
     canvas.mpl_connect("motion_notify_event", on_drag)
     canvas.mpl_connect("button_release_event", on_release)
 
+def displaySignalProperties(properties, properties_frame):
+    # Clear previous properties if they exist
+    for widget in properties_frame.winfo_children():
+        widget.destroy()
+
+    # Display signal properties
+    row = 0
+    for key, value in properties.items():
+        ttk.Label(properties_frame, text=f"{key}: {value}").grid(row=row, column=0, padx=10, pady=5, sticky=tk.W)
+        row += 1
+
+# def return_range(ranges):
+#     print("ranges:", ranges)
+#     return ranges
+# 示例计算函数
+# def calculate_mean(ranges):
+#     print("计算平均值:", ranges)
+#     # 执行计算逻辑...
+
+# def calculate_variance(ranges):
+#     print("计算方差:", ranges)
+
+def show_windowInfo(ranges):
+    print("show_windowInfo",ranges)

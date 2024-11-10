@@ -12,6 +12,7 @@ data_directory = r'C:\Users\60427\Desktop\fantasia-database-1.0.0/'
 records, annotations = readPatientRecords2(patient_id, data_directory)
 start = 0
 end = 100000
+end = 100000
 ecgSignal = concatenateECG(records, start, end)
 
 # Calculate RR Intervals from ECG Signal

@@ -6,6 +6,7 @@ import timeDomainAnalysis as tda
 import freqDomainAnalysis as fda
 import visulaztionOverview as vo
 import guiController as gui
+import observer as ob
 from utilities import *
 
 
@@ -15,17 +16,33 @@ class CBATools:
         self.root.title("ECG Signal Processing GUI")
         self.root.geometry("1200x1000")
 
-        self.guiWindow = gui.guiWindow(self.root)
-
         self.whole_signal = None
         self.ecg_signal = None
         self.ap_signal = None
-
         self.selected_channel_signal = None 
+        self.range = None
+        # self.parameters = None
+
+        self.range_min = None
+        self.range_max = None
+
         self.fs = 250 #Change it after get fs 
 
         notebook = ttk.Notebook(self.root)
         notebook.pack(fill=tk.BOTH, expand=True)
+
+        self.observer = ob.Observer(self.fs)
+        self.interactive_plot = vo.InteractivePlot(self.observer)
+        self.guiWindow = gui.guiWindow(self.root, self.observer, self.interactive_plot)
+        self.hrv_plot = vo.AnalyzerPlot(self.guiWindow)
+
+        self.observer.subscribe(self.return_range)
+        self.observer.subscribe(self.update_labels_on_change)
+        self.observer.subscribe(self.hrv_plot.hrv_analysis)
+        self.observer.subscribe(self.hrv_plot.update_range_maxmin)
+        self.observer.subscribe(show_windowInfo)
+
+        # self.observer.subscribe(calculate_variance)
 
         load_data_page_components = self.guiWindow.create_load_data_page(
             # notebook,
@@ -79,13 +96,14 @@ class CBATools:
                 self,
                 self.fs,
                 time_domain_page_components["properties_frame_ecg"],
-                time_domain_page_components["sd_canvas_frame"]
-
+                time_domain_page_components["sd_canvas_frame"],
+                self.range
             ),
             lambda: tda.calculateApTimeDomainValue(
                 self,
                 self.fs,
-                time_domain_page_components["properties_frame_ap"]
+                time_domain_page_components["properties_frame_ap"],
+                self.range
             )
         )
 
@@ -115,11 +133,22 @@ class CBATools:
         self._ap_signal = value
         self.on_signal_change("ap")
 
+    def return_range(self, range):
+        print("return_range observer:",range)
+        self.range = range
+        # self.range = selection_ranges
+        # print("ranges:", self.range[0][0])
+        # return selection_ranges
+
     def on_signal_change(self, signal_type):
         if signal_type == "ecg" or signal_type == "ap":
             if self._ecg_signal is not None and self._ap_signal is not None:
                 # 如果两个信号都有数据，则更新绘图
                 self.guiWindow.interactive_plot.plot_signals(self._ecg_signal, self._ap_signal)
+
+    # Update labels when new data is available
+    def update_labels_on_change(self, range):
+        tda.calculateApandEcgTimeDomainValue(self, self.fs, self.guiWindow.dataLoader_properties_frame, range)
 
     def update_ecg_signal(self, signal, sampling_rate):
         self.ecg_signal = signal
@@ -128,6 +157,7 @@ class CBATools:
     def update_ap_signal(self, signal, sampling_rate):
         self.ap_signal = signal
         self.fs = sampling_rate
+
 
 if __name__ == "__main__":
     root = tk.Tk()
