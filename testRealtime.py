@@ -101,6 +101,10 @@ for i in range(len(ecg)):
         # 设置 X 轴范围，使其随着窗口滑动
         ax[0].set_xlim(start_idx, end_idx - 1)
         ax[1].set_xlim(start_idx, end_idx - 1)
+        ax[0].set_xlabel("time (sample)")
+        ax[1].set_xlabel("time (sample)")
+        ax[0].set_ylabel("ecg (mv)")
+        ax[1].set_ylabel("rr interval (ms)")
 
         # 更新轴的范围
         ax[0].relim()
