@@ -123,60 +123,6 @@ class InteractivePlot:
         self.last_press_time = 0  # 上次鼠标按下事件的时间戳
         self.debounce_interval = 0.5  # 去抖时间间隔（秒）
 
-        # self.slider_ax = self.fig.add_axes([0.15, 0.02, 0.7, 0.03], facecolor='lightgoldenrodyellow')
-        # self.slider = Slider(self.slider_ax, 'Time', 0, 1000, valinit=0, valstep=1)
-
-        # # 添加事件
-        # self.slider.on_changed(self.update_plot)
-
-    # def add_toolbar(self, canvas, canvas_frame):
-    #     """添加导航工具栏"""
-    #     self.toolbar = NavigationToolbar2Tk(canvas, canvas_frame)
-    #     self.toolbar.update()
-    #     canvas.get_tk_widget().pack(side="top", fill="both", expand=True)
-
-
-    # def plot_signals(self, ecg_data, ap_data, start_time="00:00:00", sample_interval=0.004):
-    #     """更新绘图内容"""
-    #     self.ecg_data = ecg_data
-    #     self.ap_data = ap_data
-
-    #     start_datetime = datetime.strptime(start_time, "%H:%M:%S")
-    #     self.time_points = [start_datetime + timedelta(seconds=i * sample_interval) for i in range(len(ecg_data))]
-
-    #     # 绘制 ECG 数据
-    #     self.ax1.clear()
-    #     self.ax1.plot(self.time_points, ecg_data, label="ECG Signal")
-    #     self.ax1.set_ylabel("ECG Amplitude(mV)")
-    #     self.ax1.legend()
-
-    #     # 绘制 AP 数据
-    #     self.ax2.clear()
-    #     self.ax2.plot(self.time_points, ap_data, label="AP Signal", color="orange")
-    #     self.ax2.set_xlabel("Time (HH:MM:SS)")
-    #     self.ax2.set_ylabel("AP Amplitude (mmHg)")
-    #     self.ax2.legend()
-
-    #     # 设置 x 轴格式
-    #     self.ax1.xaxis.set_major_formatter(mdates.DateFormatter("%H:%M:%S"))
-    #     self.ax2.xaxis.set_major_formatter(mdates.DateFormatter("%H:%M:%S"))
-
-    #     # 初始显示范围设置为从第一个时间点起，显示 100 个样本
-    #     self.ax1.set_xlim(self.time_points[0], self.time_points[min(100, len(self.time_points) - 1)])
-        
-    #     # 绘图更新
-    #     self.fig.autofmt_xdate()
-    #     self.fig.canvas.draw()
-
-    # def update_plot(self, val):
-    #     """更新图像显示范围"""
-    #     # 根据滑动条的位置调整 x 轴范围
-    #     window_size = 100  # 设定窗口大小为 100 个样本
-    #     start_index = int(val)
-    #     end_index = min(start_index + window_size, len(self.time_points) - 1)
-
-    #     self.ax1.set_xlim(self.time_points[start_index], self.time_points[end_index])
-    #     self.fig.canvas.draw()
     def plot_signals(self, ecg_data, ap_data, start_time="00:00:00", sample_interval=0.004):
         """更新绘图内容"""
         self.ax1.clear()
@@ -203,8 +149,8 @@ class InteractivePlot:
         self.ax2.xaxis.set_major_formatter(mdates.DateFormatter("%H:%M:%S"))
         
         # 自动格式化 x 轴时间刻度
-        self.ax1.xaxis.set_major_locator(mdates.SecondLocator(interval=10))  # 设置为每 10 秒一个刻度
-        self.ax2.xaxis.set_major_locator(mdates.SecondLocator(interval=10))  # 设置为每 10 秒一个刻度
+        self.ax1.xaxis.set_major_locator(mdates.SecondLocator(interval=1000))  # 设置为每 10 秒一个刻度
+        self.ax2.xaxis.set_major_locator(mdates.SecondLocator(interval=1000))  # 设置为每 10 秒一个刻度
 
         # 绘图更新
         self.fig.autofmt_xdate()  # 自动旋转日期标签

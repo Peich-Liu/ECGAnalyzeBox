@@ -7,7 +7,9 @@ import freqDomainAnalysis as fda
 import visulaztionOverview as vo
 import guiController as gui
 import observer as ob
+import realtimeDataLoader as rtdl
 from utilities import *
+from pylsl import StreamInfo, StreamOutlet
 
 
 
@@ -22,6 +24,8 @@ class CBATools:
         self.ap_signal = None
         self.selected_channel_signal = None 
         self.range = None
+        self.filepath = r'C:\Document\sc2024\250 kun HR.csv'
+        self.rtWindowLength = 1000
         # self.parameters = None
 
         self.range_min = None
@@ -29,11 +33,18 @@ class CBATools:
 
         self.fs = 250 #The fs is locked in 250Hz
 
+        # 初始化 LSL Stream
+        self.ecg_stream_info = StreamInfo('ECGStream', 'ECG', 1, self.fs, 'float32', 'ecg12345')
+        self.ecg_outlet = StreamOutlet(self.ecg_stream_info)
 
+        self.ap_stream_info = StreamInfo('APStream', 'AP', 1, self.fs, 'float32', 'ap12345')
+        self.ap_outlet = StreamOutlet(self.ap_stream_info)
 
         self.observer = ob.Observer(self.fs)
         self.interactive_plot = vo.InteractivePlot(self.observer)
-        self.guiWindow = gui.guiWindow(self.root, self.observer, self.interactive_plot)
+        self.rtDataLoder = rtdl.dataAnalyzer(self.filepath)
+        self.guiWindow = gui.guiWindow(self.root, self.observer, self.interactive_plot, self.rtDataLoder)
+
         # self.hrv_plot = vo.AnalyzerPlot(self.guiWindow)
 
         self.observer.subscribe(self.return_range)
@@ -46,6 +57,9 @@ class CBATools:
 
         load_data_page_components = self.guiWindow.create_load_data_page(
             lambda: dl.load_data(
+            self,
+            ),
+            lambda: dl.load_rt_data(
             self,
             ),
 
@@ -95,6 +109,9 @@ class CBATools:
                 self.fs,
                 frequency_domain_page_components["freq_canvas_frame"]
             )
+        )
+
+        real_time_page_components = self.guiWindow.create_real_time_page(
         )
     @property
     def ecg_signal(self):
