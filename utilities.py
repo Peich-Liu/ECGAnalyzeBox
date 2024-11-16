@@ -613,3 +613,19 @@ def displaySignalProperties(properties, properties_frame):
 
 def show_windowInfo(ranges):
     print("show_windowInfo",ranges)
+
+
+
+def loadData(filePath):
+    filePath = r"C:\Document\sc2024\250 kun HR.csv"
+    data = pd.read_csv(filePath, sep=';')
+
+    data['ecg'] = data['ecg'].str.replace(',', '.').astype(float)
+    data['ecg'] = data['ecg'].fillna(0)  # 将 NaN 填充为 0
+    data['abp[mmHg]'] = data['abp[mmHg]'].str.replace(',', '.').astype(float)
+
+    # extract ECG signal
+    ecg = data['ecg'].values
+    ap = data['abp[mmHg]'].values
+
+    return ecg, ap

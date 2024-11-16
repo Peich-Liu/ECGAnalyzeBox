@@ -10,6 +10,24 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolb
 import numpy as np
 import visulaztionOverview as vo
 
+def load_data(cba_instance):
+    try:
+        # patient_id = patient_id_entry.get()
+        # start = int(start_entry.get())
+        # end = int(end_entry.get())
+        data_directory = r'C:\Document\sc2024\250 kun HR.csv'
+
+        # 加载ECG数据
+        ecg, ap = loadData(data_directory)
+        if ecg is None:
+            messagebox.showerror("Error", "Failed to read records")
+            return
+        # concatenated_signal = concatenateECG(records, start, end)
+        cba_instance.update_ecg_signal(ecg, 250)  # 设置采样率
+        cba_instance.update_ap_signal(ap, 250)
+
+    except ValueError:
+        messagebox.showerror("Input Error", "Please enter valid start and end sample values")
 def load_ecg_data(cba_instance, patient_id_entry, start_entry, end_entry):
 
     try:

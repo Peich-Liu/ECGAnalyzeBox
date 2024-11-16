@@ -34,8 +34,7 @@ def calculateApandEcgTimeDomainValue(cba_instance, fs, properties_frame, selecte
         messagebox.showerror("Error", "No signal loaded to filter. Please load data first.")
         return
     try:
-        # Calculate and display signal properties
-        # properties, sdFigure = calculateEcgSignalProperties(cba_instance.ecg_signal, fs) # The algorithm of the time domain anaylsis is here
+
         print("timeDomainAna, selected_ranges:", selected_ranges)
         properties_ecg, sdFigure = calculateEcgSignalRangeProperties(cba_instance.ecg_signal, fs, selected_ranges)
         properties_ap = calculateApSignalRangeProperties(cba_instance.ap_signal, fs, selected_ranges) # The algorithm of the time domain anaylsis is here
@@ -48,7 +47,7 @@ def calculateApandEcgTimeDomainValue(cba_instance, fs, properties_frame, selecte
                 "ECG": properties_ecg[index],
                 "AP": properties_ap[index],
             }
-        cba_instance.hrv_plot.parameters = combined_results
+        # cba_instance.hrv_plot.parameters = combined_results
         displaySignalProperties(combined_results, properties_frame)
         # getFigure(sdFigure, sd_canvas_frame)
     except ValueError:

@@ -7,7 +7,9 @@ import freqDomainAnalysis as fda
 import visulaztionOverview as vo
 import guiController as gui
 import observer as ob
+import dataLoader2 as dl2
 from utilities import *
+
 
 
 class CBATools:
@@ -26,48 +28,28 @@ class CBATools:
         self.range_min = None
         self.range_max = None
 
-        self.fs = 250 #Change it after get fs 
+        self.fs = 250 #The fs is locked in 250Hz
 
-        notebook = ttk.Notebook(self.root)
-        notebook.pack(fill=tk.BOTH, expand=True)
+
 
         self.observer = ob.Observer(self.fs)
         self.interactive_plot = vo.InteractivePlot(self.observer)
         self.guiWindow = gui.guiWindow(self.root, self.observer, self.interactive_plot)
-        self.hrv_plot = vo.AnalyzerPlot(self.guiWindow)
+        # self.hrv_plot = vo.AnalyzerPlot(self.guiWindow)
 
         self.observer.subscribe(self.return_range)
         self.observer.subscribe(self.update_labels_on_change)
-        self.observer.subscribe(self.hrv_plot.hrv_analysis)
-        self.observer.subscribe(self.hrv_plot.update_range_maxmin)
+        # self.observer.subscribe(self.hrv_plot.hrv_analysis)
+        # self.observer.subscribe(self.hrv_plot.update_range_maxmin)
         self.observer.subscribe(show_windowInfo)
 
         # self.observer.subscribe(calculate_variance)
 
         load_data_page_components = self.guiWindow.create_load_data_page(
-            # notebook,
-            lambda: dl.load_ecg_data(
+            lambda: dl.load_data(
             self,
-            load_data_page_components["patient_id_entry"],
-            load_data_page_components["start_entry"],
-            load_data_page_components["end_entry"],
             ),
-            lambda: dl.load_ap_data(
-            self,
-            load_data_page_components["patient_id_entry"],
-            load_data_page_components["start_entry"],
-            load_data_page_components["end_entry"],
-            ),
-            lambda: dl.load_ecg_data(
-            self,
-            load_data_page_components["patient_id_entry"],
-            load_data_page_components["start_entry"],
-            load_data_page_components["end_entry"],
-            ),
-            lambda: vo.vis_data(
-            self,
-            load_data_page_components["interactive_plot"],
-            ),
+
             lambda: vo.updateInteract(
             load_data_page_components["interactive_plot"],
             )

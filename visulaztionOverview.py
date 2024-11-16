@@ -9,6 +9,7 @@ import time
 import numpy as np
 import matplotlib.dates as mdates
 from datetime import datetime, timedelta
+from matplotlib.widgets import Slider
 
 class AnalyzerPlot:
     def __init__(self, gui_window):
@@ -95,12 +96,6 @@ class AnalyzerPlot:
             self.hrv_analysis(range)  # 更新图形
 
 
-
-
-
-
-
-
 class InteractivePlot:
     def __init__(self, observer):
         # self.canvas_frame = canvas_frame
@@ -128,12 +123,60 @@ class InteractivePlot:
         self.last_press_time = 0  # 上次鼠标按下事件的时间戳
         self.debounce_interval = 0.5  # 去抖时间间隔（秒）
 
-    def add_toolbar(self, canvas, canvas_frame):
-        """添加导航工具栏"""
-        self.toolbar = NavigationToolbar2Tk(canvas, canvas_frame)
-        self.toolbar.update()
-        canvas.get_tk_widget().pack(side="top", fill="both", expand=True)
+        # self.slider_ax = self.fig.add_axes([0.15, 0.02, 0.7, 0.03], facecolor='lightgoldenrodyellow')
+        # self.slider = Slider(self.slider_ax, 'Time', 0, 1000, valinit=0, valstep=1)
 
+        # # 添加事件
+        # self.slider.on_changed(self.update_plot)
+
+    # def add_toolbar(self, canvas, canvas_frame):
+    #     """添加导航工具栏"""
+    #     self.toolbar = NavigationToolbar2Tk(canvas, canvas_frame)
+    #     self.toolbar.update()
+    #     canvas.get_tk_widget().pack(side="top", fill="both", expand=True)
+
+
+    # def plot_signals(self, ecg_data, ap_data, start_time="00:00:00", sample_interval=0.004):
+    #     """更新绘图内容"""
+    #     self.ecg_data = ecg_data
+    #     self.ap_data = ap_data
+
+    #     start_datetime = datetime.strptime(start_time, "%H:%M:%S")
+    #     self.time_points = [start_datetime + timedelta(seconds=i * sample_interval) for i in range(len(ecg_data))]
+
+    #     # 绘制 ECG 数据
+    #     self.ax1.clear()
+    #     self.ax1.plot(self.time_points, ecg_data, label="ECG Signal")
+    #     self.ax1.set_ylabel("ECG Amplitude(mV)")
+    #     self.ax1.legend()
+
+    #     # 绘制 AP 数据
+    #     self.ax2.clear()
+    #     self.ax2.plot(self.time_points, ap_data, label="AP Signal", color="orange")
+    #     self.ax2.set_xlabel("Time (HH:MM:SS)")
+    #     self.ax2.set_ylabel("AP Amplitude (mmHg)")
+    #     self.ax2.legend()
+
+    #     # 设置 x 轴格式
+    #     self.ax1.xaxis.set_major_formatter(mdates.DateFormatter("%H:%M:%S"))
+    #     self.ax2.xaxis.set_major_formatter(mdates.DateFormatter("%H:%M:%S"))
+
+    #     # 初始显示范围设置为从第一个时间点起，显示 100 个样本
+    #     self.ax1.set_xlim(self.time_points[0], self.time_points[min(100, len(self.time_points) - 1)])
+        
+    #     # 绘图更新
+    #     self.fig.autofmt_xdate()
+    #     self.fig.canvas.draw()
+
+    # def update_plot(self, val):
+    #     """更新图像显示范围"""
+    #     # 根据滑动条的位置调整 x 轴范围
+    #     window_size = 100  # 设定窗口大小为 100 个样本
+    #     start_index = int(val)
+    #     end_index = min(start_index + window_size, len(self.time_points) - 1)
+
+    #     self.ax1.set_xlim(self.time_points[start_index], self.time_points[end_index])
+    #     self.fig.canvas.draw()
     def plot_signals(self, ecg_data, ap_data, start_time="00:00:00", sample_interval=0.004):
         """更新绘图内容"""
         self.ax1.clear()
@@ -216,6 +259,32 @@ class InteractivePlot:
                     self.selected_start[self.current_index] = selected_time.strftime("%H:%M:%S")
                     print("self.selected_start[self.current_index]",self.selected_start[self.current_index])
                     return
+    def on_scroll(self, event):
+        """滚动事件处理，用于缩放图表"""
+        base_scale = 1.1
+        ax = event.inaxes
+        if ax is None:
+            return
+
+        # 获取当前的 x 轴范围
+        x_min, x_max = ax.get_xlim()
+        x_range = x_max - x_min
+
+        # 缩放比例
+        if event.step > 0:
+            scale_factor = 1 / base_scale
+        elif event.step < 0:
+            scale_factor = base_scale
+        else:
+            scale_factor = 1
+
+        # 更新 x 轴范围
+        x_center = (x_min + x_max) / 2.0
+        new_x_range = x_range * scale_factor
+        ax.set_xlim([x_center - new_x_range / 2, x_center + new_x_range / 2])
+        
+        # 绘图更新
+        self.fig.canvas.draw()
 
     def on_drag(self, event):
         """鼠标拖动事件处理"""

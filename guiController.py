@@ -15,39 +15,31 @@ class guiWindow:
         
         # 创建一个Notebook容器
         self.notebook = ttk.Notebook(root)
-        self.notebook.pack(fill="both", expand=False)
-        
+        self.notebook.pack(fill="both", expand=True)
+        # self.notebook.grid(row=0, column=0, sticky="nsew")
+
         self.interactive_plot = None
         self.dataLoader_properties_frame = None
         self.ecg_result_label = None
         self.ap_result_label = None
-        self.canvas_hrv_frame = None
-        
-
-
-
+        # self.canvas_hrv_frame = None
+    
         self.plotObersever = observer
         self.interactive_plot = interactive_plot
-
-
-        
-
-    def create_load_data_page(self, load_ecg_command, load_ap_command, load_eeg_command, vis_data, interact_update):
-        '''data loader interface'''
-        load_data_page = ttk.Frame(self.notebook)
-        self.notebook.add(load_data_page, text="Load Data Page")
 
     '''=========================================================
     The Data Loading Page,
     There are 3 buttons, one mode select box, 3 text inputers
     ========================================================='''
-    def create_load_data_page(self, load_ecg_command, load_ap_command, load_eeg_command, vis_data, interact_update):
+    def create_load_data_page(self, load_data, interact_update):
         '''data loader interface'''
         load_data_page = ttk.Frame(self.notebook)
         self.notebook.add(load_data_page, text="Load Data Page")
 
         ecg_frame = ttk.Frame(load_data_page)
-        ecg_frame.pack(side=tk.TOP, fill=tk.X, padx=10, pady=10)
+        ecg_frame.pack(side="top", fill="both", expand=True)
+        # ecg_frame.pack(side=tk.TOP, fill=tk.X, padx=10, pady=10)
+
 
         ttk.Label(ecg_frame, text="Select Mode:").grid(row=0, column=0, padx=5, pady=5)
 
@@ -61,33 +53,34 @@ class guiWindow:
         ecg_patient_id_entry.grid(row=1, column=1, padx=5, pady=5)
         ecg_patient_id_entry.insert(0, "f2o01")
 
-        ttk.Label(ecg_frame, text="Start Sample:").grid(row=1, column=2, padx=5, pady=5)
-        ecg_start_entry = ttk.Entry(ecg_frame)
-        ecg_start_entry.grid(row=1, column=3, padx=5, pady=5)
-        ecg_start_entry.insert(0, "0")
+        # ttk.Label(ecg_frame, text="Start Sample:").grid(row=1, column=2, padx=5, pady=5)
+        # ecg_start_entry = ttk.Entry(ecg_frame)
+        # ecg_start_entry.grid(row=1, column=3, padx=5, pady=5)
+        # ecg_start_entry.insert(0, "0")
 
-        ttk.Label(ecg_frame, text="End Sample:").grid(row=1, column=4, padx=5, pady=5)
-        ecg_end_entry = ttk.Entry(ecg_frame)
-        ecg_end_entry.grid(row=1, column=5, padx=5, pady=5)
-        ecg_end_entry.insert(0, "100000")
+        # ttk.Label(ecg_frame, text="End Sample:").grid(row=1, column=4, padx=5, pady=5)
+        # ecg_end_entry = ttk.Entry(ecg_frame)
+        # ecg_end_entry.grid(row=1, column=5, padx=5, pady=5)
+        # ecg_end_entry.insert(0, "100000")
 
-        load_ecg_button = ttk.Button(ecg_frame, text="Load ECG Data", command=load_ecg_command)
+        load_ecg_button = ttk.Button(ecg_frame, text="Load ECG Data", command=load_data)
         load_ecg_button.grid(row=1, column=6, padx=5, pady=5)
 
-        load_ap_button = ttk.Button(ecg_frame, text="Load AP Data", command=load_ap_command)
-        load_ap_button.grid(row=1, column=7, padx=5, pady=5)
+        # load_ap_button = ttk.Button(ecg_frame, text="Load AP Data", command=load_ap_command)
+        # load_ap_button.grid(row=1, column=7, padx=5, pady=5)
 
-        visual_button = ttk.Button(ecg_frame, text="Visualize Data", command=vis_data)
-        visual_button.grid(row=1, column=8, padx=5, pady=5)
+        # visual_button = ttk.Button(ecg_frame, text="Visualize Data", command=vis_data)
+        # visual_button.grid(row=1, column=8, padx=5, pady=5)
 
         # 创建一个主容器来控制 canvas 和 properties_frame 的布局
         main_container = ttk.Frame(load_data_page)
-        main_container.pack(fill="both", expand=True)
+        main_container.pack(side="top", fill="both", expand=True)
 
         # 创建 canvas 并放置在 main_container 顶部
         canvas = FigureCanvasTkAgg(self.interactive_plot.fig, master=main_container)
-        canvas.draw()
         canvas.get_tk_widget().pack(side="top", fill="both", expand=True)
+        canvas.draw()
+
         
         # 绑定事件
         canvas.mpl_connect("button_press_event", self.interactive_plot.on_press)
@@ -97,31 +90,29 @@ class guiWindow:
         # self.canvas_hrv = FigureCanvasTkAgg()
         # self.canvas_hrv.draw()
         # self.canvas_hrv.get_tk_widget().pack(side="top", fill="both", expand=True)
-
-        self.canvas_hrv_frame = ttk.Frame(load_data_page)
-        self.canvas_hrv_frame.pack(side=tk.TOP, fill=tk.X, padx=10, pady=10)
+        # self.canvas_hrv_frame = ttk.Frame(load_data_page)
+        # self.canvas_hrv_frame.pack(side=tk.TOP, fill=tk.X, padx=10, pady=10)
 
 
 
         self.dataLoader_properties_frame = ttk.Frame(main_container)
-        self.dataLoader_properties_frame.pack(side="bottom", fill="x", padx=5, pady=5)
+        self.dataLoader_properties_frame.pack(side="top", fill="x", padx=5, pady=5)
 
         self.ecg_result_label = ttk.Label(self.dataLoader_properties_frame, text="Window Information: ")
-        self.ecg_result_label.grid(row=0, column=0, sticky="w")
+        self.ecg_result_label.grid(row=0, column=0)
 
         
         self.mode_combobox.bind("<<ComboboxSelected>>", partial(self.mode_changed_load_page, self.interactive_plot))
 
         return {
             "patient_id_entry": ecg_patient_id_entry,
-            "start_entry": ecg_start_entry,
-            "end_entry": ecg_end_entry,
             "load_ecg_button": load_ecg_button,
-            "load_ap_button": load_ap_button,
             "interactive_plot": self.interactive_plot,
             "properties_frame":self.dataLoader_properties_frame,
             "ecg_result_label":self.ecg_result_label,
             "ap_result_label":self.ap_result_label,
+            # "start_entry": ecg_start_entry,
+            # "end_entry": ecg_end_entry,
 
         }
     
@@ -175,7 +166,7 @@ class guiWindow:
         visual_button.grid(row=0, column=8, padx=5, pady=5)
         # Frame for signal visualization
         canvas_frame = ttk.Frame(signal_processing_page)
-        canvas_frame.pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True, padx=10, pady=10)
+        canvas_frame.pack(side=tk.TOP, fill=tk.BOTH, expand=True, padx=10, pady=10)
         return {
             "lowcut_entry": lowcut_entry,
             "highcut_entry": highcut_entry,
