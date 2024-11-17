@@ -1,15 +1,16 @@
 import tkinter as tk
 from tkinter import ttk
-import dataLoader as dl
-import signalProcessing as sp
-import timeDomainAnalysis as tda
-import freqDomainAnalysis as fda
-import visulaztionOverview as vo
-import guiController as gui
-import observer as ob
-import realtimeDataLoader as rtdl
-from utilities import *
 from pylsl import StreamInfo, StreamOutlet
+
+import guiDataLoader as dl
+import guiSignalProcessing as sp
+import timeDomainAnalysis as tda
+import guiFreqDomainAnalysis as fda
+import guiVisulaztionOverview as vo
+import guiController as gui
+import guiObserver as ob
+import guiRealtimeDataLoader as rtdl
+from utilities import *
 
 
 

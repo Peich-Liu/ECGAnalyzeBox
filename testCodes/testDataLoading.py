@@ -70,7 +70,7 @@ plt.plot(np.array(time_stamps)[ap_artifacts], np.array(apFilteredSignal)[ap_arti
 plt.title('Filtered AP Signal')
 plt.xlabel('Time (HH:MM:SS)')
 plt.ylabel('Amplitude')
-plt.gca().xaxis.set_major_formatter(mdates.DateFormatter("%H:%M:%S"))
+# plt.gca().xaxis.set_major_formatter(mdates.DateFormatter("%H:%M:%S"))
 plt.legend()
 
 # 子图 2: ICA 去伪影后的 ECG 信号
@@ -80,7 +80,7 @@ plt.plot(np.array(time_stamps)[ecg_artifacts], np.array(ecgFilteredSignal)[ecg_a
 plt.title('Filtered ECG Signal')
 plt.xlabel('Time (HH:MM:SS)')
 plt.ylabel('Amplitude')
-plt.gca().xaxis.set_major_formatter(mdates.DateFormatter("%H:%M:%S"))
+# plt.gca().xaxis.set_major_formatter(mdates.DateFormatter("%H:%M:%S"))
 plt.legend()
 
 plt.tight_layout()

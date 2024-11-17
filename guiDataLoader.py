@@ -8,7 +8,7 @@ import tkinter as tk
 from tkinter import messagebox, ttk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 import numpy as np
-import visulaztionOverview as vo
+import guiVisulaztionOverview as vo
 
 def load_data(cba_instance):
     try:
@@ -33,17 +33,6 @@ def load_data(cba_instance):
 
 def load_rt_data(cba_instance):
     try:
-        # patient_id = patient_id_entry.get()
-        # start = int(start_entry.get())
-        # end = int(end_entry.get())
-        # data_directory = r'C:\Document\sc2024\250 kun HR.csv'
-
-        # 加载ECG数据
-        # ecg, ap = loadData(data_directory)
-        # if ecg is None:
-        #     messagebox.showerror("Error", "Failed to read records")
-        #     return
-        # concatenated_signal = concatenateECG(records, start, end)
         cba_instance.update_ecg_signal(cba_instance.guiWindow.ecg_window, 250)  # 设置采样率
         cba_instance.update_ap_signal(cba_instance.guiWindow.ap_window, 250)
         print(len(cba_instance.guiWindow.ecg_window), len(cba_instance.guiWindow.ap_window))

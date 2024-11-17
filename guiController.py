@@ -1,9 +1,9 @@
 import tkinter as tk
 import numpy as np
 from tkinter import ttk
-import visulaztionOverview as vo
+import guiVisulaztionOverview as vo
 from functools import partial
-import observer as ob
+import guiObserver as ob
 from collections import deque
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
