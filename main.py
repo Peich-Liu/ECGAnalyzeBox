@@ -7,7 +7,7 @@ import guiSignalProcessing as sp
 import guiTimeDomainAnalysis as tda
 import guiFreqDomainAnalysis as fda
 import guiVisulaztionOverview as vo
-import guiController as gui
+import guiInterface as gui
 import guiObserver as ob
 import guiRealtimeDataLoader as rtdl
 from utilities import *
