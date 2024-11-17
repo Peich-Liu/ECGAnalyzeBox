@@ -18,6 +18,8 @@ def signalQualityEva(signalSample, signal_threshold = 1.5):
     '''
     @Gao: you can change the parameter in this function
     '''
+
+
     quality = "Good" if abs(signalSample) < signal_threshold else "Bad"
     return quality
 
@@ -55,8 +57,9 @@ with open(output_file, mode='a', newline='') as file:
     writer = csv.writer(file)
     
     for i in range(len(ecg)):
-        #simulate the rt signal
-        ecgWindow.append(ecg[i])
+        # simulate the rt signal
+        # ecg[i] --> sample point
+        # ecgWindow.append(ecg[i])
 
         #pre-processing
         filtered_ecg, zi = ziFilter(sos, ecg[i], zi)
