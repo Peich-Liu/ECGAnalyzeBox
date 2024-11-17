@@ -4,7 +4,7 @@ from pylsl import StreamInfo, StreamOutlet
 
 import guiDataLoader as dl
 import guiSignalProcessing as sp
-import timeDomainAnalysis as tda
+import guiTimeDomainAnalysis as tda
 import guiFreqDomainAnalysis as fda
 import guiVisulaztionOverview as vo
 import guiController as gui

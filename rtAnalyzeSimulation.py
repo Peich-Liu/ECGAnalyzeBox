@@ -18,7 +18,7 @@ def signalQualityEva(signalSample, signal_threshold = 1.5):
     '''
     @Gao: you can change the parameter in this function
     '''
-    quality = "Good" if abs(filtered_ecg[0]) < signal_threshold else "Bad"
+    quality = "Good" if abs(signalSample) < signal_threshold else "Bad"
     return quality
 
 low = 0.5
@@ -37,9 +37,8 @@ data['ecg'] = data['ecg'].fillna(0)
 ecg = data['ecg'].values
 ecg = ecg
 
-# 设置窗口长度
+
 window_length = 1000
-# 初始化滑动窗口和数据队列
 ecgWindow = deque(maxlen=window_length)
 ecgFilteredWindow = deque(maxlen=window_length)
 rrInterval = deque([0] * window_length, maxlen=window_length)
