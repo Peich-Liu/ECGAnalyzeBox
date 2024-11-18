@@ -1,14 +1,10 @@
-'''
-After get the data, the whole data loader maybe need to re-write
-'''
-
-# data_loader_handlers.py
-from utilities import *
-import tkinter as tk
-from tkinter import messagebox, ttk
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 import numpy as np
 import guiVisulaztionOverview as vo
+import tkinter as tk
+
+from tkinter import messagebox, ttk
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
+from utilities import *
 
 def load_data(cba_instance):
     try:

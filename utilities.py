@@ -1,24 +1,17 @@
+import wfdb
+import os
 import numpy as np
 import pandas as pd 
 import scipy.signal as signal
-import wfdb
-import os
+import matplotlib.pyplot as plt
+import tkinter as tk
+import neurokit2 as nk
+
 from scipy.signal import butter, filtfilt
-import matplotlib.pyplot as plt
-import wfdb
-import numpy as np
-import matplotlib.pyplot as plt
 from scipy.signal import find_peaks
 from scipy.signal import welch
 from scipy.integrate import simpson
 from statsmodels.tsa.ar_model import AutoReg
-import neurokit2 as nk
-from scipy.signal import butter, filtfilt
-import numpy as np
-import os
-import wfdb
-import matplotlib.pyplot as plt
-import tkinter as tk
 from tkinter import filedialog, simpledialog, messagebox
 from tkinter import ttk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk

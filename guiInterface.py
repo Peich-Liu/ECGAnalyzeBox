@@ -1,11 +1,12 @@
-import tkinter as tk
 import numpy as np
-from tkinter import ttk
 import guiVisulaztionOverview as vo
-from functools import partial
 import guiObserver as ob
-from collections import deque
 import matplotlib.pyplot as plt
+import tkinter as tk
+
+from tkinter import ttk
+from collections import deque
+from functools import partial
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 from pylsl import StreamInlet, resolve_stream
 # from utilities import *
@@ -16,36 +17,29 @@ class guiWindow:
         self.root.title("Data Visualization Interface")
         self.root.geometry("1200x1000")
         
-        # 创建一个Notebook容器
         self.notebook = ttk.Notebook(root)
         self.notebook.pack(fill="both", expand=True)
         self.data_analyzer = data_analyzer
-        # self.notebook.grid(row=0, column=0, sticky="nsew")
 
         self.interactive_plot = None
         self.dataLoader_properties_frame = None
         self.ecg_result_label = None
         self.ap_result_label = None
-        # self.canvas_hrv_frame = None
     
         self.plotObersever = observer
         self.interactive_plot = interactive_plot
 
-        # 初始化 LSL 接收器
-        print("正在查找 ECG 和 AP 数据流...")
-        self.ecg_inlet = self.resolve_lsl_stream('ECGStream')
-        self.ap_inlet = self.resolve_lsl_stream('APStream')
-
-        # self.create_real_time_page()
 
     def resolve_lsl_stream(self, stream_name):
         streams = resolve_stream('name', stream_name)
         return StreamInlet(streams[0])
 
-    '''=========================================================
+    '''
+    =========================================================
     The Data Loading Page,
     There are 3 buttons, one mode select box, 3 text inputers
-    ========================================================='''
+    =========================================================
+    '''
     def create_load_data_page(self, load_data, load_rt_data,interact_update):
         '''data loader interface'''
         load_data_page = ttk.Frame(self.notebook)
@@ -53,9 +47,7 @@ class guiWindow:
 
         ecg_frame = ttk.Frame(load_data_page)
         ecg_frame.pack(side="top", fill="both", expand=True)
-        # ecg_frame.pack(side=tk.TOP, fill=tk.X, padx=10, pady=10)
-
-
+    
         ttk.Label(ecg_frame, text="Select Mode:").grid(row=0, column=0, padx=5, pady=5)
 
         self.mode_var = tk.StringVar(value="Select Mode")
@@ -82,14 +74,11 @@ class guiWindow:
         canvas = FigureCanvasTkAgg(self.interactive_plot.fig, master=main_container)
         canvas.get_tk_widget().pack(side="top", fill="both", expand=True)
         canvas.draw()
-
         
         # 绑定事件
         canvas.mpl_connect("button_press_event", self.interactive_plot.on_press)
         canvas.mpl_connect("motion_notify_event", self.interactive_plot.on_drag)
         canvas.mpl_connect("button_release_event", self.interactive_plot.on_release)
-
-
 
         self.dataLoader_properties_frame = ttk.Frame(main_container)
         self.dataLoader_properties_frame.pack(side="top", fill="x", padx=5, pady=5)
@@ -97,7 +86,6 @@ class guiWindow:
         self.ecg_result_label = ttk.Label(self.dataLoader_properties_frame, text="Window Information: ")
         self.ecg_result_label.grid(row=0, column=0)
 
-        
         self.mode_combobox.bind("<<ComboboxSelected>>", partial(self.mode_changed_load_page, self.interactive_plot))
 
         return {
@@ -109,7 +97,6 @@ class guiWindow:
             "ap_result_label":self.ap_result_label,
             # "start_entry": ecg_start_entry,
             # "end_entry": ecg_end_entry,
-
         }
     
     def mode_changed_load_page(self, interactive_plot, event):
@@ -125,10 +112,12 @@ class guiWindow:
         elif selected_mode == "Delete Mode":
             print("View Mode Selected")
 
-    '''=========================================================
+    '''
+    =========================================================
     The Signal Processing Page,
     There are 2 buttons
-    ========================================================='''
+    =========================================================
+    '''
 
     def create_signal_processing_page(self, filter_command, artifact_command, vis_data):
         signal_processing_page = ttk.Frame(self.notebook)
@@ -170,10 +159,12 @@ class guiWindow:
         }
     
 
-    '''=========================================================
+    '''
+    =========================================================
     The Time Domain Analysis Page,
     There are 2 buttons
-   ========================================================='''
+    =========================================================
+    '''
     def create_time_domain_page(self, ecg_time_domain_command, ap_time_domain_command):
         time_domain_page = ttk.Frame(self.notebook)
         self.notebook.add(time_domain_page, text="Time Domain Analysis")
@@ -206,11 +197,12 @@ class guiWindow:
             "sd_canvas_frame": sd_canvas_frame
         }
     
-    '''=========================================================
+    '''
+    =========================================================
     The Frequency Domain Analysis Page,
     There are 2 buttons
-   ========================================================='''
-
+    =========================================================
+    '''
     def create_frequency_domain_page(self, frequency_analysis_command):
         frequency_domain_page = ttk.Frame(self.notebook)
         self.notebook.add(frequency_domain_page, text="Frequency Domain Analysis")
@@ -232,72 +224,25 @@ class guiWindow:
             "freq_canvas_frame": freq_canvas_frame
         }
     
-    '''=========================================================
+    '''
+    =========================================================
     Real-time Analysis Page
-   ========================================================='''
-    def create_real_time_page(self):
+    =========================================================
+    '''
+
+    def create_real_time_page(self, loadingRtSignal_command):
         real_time_page = ttk.Frame(self.notebook)
         self.notebook.add(real_time_page, text="Real Time Analysis")
 
-        self.fig, self.ax = plt.subplots(2, 1, figsize=(10, 8))
-        self.canvas = FigureCanvasTkAgg(self.fig, master=real_time_page)
-        self.canvas.get_tk_widget().pack(fill='both', expand=True)
+        rt_button = ttk.Button(real_time_page, text="Start Collect RT Signal", command=loadingRtSignal_command)
+        rt_button.pack(fill='both', expand=True)
+    
+        self.rt_canvas = FigureCanvasTkAgg(self.data_analyzer.fig, master=real_time_page)
+        self.rt_canvas.get_tk_widget().pack(fill='both', expand=True)
 
-        self.line1, = self.ax[0].plot([], [], label='Filtered ECG Signal', color='b')
-        self.line2, = self.ax[1].plot([], [], label='RR Intervals', color='g')
+        self.data_analyzer.update_plot()
 
-        self.ax[0].legend()
-        self.ax[1].legend()
-        self.ax[0].set_title('Filtered ECG Signal')
-        self.ax[1].set_title('RR Intervals')
-
-        self.ecg_window = deque(maxlen=self.data_analyzer.window_length)
-        self.ap_window  = deque(maxlen=self.data_analyzer.window_length)
-        self.filtered_ecg_window  = deque(maxlen=self.data_analyzer.window_length)
-        self.filtered_rr_window  = deque(maxlen=self.data_analyzer.window_length)
-        self.filtered_ap_window  = deque(maxlen=self.data_analyzer.window_length)
-
-        self.rr_window = deque([0] * self.data_analyzer.window_length, maxlen=self.data_analyzer.window_length)
-
-        self.update_plot()
-
-    def update_plot(self):
-
-        # 从 LSL 接收 ECG 数据
-        ecg_sample, _ = self.ecg_inlet.pull_sample(timeout=0.0)
-        ap_sample, _ = self.ap_inlet.pull_sample(timeout=0.0)
-
-        if ecg_sample:
-            self.ecg_window.append(ecg_sample[0])
-        if ap_sample:
-            self.ap_window.append(ap_sample[0])
-
-        filtered_ecg = self.data_analyzer.get_next_data_point()
-        filtered_ap = self.data_analyzer.get_next_data_point()
-
-        rr_interval = self.data_analyzer.get_rr_interval()
-
-        if filtered_ecg is not None:
-            self.filtered_ecg_window.append(filtered_ecg)
-            self.filtered_rr_window.append(rr_interval)
-            self.filtered_ap_window.append(filtered_ap)
-
-
-            if len(self.filtered_ecg_window) == self.data_analyzer.window_length:
-                x = np.arange(len(self.filtered_ecg_window))
-                self.line1.set_data(x, np.array(self.filtered_ecg_window))
-                self.line2.set_data(x, np.array(self.filtered_rr_window))
-
-                self.ax[0].set_xlim(0, len(self.filtered_ecg_window) - 1)
-                self.ax[1].set_xlim(0, len(self.filtered_rr_window) - 1)
-
-                self.ax[0].relim()
-                self.ax[0].autoscale_view()
-                self.ax[1].relim()
-                self.ax[1].autoscale_view()
-
-                self.canvas.draw()
-
-        # 定时器调用，实现实时更新
-        self.root.after(10, self.update_plot)
-        
+        # return {
+        #     "rt_button":rt_button,
+        #     "rt_canvas":self.rt_canvas
+        # }

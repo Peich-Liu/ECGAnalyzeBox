@@ -1,25 +1,31 @@
 import pandas as pd
 import numpy as np
+import matplotlib.dates as mdates
+import matplotlib.pyplot as plt
+import numpy as np
+import tkinter as tk
+
+from tkinter import ttk
+from datetime import datetime, timedelta
 from scipy import signal
 from collections import deque
-
-import tkinter as tk
-from tkinter import ttk
-import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-import numpy as np
 from collections import deque
-from pylsl import StreamInfo, StreamOutlet
+from pylsl import StreamInfo, StreamOutlet, StreamInlet, resolve_stream
 
 class dataAnalyzer:
-    def __init__(self, file_path):
+    def __init__(self, file_path, root):
         self.file_path = file_path
+        self.root = root
         self.window_length = 1000
         self.rt_ecg_data = []
         self.rt_ap_data = []
         self.filtered_data = deque(maxlen=self.window_length)
         self.rr_intervals = deque([0] * self.window_length, maxlen=self.window_length)
+        self.fig, self.ax = plt.subplots(2, 1, figsize=(10, 8))
+        self.isLoading = False
 
+        #filter Parameters
         self.low = 0.5
         self.high = 45
         self.fs = 1000
@@ -27,22 +33,46 @@ class dataAnalyzer:
         self.zi = signal.sosfilt_zi(self.sos)
         self.index = 0
 
-        self.load_data()
+        #initial the deques
+        self.filtered_ecg_window = deque(maxlen=self.window_length)
+        self.filtered_rr_window = deque(maxlen=self.window_length)
+        self.filtered_ap_window = deque([0] * self.window_length, maxlen=self.window_length)
+        self.ecgWindow = deque(maxlen=self.window_length)
+        self.apWindow = deque(maxlen=self.window_length)
+        self.ecgFilteredWindow = deque(maxlen=self.window_length)
+        self.rrInterval = deque([0] * self.window_length, maxlen=self.window_length)
 
+        # 初始化 LSL 接收器
+        print("正在查找 ECG 和 AP 数据流...")
+        self.ecg_inlet = self.resolve_lsl_stream('ECGStream')
+        self.ap_inlet = self.resolve_lsl_stream('APStream')
+
+        # 在初始化中创建绘图对象，只需要创建一次
+        self.line1, = self.ax[0].plot([], [], label='Filtered ECG Signal', color='b')
+        self.line2, = self.ax[1].plot([], [], label='RR Intervals', color='g')
+        self.ax[0].legend()
+        self.ax[1].legend()
+
+    def resolve_lsl_stream(self, stream_name):
+        streams = resolve_stream('name', stream_name)
+        return StreamInlet(streams[0])
     def filter2Sos(self, low, high, fs=1000, order=4):
         nyquist = fs / 2
         sos = signal.butter(order, [low / nyquist, high / nyquist], btype='band', output='sos')
         return sos
 
     def load_data(self):
-        data = pd.read_csv(self.file_path, sep=';')
-        data['ecg'] = data['ecg'].str.replace(',', '.').astype(float)
-        data['ecg'] = data['ecg'].fillna(0)
-        data['abp[mmHg]'] = data['abp[mmHg]'].str.replace(',', '.').astype(float)
-        data['abp[mmHg]'] = data['abp[mmHg]'].fillna(0)
+        print(self.isLoading)
+        if self.isLoading:
+            print("rtSignalCollecting")
+            data = pd.read_csv(self.file_path, sep=';')
+            data['ecg'] = data['ecg'].str.replace(',', '.').astype(float)
+            data['ecg'] = data['ecg'].fillna(0)
+            data['abp[mmHg]'] = data['abp[mmHg]'].str.replace(',', '.').astype(float)
+            data['abp[mmHg]'] = data['abp[mmHg]'].fillna(0)
 
-        self.rt_ecg_data = data['ecg'].values[375000:1799788]
-        self.rt_ap_data = data['abp[mmHg]'].values[375000:1799788]
+            self.rt_ecg_data = data['ecg'].values[375000:1799788]
+            self.rt_ap_data = data['abp[mmHg]'].values[375000:1799788]
 
     def get_next_data_point(self):
         if self.index < len(self.rt_ecg_data):
@@ -62,3 +92,52 @@ class dataAnalyzer:
                 self.rr_intervals.append(rr_interval)
                 return rr_interval
         return 0
+    
+    def update_plot(self):
+
+        # 从 LSL 接收 ECG 数据
+        ecg_sample, _ = self.ecg_inlet.pull_sample(timeout=0.0)
+        ap_sample, _ = self.ap_inlet.pull_sample(timeout=0.0)
+
+        if ecg_sample:
+            self.ecgWindow.append(ecg_sample[0])
+        if ap_sample:
+            self.apWindow.append(ap_sample[0])
+
+        filtered_ecg = self.get_next_data_point()
+        filtered_ap = self.get_next_data_point()
+
+        rr_interval = self.get_rr_interval()
+
+        if filtered_ecg is not None:
+            self.filtered_ecg_window.append(filtered_ecg)
+            self.filtered_rr_window.append(rr_interval)
+            self.filtered_ap_window.append(filtered_ap)
+
+
+            if len(self.filtered_ecg_window) == self.window_length:
+                x = np.arange(len(self.filtered_ecg_window))
+
+                self.line1.set_data(x, np.array(self.filtered_ecg_window))
+                self.line2.set_data(x, np.array(self.filtered_rr_window))
+
+                self.ax[0].set_xlim(0, len(self.filtered_ecg_window) - 1)
+                self.ax[0].relim()
+                self.ax[0].autoscale_view()
+
+                self.ax[1].set_xlim(0, len(self.filtered_rr_window) - 1)
+                self.ax[1].relim()
+                self.ax[1].autoscale_view()
+
+                self.fig.canvas.draw()
+
+        self.root.after(10, self.update_plot)
+        
+
+    def openLoadData(self):
+        self.isLoading = True
+        print("RTDataLoadingStart...")
+        self.load_data()
+
+    def closeLoadData(self):
+        self.isLoading = False

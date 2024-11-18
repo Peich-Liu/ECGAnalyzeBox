@@ -1,99 +1,16 @@
+import numpy as np
+import time
+import numpy as np
+import matplotlib.dates as mdates
 import tkinter as tk
+
 from tkinter import ttk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 from matplotlib.figure import Figure
 from matplotlib.patches import Rectangle
-import numpy as np
-from utilities import *
-import time
-import numpy as np
-import matplotlib.dates as mdates
 from datetime import datetime, timedelta
 from matplotlib.widgets import Slider
-
-class AnalyzerPlot:
-    def __init__(self, gui_window):
-        self.guiWindow = gui_window
-        self.range_max = None
-        self.range_min = None
-        self.max_points = []  # 保存最大值的点
-        self.min_points = []  # 保存最小值的点
-        self.time_series = []  # 保存时间序列的 x 值
-        self.hrv_values = []   # 保存 HRV 值
-        self.parameters = None
-
-        # 初始化图形和Canvas
-        self.fig = Figure(figsize=(5, 4), dpi=100)
-        self.ax = self.fig.add_subplot(111)
-        self.canvas = FigureCanvasTkAgg(self.fig, master=self.guiWindow.canvas_hrv_frame)
-        self.canvas.get_tk_widget().pack(side="top", fill="both", expand=True)
-
-    def hrv_analysis(self, range):
-        print("hrv_analysis, range[0][0]:",range)
-        # 获取采样点并计算相对时间
-        sample_point = range[0][0]
-        time_delta = timedelta(seconds=sample_point / 250)  # 将采样点转换为时间差
-
-        # 将起始时间设为 `datetime` 对象
-        self.start_time = datetime.strptime("00:00:00", "%H:%M:%S")
-
-        # 计算该采样点的实际时间
-        x = self.start_time + time_delta
-        hrv = float(self.parameters['0']['ECG']['Heart Rate'])
-
-        # 将新的时间点和 HRV 值添加到序列中
-        self.time_series.append(x)
-        self.hrv_values.append(hrv)
-
-        # 清除旧图像
-        self.ax.clear()
-
-        print("self.hrv_values",x)
-
-        # 绘制已经存在的时间序列数据
-        self.ax.plot(self.time_series, self.hrv_values, '-o', label="Heart Rate Time Series")
-
-        # 单独标记最新的点
-        self.ax.plot(x, hrv, 'ro', label="Current Point")
-
-        # 设置 x 轴格式为 HH:MM:SS
-        self.ax.xaxis.set_major_formatter(mdates.DateFormatter("%H:%M:%S"))
-        self.ax.xaxis.set_major_locator(mdates.AutoDateLocator())
-
-        # 设置轴标签和图例
-        self.ax.set_xlabel("Time (HH:MM:SS)")
-        self.ax.set_ylabel("Heart Rate (BPM)")
-        self.ax.legend()
-        
-        self.canvas.draw()  # 刷新 Canvas 显示最新的图形
-
-        getFigure(self.fig, self.guiWindow.canvas_hrv_frame)
-
-    def update_range_maxmin(self, range):
-        # 获取 range[0] 的最大值和最小值
-        print("update_range_maxmin", range)
-        range_max = max(range[0])
-        range_min = min(range[0])
-
-        # 初始化最大值和最小值
-        if self.range_max is None or self.range_min is None:
-            self.range_max = range_max
-            self.range_min = range_min
-            self.hrv_analysis(range)  # 更新图形
-            return
-        # 更新最大值
-        if range_max > self.range_max:
-            print(f"最大值已更新：从 {self.range_max} 到 {range_max}")
-            self.range_max = range_max
-            self.max_points.append((range[0][1], range_max))  # 添加新的最大值点
-            self.hrv_analysis(range)  # 更新图形
-
-        # 更新最小值
-        if range_min < self.range_min:
-            print(f"最小值已更新：从 {self.range_min} 到 {range_min}")
-            self.range_min = range_min
-            self.min_points.append((range[0][0], range_min))  # 添加新的最小值点
-            self.hrv_analysis(range)  # 更新图形
+from utilities import *
 
 
 class InteractivePlot:
@@ -297,3 +214,93 @@ def vis_data(cba_instance, plot_instance):
 
 def updateInteract(plot_instance):
     plot_instance.toggle_create_mode()
+
+
+
+
+
+
+
+# class AnalyzerPlot:
+#     def __init__(self, gui_window):
+#         self.guiWindow = gui_window
+#         self.range_max = None
+#         self.range_min = None
+#         self.max_points = []  # 保存最大值的点
+#         self.min_points = []  # 保存最小值的点
+#         self.time_series = []  # 保存时间序列的 x 值
+#         self.hrv_values = []   # 保存 HRV 值
+#         self.parameters = None
+
+#         # 初始化图形和Canvas
+#         self.fig = Figure(figsize=(5, 4), dpi=100)
+#         self.ax = self.fig.add_subplot(111)
+#         self.canvas = FigureCanvasTkAgg(self.fig, master=self.guiWindow.canvas_hrv_frame)
+#         self.canvas.get_tk_widget().pack(side="top", fill="both", expand=True)
+
+#     def hrv_analysis(self, range):
+#         print("hrv_analysis, range[0][0]:",range)
+#         # 获取采样点并计算相对时间
+#         sample_point = range[0][0]
+#         time_delta = timedelta(seconds=sample_point / 250)  # 将采样点转换为时间差
+
+#         # 将起始时间设为 `datetime` 对象
+#         self.start_time = datetime.strptime("00:00:00", "%H:%M:%S")
+
+#         # 计算该采样点的实际时间
+#         x = self.start_time + time_delta
+#         hrv = float(self.parameters['0']['ECG']['Heart Rate'])
+
+#         # 将新的时间点和 HRV 值添加到序列中
+#         self.time_series.append(x)
+#         self.hrv_values.append(hrv)
+
+#         # 清除旧图像
+#         self.ax.clear()
+
+#         print("self.hrv_values",x)
+
+#         # 绘制已经存在的时间序列数据
+#         self.ax.plot(self.time_series, self.hrv_values, '-o', label="Heart Rate Time Series")
+
+#         # 单独标记最新的点
+#         self.ax.plot(x, hrv, 'ro', label="Current Point")
+
+#         # 设置 x 轴格式为 HH:MM:SS
+#         self.ax.xaxis.set_major_formatter(mdates.DateFormatter("%H:%M:%S"))
+#         self.ax.xaxis.set_major_locator(mdates.AutoDateLocator())
+
+#         # 设置轴标签和图例
+#         self.ax.set_xlabel("Time (HH:MM:SS)")
+#         self.ax.set_ylabel("Heart Rate (BPM)")
+#         self.ax.legend()
+        
+#         self.canvas.draw()  # 刷新 Canvas 显示最新的图形
+
+#         getFigure(self.fig, self.guiWindow.canvas_hrv_frame)
+
+#     def update_range_maxmin(self, range):
+#         # 获取 range[0] 的最大值和最小值
+#         print("update_range_maxmin", range)
+#         range_max = max(range[0])
+#         range_min = min(range[0])
+
+#         # 初始化最大值和最小值
+#         if self.range_max is None or self.range_min is None:
+#             self.range_max = range_max
+#             self.range_min = range_min
+#             self.hrv_analysis(range)  # 更新图形
+#             return
+#         # 更新最大值
+#         if range_max > self.range_max:
+#             print(f"最大值已更新：从 {self.range_max} 到 {range_max}")
+#             self.range_max = range_max
+#             self.max_points.append((range[0][1], range_max))  # 添加新的最大值点
+#             self.hrv_analysis(range)  # 更新图形
+
+#         # 更新最小值
+#         if range_min < self.range_min:
+#             print(f"最小值已更新：从 {self.range_min} 到 {range_min}")
+#             self.range_min = range_min
+#             self.min_points.append((range[0][0], range_min))  # 添加新的最小值点
+#             self.hrv_analysis(range)  # 更新图形

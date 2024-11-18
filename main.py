@@ -1,7 +1,3 @@
-import tkinter as tk
-from tkinter import ttk
-from pylsl import StreamInfo, StreamOutlet
-
 import guiDataLoader as dl
 import guiSignalProcessing as sp
 import guiTimeDomainAnalysis as tda
@@ -10,6 +6,10 @@ import guiVisulaztionOverview as vo
 import guiInterface as gui
 import guiObserver as ob
 import guiRealtimeDataLoader as rtdl
+import tkinter as tk
+
+from tkinter import ttk
+from pylsl import StreamInfo, StreamOutlet
 from utilities import *
 
 
@@ -37,24 +37,17 @@ class CBATools:
         # 初始化 LSL Stream
         self.ecg_stream_info = StreamInfo('ECGStream', 'ECG', 1, self.fs, 'float32', 'ecg12345')
         self.ecg_outlet = StreamOutlet(self.ecg_stream_info)
-
         self.ap_stream_info = StreamInfo('APStream', 'AP', 1, self.fs, 'float32', 'ap12345')
         self.ap_outlet = StreamOutlet(self.ap_stream_info)
 
         self.observer = ob.Observer(self.fs)
         self.interactive_plot = vo.InteractivePlot(self.observer)
-        self.rtDataLoder = rtdl.dataAnalyzer(self.filepath)
+        self.rtDataLoder = rtdl.dataAnalyzer(self.filepath, root)
         self.guiWindow = gui.guiWindow(self.root, self.observer, self.interactive_plot, self.rtDataLoder)
-
-        # self.hrv_plot = vo.AnalyzerPlot(self.guiWindow)
 
         self.observer.subscribe(self.return_range)
         self.observer.subscribe(self.update_labels_on_change)
-        # self.observer.subscribe(self.hrv_plot.hrv_analysis)
-        # self.observer.subscribe(self.hrv_plot.update_range_maxmin)
         self.observer.subscribe(show_windowInfo)
-
-        # self.observer.subscribe(calculate_variance)
 
         load_data_page_components = self.guiWindow.create_load_data_page(
             lambda: dl.load_data(
@@ -113,6 +106,8 @@ class CBATools:
         )
 
         real_time_page_components = self.guiWindow.create_real_time_page(
+            lambda: self.rtDataLoder.openLoadData(),
+            # self.rtDataLoder
         )
     @property
     def ecg_signal(self):
