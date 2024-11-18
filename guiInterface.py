@@ -239,7 +239,7 @@ class guiWindow:
     
         self.rt_canvas = FigureCanvasTkAgg(self.data_analyzer.fig, master=real_time_page)
         self.rt_canvas.get_tk_widget().pack(fill='both', expand=True)
-
+        # if self.data_analyzer.isLoading:
         self.data_analyzer.update_plot()
 
         # return {

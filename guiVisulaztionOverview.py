@@ -122,37 +122,10 @@ class InteractivePlot:
                     self.selected_start[self.current_index] = selected_time.strftime("%H:%M:%S")
                     print("self.selected_start[self.current_index]",self.selected_start[self.current_index])
                     return
-    def on_scroll(self, event):
-        """滚动事件处理，用于缩放图表"""
-        base_scale = 1.1
-        ax = event.inaxes
-        if ax is None:
-            return
-
-        # 获取当前的 x 轴范围
-        x_min, x_max = ax.get_xlim()
-        x_range = x_max - x_min
-
-        # 缩放比例
-        if event.step > 0:
-            scale_factor = 1 / base_scale
-        elif event.step < 0:
-            scale_factor = base_scale
-        else:
-            scale_factor = 1
-
-        # 更新 x 轴范围
-        x_center = (x_min + x_max) / 2.0
-        new_x_range = x_range * scale_factor
-        ax.set_xlim([x_center - new_x_range / 2, x_center + new_x_range / 2])
-        
-        # 绘图更新
-        self.fig.canvas.draw()
 
     def on_drag(self, event):
         """鼠标拖动事件处理"""
 
-            
         if event.inaxes not in [self.ax1, self.ax2]:
             return
 
@@ -208,6 +181,29 @@ class InteractivePlot:
             print("selection_ranges",selection_ranges)
 
         return selection_ranges
+    def mark_noise_regions(self, time_points, quality_data):
+        """根据 quality 列标记噪音区间"""
+        noise_intervals = []
+        is_bad = False
+        start_index = 0
+
+        # 遍历 quality_data 列
+        for i, quality in enumerate(quality_data):
+            if quality == "Bad" and not is_bad:
+                is_bad = True
+                start_index = i
+            elif quality == "Good" and is_bad:
+                is_bad = False
+                noise_intervals.append((start_index, i))
+        
+        # 如果文件以 "Bad" 结尾，处理最后的区间
+        if is_bad:
+            noise_intervals.append((start_index, len(quality_data)))
+
+        # 在图表上标记噪音区间
+        for start, end in noise_intervals:
+            self.ax1.axvspan(time_points[start], time_points[end], color='red', alpha=0.3)
+            self.ax2.axvspan(time_points[start], time_points[end], color='red', alpha=0.3)
 
 def vis_data(cba_instance, plot_instance):
     plot_instance.plot_signals(cba_instance.ecg_signal, cba_instance.ap_signal)
