@@ -16,60 +16,33 @@ def ziFilter(sos, data_point, zi):
     return filtered_point, zi
 
 def compute_z_score(value, mean, std):
-    #Compute the z-score 
+    # Compute the z-score 
     return (value - mean) / std if std > 0 else 0
 
+def normalize_signal(signal):
+    # 避免分母为零
+    if np.max(signal) == np.min(signal):
+        return np.zeros_like(signal)
+    return (signal - np.min(signal)) / (np.max(signal) - np.min(signal))
 
-def signalQualityEva(window, stats, thresholds):
-    if np.isnan(window).any() or np.isinf(window).any():
+def signalQualityEva(window, thresholds):
+    # Normalize the window to [0, 1]
+    window = normalize_signal(window)  
+
+    # flat line check
+    amplitude_range = np.max(window) - np.min(window)
+    if amplitude_range < thresholds["amplitude_range"]:
+        return "Bad"  
+    # pure noise check
+    zero_crossings = np.sum(np.diff(window > np.mean(window)) != 0)
+    if zero_crossings < thresholds["zero_cross_min"] or zero_crossings > thresholds["zero_cross_max"]:
         return "Bad"
-
-    if np.std(window) < 1e-10:  # 标准差过小，说明信号几乎恒定
-        return "Bad"
-
-    # 特征计算
-    signal_mean = np.mean(window)
-    signal_std = np.std(window)
-    snr = 10 * np.log10(signal_mean / signal_std) if signal_std > 1e-10 else 0
-
-    if np.std(window) < 1e-10:  # 防止精度损失
-        kurtosis = 0
-        skewness = 0
-    else:
-        kurtosis = calc_kurtosis(window)
-        skewness = calc_skew(window)
-
-    template = np.sin(np.linspace(0, 2 * np.pi, len(window)))
-    if np.std(window) < 1e-10:  # 防止相关性矩阵中出现 NaN
-        correlation = 0
-    else:
-        correlation = np.corrcoef(window, template)[0, 1]
-
-    # 阈值筛选
-    if not (
-        correlation >= thresholds['corr'] and
-        snr >= thresholds['snr'] and
-        thresholds['kur_min'] <= kurtosis <= thresholds['kur_max'] and
-        thresholds['ske_min'] <= skewness <= thresholds['ske_max']
-    ):
-        return "Bad"
-
-    # Z-test
-    stats_means = stats['means']
-    stats_stds = stats['stds']
-    z_scores = {
-        "snr": compute_z_score(snr, stats_means['snr'], stats_stds['snr']),
-        "correlation": compute_z_score(correlation, stats_means['correlation'], stats_stds['correlation']),
-        "kurtosis": compute_z_score(kurtosis, stats_means['kurtosis'], stats_stds['kurtosis']),
-        "skewness": compute_z_score(skewness, stats_means['skewness'], stats_stds['skewness']),
-    }
-
-    if any(abs(z) > 1.96 for z in z_scores.values()):
-        return "Bad"
+    # QRS detection
+    peaks, _ = signal.find_peaks(window, height=thresholds["peak_height"], distance=thresholds["beat_length"])
+    if len(peaks) < 2:
+        return "Bad" 
 
     return "Good"
-
-
 
 low = 0.5
 high = 45
@@ -77,32 +50,25 @@ sos = filter2Sos(low, high)
 
 zi = signal.sosfilt_zi(sos)
 
-stats = {
-    "means": {"snr": 15, "correlation": 0.8, "kurtosis": 3, "skewness": 0},
-    "stds": {"snr": 3, "correlation": 0.1, "kurtosis": 0.5, "skewness": 0.2}
+thresholds = {
+    "amplitude_range": 0.1,      
+    "zero_cross_min": 5,         
+    "zero_cross_max": 50,       
+    "peak_height": 0.6,          
+    "beat_length": 100,          
 }
 
-thresholds = {
-    "corr": 0.7,
-    "snr": 10,
-    "kur_min": 2,
-    "kur_max": 4,
-    "ske_min": -1,
-    "ske_max": 1
-}
 filePath = r"C:\Users\60427\Desktop\250 kun HR.csv"
 data = pd.read_csv(filePath, sep=';')
 
 data['ecg'] = data['ecg'].str.replace(',', '.').astype(float)
 data['ecg'] = data['ecg'].fillna(0)
 
-# 提取 ECG 信号
 ecg = data['ecg'].values
 ecg = ecg
 
 window_length = 1000
 overlap_length = 500  
-ecgWindow = deque(maxlen=window_length)
 ecgFilteredWindow = deque(maxlen=window_length)
 rrInterval = deque([0] * window_length, maxlen=window_length)
 
@@ -112,25 +78,21 @@ with open(output_file, mode='w', newline='') as file:
     writer.writerow(["sample_index", "ecg", "filtered_ecg", "rr_interval", "quality"])
 
 
+bad_windows = []
 r_peaks = []
 
 with open(output_file, mode='a', newline='') as file:
     writer = csv.writer(file)
     
-    step_count = 0  # counter
-    for i in range(len(ecg)):
-        # simulate the rt signal
-        # ecg[i] --> sample point
-        # ecgWindow.append(ecg[i])
-
-        #pre-processing
+    for i in range(0, len(ecg) - window_length, overlap_length):
+        # Pre-processing
         filtered_ecg, zi = ziFilter(sos, ecg[i], zi)
+        window = ecg[i:i + window_length]
         ecgFilteredWindow.append(filtered_ecg[0])
 
+        quality = signalQualityEva(list(ecgFilteredWindow), thresholds)
 
-        quality = signalQualityEva(list(ecgFilteredWindow), stats, thresholds)
-
-        # rr interval calculation
+        # RR interval calculation
         ecg_window_data = np.array(ecgFilteredWindow)
         peaks, _ = signal.find_peaks(ecg_window_data, distance=200, height=np.mean(ecg_window_data) * 1.2)
 
@@ -138,12 +100,22 @@ with open(output_file, mode='a', newline='') as file:
             rr_interval = peaks[-1] - peaks[-2]
         else:
             rr_interval = 0
-        rrInterval.append(rr_interval)  # maybe delete
+        rrInterval.append(rr_interval)
 
         writer.writerow([i, ecg[i], filtered_ecg[0], rr_interval, quality])
 
-    step_count += 1
-    if step_count >= (window_length - overlap_length):  # 如果到达滑动步长
-        for _ in range(overlap_length):  # 按 overlap 长度移除旧数据
-            ecgFilteredWindow.popleft()
-        step_count = 0  # 重置计数器
+        # 记录“Bad”窗口
+        if quality == "Bad":
+            bad_windows.append(i)
+
+plt.figure(figsize=(15, 6))
+plt.plot(ecg, label="ECG Signal", alpha=0.7)
+for start in bad_windows:
+    plt.axvspan(start, start + window_length, color='red', alpha=0.3, label="Bad Window" if start == bad_windows[0] else "")
+
+plt.title("ECG Signal with Bad Windows Highlighted")
+plt.xlabel("Sample Index")
+plt.ylabel("Amplitude")
+plt.legend()
+plt.grid()
+plt.show()
