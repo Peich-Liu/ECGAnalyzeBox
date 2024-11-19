@@ -58,7 +58,7 @@ thresholds = {
     "beat_length": 100,          
 }
 
-filePath = r"C:\Users\60427\Desktop\250 kun HR.csv"
+filePath = r"c:\Document\sc2024\250 kun HR.csv"
 data = pd.read_csv(filePath, sep=';')
 
 data['ecg'] = data['ecg'].str.replace(',', '.').astype(float)
@@ -72,7 +72,7 @@ overlap_length = 500
 ecgFilteredWindow = deque(maxlen=window_length)
 rrInterval = deque([0] * window_length, maxlen=window_length)
 
-output_file = r"C:\Users\60427\Desktop\filtered_ecg_with_quality.csv"
+output_file = r"c:\Document\sc2024\filtered_ecg_with_quality2.csv"
 with open(output_file, mode='w', newline='') as file:
     writer = csv.writer(file)
     writer.writerow(["sample_index", "ecg", "filtered_ecg", "rr_interval", "quality"])
@@ -85,7 +85,8 @@ with open(output_file, mode='a', newline='') as file:
     writer = csv.writer(file)
     
     for i in range(0, len(ecg) - window_length, overlap_length):
-        # Pre-processing
+        print("i",i)
+        # # Pre-processing
         filtered_ecg, zi = ziFilter(sos, ecg[i], zi)
         window = ecg[i:i + window_length]
         ecgFilteredWindow.append(filtered_ecg[0])
