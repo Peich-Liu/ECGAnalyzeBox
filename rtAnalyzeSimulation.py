@@ -34,10 +34,16 @@ data = pd.read_csv(filePath, sep=';')
 
 data['ecg'] = data['ecg'].str.replace(',', '.').astype(float)
 data['ecg'] = data['ecg'].fillna(0)
+data['abp[mmHg]'] = data['abp[mmHg]'].str.replace(',', '.').astype(float)
+data['abp[mmHg]'] = data['abp[mmHg]'].fillna(0)
+
+
 
 # 提取 ECG 信号
 ecg = data['ecg'].values
+ap = data['abp[mmHg]'].values
 ecg = ecg
+ap = ap
 
 
 window_length = 1000
@@ -48,7 +54,7 @@ rrInterval = deque([0] * window_length, maxlen=window_length)
 output_file = r"C:\Document\sc2024\filtered_ecg_with_quality.csv"
 with open(output_file, mode='w', newline='') as file:
     writer = csv.writer(file)
-    writer.writerow(["sample_index", "ecg", "filtered_ecg", "rr_interval", "quality"])
+    writer.writerow(["sample_index", "ecg", "ap", "filtered_ecg", "rr_interval", "quality"])
 
 
 r_peaks = []
@@ -79,4 +85,4 @@ with open(output_file, mode='a', newline='') as file:
         rrInterval.append(rr_interval)#maybe delete
 
 
-        writer.writerow([i, ecg[i], filtered_ecg[0], rr_interval, quality])
+        writer.writerow([i, ecg[i], ap[i], filtered_ecg[0], rr_interval, quality])

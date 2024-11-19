@@ -27,18 +27,12 @@ class CBATools:
         self.range = None
         self.filepath = r'C:\Document\sc2024\250 kun HR.csv'
         self.rtWindowLength = 1000
-        # self.parameters = None
+        self.quality = None
 
         self.range_min = None
         self.range_max = None
 
         self.fs = 250 #The fs is locked in 250Hz
-
-        # 初始化 LSL Stream
-        self.ecg_stream_info = StreamInfo('ECGStream', 'ECG', 1, self.fs, 'float32', 'ecg12345')
-        self.ecg_outlet = StreamOutlet(self.ecg_stream_info)
-        self.ap_stream_info = StreamInfo('APStream', 'AP', 1, self.fs, 'float32', 'ap12345')
-        self.ap_outlet = StreamOutlet(self.ap_stream_info)
 
         self.observer = ob.Observer(self.fs)
         self.interactive_plot = vo.InteractivePlot(self.observer)
@@ -130,15 +124,12 @@ class CBATools:
     def return_range(self, range):
         print("return_range observer:",range)
         self.range = range
-        # self.range = selection_ranges
-        # print("ranges:", self.range[0][0])
-        # return selection_ranges
 
     def on_signal_change(self, signal_type):
         if signal_type == "ecg" or signal_type == "ap":
             if self._ecg_signal is not None and self._ap_signal is not None:
                 # 如果两个信号都有数据，则更新绘图
-                self.guiWindow.interactive_plot.plot_signals(self._ecg_signal, self._ap_signal)
+                self.guiWindow.interactive_plot.plot_signals(self._ecg_signal, self._ap_signal, self.quality)
 
     # Update labels when new data is available
     def update_labels_on_change(self, range):
@@ -151,6 +142,10 @@ class CBATools:
     def update_ap_signal(self, signal, sampling_rate):
         self.ap_signal = signal
         self.fs = sampling_rate
+
+    def update_quality(self, quality):
+        print(len(quality))
+        self.quality = quality
 
 
 if __name__ == "__main__":

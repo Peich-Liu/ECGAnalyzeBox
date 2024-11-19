@@ -40,7 +40,7 @@ class InteractivePlot:
         self.last_press_time = 0  # 上次鼠标按下事件的时间戳
         self.debounce_interval = 0.5  # 去抖时间间隔（秒）
 
-    def plot_signals(self, ecg_data, ap_data, start_time="00:00:00", sample_interval=0.004):
+    def plot_signals(self, ecg_data, ap_data, quality_data, start_time="00:00:00", sample_interval=0.004):
         """更新绘图内容"""
         self.ax1.clear()
         self.ax2.clear()
@@ -60,6 +60,27 @@ class InteractivePlot:
         self.ax2.set_xlabel("Time (HH:MM:SS)")
         self.ax2.set_ylabel("AP Amplitude (mmHg)")
         self.ax2.legend()
+
+        # 如果提供了质量数据，标记 "bad" 区间
+        if quality_data is not None:
+            print("77777")
+            is_bad = False
+            start_index = 0
+            for i, quality in enumerate(quality_data):
+                if quality == "Bad" and not is_bad:
+                    is_bad = True
+                    start_index = i
+                elif quality == "Good" and is_bad:
+                    is_bad = False
+                    # 绘制 "bad" 区间
+                    self.ax1.axvspan(time_points[start_index], time_points[i], color='grey', alpha=0.3)
+                    self.ax2.axvspan(time_points[start_index], time_points[i], color='grey', alpha=0.3)
+            
+            # 如果最后一个点是 "Bad"，处理未关闭的区间
+            if is_bad:
+                self.ax1.axvspan(time_points[start_index], time_points[-1], color='grey', alpha=0.3)
+                self.ax2.axvspan(time_points[start_index], time_points[-1], color='grey', alpha=0.3)
+    
         
         # 设置 x 轴格式
         self.ax1.xaxis.set_major_formatter(mdates.DateFormatter("%H:%M:%S"))
@@ -181,8 +202,10 @@ class InteractivePlot:
             print("selection_ranges",selection_ranges)
 
         return selection_ranges
-    def mark_noise_regions(self, time_points, quality_data):
+    # def mark_noise_regions(self, time_points, quality_data):
+    def mark_noise_regions(self, quality_data):
         """根据 quality 列标记噪音区间"""
+        time_points = range(len(quality_data))
         noise_intervals = []
         is_bad = False
         start_index = 0
@@ -202,8 +225,11 @@ class InteractivePlot:
 
         # 在图表上标记噪音区间
         for start, end in noise_intervals:
-            self.ax1.axvspan(time_points[start], time_points[end], color='red', alpha=0.3)
-            self.ax2.axvspan(time_points[start], time_points[end], color='red', alpha=0.3)
+            self.ax1.axvspan(time_points[start], time_points[end], color='grey', alpha=0.3)
+            self.ax2.axvspan(time_points[start], time_points[end], color='grey', alpha=0.3)
+        # 使用 blit 刷新
+        self.fig.canvas.draw_idle()  # `draw_idle` 优化性能
+        self.fig.canvas.flush_events()  # 确保更新发生
 
 def vis_data(cba_instance, plot_instance):
     plot_instance.plot_signals(cba_instance.ecg_signal, cba_instance.ap_signal)

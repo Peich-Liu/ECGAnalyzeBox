@@ -24,13 +24,21 @@ def load_data(cba_instance):
 
 def load_rt_data(cba_instance):
     try:
-        cba_instance.update_ecg_signal(cba_instance.guiWindow.ecg_window, 250)  # 设置采样率
-        cba_instance.update_ap_signal(cba_instance.guiWindow.ap_window, 250)
-        print(len(cba_instance.guiWindow.ecg_window), len(cba_instance.guiWindow.ap_window))
+        data_directory = r'C:\Document\sc2024\filtered_ecg_with_quality.csv'
+
+        # 加载ECG数据
+        ecg, ap, quality = loadRtData(data_directory)
+        if ecg is None:
+            messagebox.showerror("Error", "Failed to read records")
+            return
+        cba_instance.update_quality(quality)
+        print(cba_instance.quality)
+        cba_instance.update_ecg_signal(ecg, 250)  # 设置采样率
+        cba_instance.update_ap_signal(ap, 250)
 
     except ValueError:
         messagebox.showerror("Input Error", "Please enter valid start and end sample values")
-# def show_signal_qulity(filePath, ):
+
 
 
 

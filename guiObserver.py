@@ -18,6 +18,7 @@ class Observer:
         sample_point_ranges = self.convert_to_sample_points(data)
         for callback in self.subscribers:
             callback(sample_point_ranges)
+            
     def convert_to_sample_points(self, data):
         """将时间范围格式的数据转换为采样点格式"""
         sample_point_ranges = {}
