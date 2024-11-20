@@ -66,6 +66,8 @@ data['ecg'] = data['ecg'].fillna(0)
 
 ecg = data['ecg'].values
 ecg = ecg
+ap = data['abp[mmHg]'].values
+ap = ap
 
 window_length = 1000
 overlap_length = 500  

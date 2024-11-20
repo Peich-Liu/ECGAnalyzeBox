@@ -638,3 +638,21 @@ def loadRtData(filePath):
 
 
     return ecg, ap, quality
+
+def loadRtDatawithRR(filePath):
+    filePath = filePath
+    data = pd.read_csv(filePath)
+
+    # data['ecg'] = data['ecg'].str.replace(',', '.').astype(float)
+    # data['ecg'] = data['ecg'].fillna(0)  # 将 NaN 填充为 0
+    # data['abp[mmHg]'] = data['abp[mmHg]'].str.replace(',', '.').astype(float)
+
+    # extract ECG signal
+    ecg = data['filtered_ecg'].values
+    ap = data['ap'].values
+    quality = data['quality'].values
+    rr = data['rr'].values
+
+
+
+    return ecg, ap, rr, quality

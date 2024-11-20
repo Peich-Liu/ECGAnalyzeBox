@@ -49,8 +49,12 @@ data = pd.read_csv(filePath, sep=';')
 
 data['ecg'] = data['ecg'].str.replace(',', '.').astype(float)
 data['ecg'] = data['ecg'].fillna(0)
-
 ecg = data['ecg'].values
+
+data['abp[mmHg]'] = data['abp[mmHg]'].str.replace(',', '.').astype(float)
+data['abp[mmHg]'] = data['abp[mmHg]'].fillna(0)
+ap = data['abp[mmHg]'].values
+
 
 window_length = 1000
 overlap_length = 500
@@ -59,12 +63,12 @@ ecgFilteredWindow = deque(maxlen=window_length)
 output_file = r"c:\Document\sc2024\filtered_ecg_with_snr.csv"
 with open(output_file, mode='w', newline='') as file:
     writer = csv.writer(file)
-    writer.writerow(["sample_index", "ecg", "filtered_ecg", "snr", "quality"])
+    writer.writerow(["sample_index", "ecg","ap", "filtered_ecg", "snr", "rr", "quality"])
 
 pqrst_list = []  # 存储窗口内的PQRST波形
 
 bad_windows = []
-
+rr_interval = 0
 with open(output_file, mode='a', newline='') as file:
     writer = csv.writer(file)
     
@@ -77,11 +81,10 @@ with open(output_file, mode='a', newline='') as file:
         if i % overlap_length == 0:
             # PQRST提取
             peaks, _ = signal.find_peaks(ecgFilteredWindow, distance=200, height=np.mean(ecgFilteredWindow) * 1.2)
+            if len(peaks) > 1:
+                rr_interval = peaks[-1] - peaks[-2]
             pqrst_list = [list(ecgFilteredWindow)[max(0, peak-50):min(len(ecgFilteredWindow), peak+50)] for peak in peaks]
             pqrst_list = [wave for wave in pqrst_list if len(wave) == 100]
-            # print("pqrst_list",pqrst_list)
-
-            # pqrst_list = [ecgFilteredWindow[max(0, peak-50):min(len(ecgFilteredWindow), peak+50)] for peak in peaks]
 
             if len(pqrst_list) > 1:
                 average_pqrst = calculate_average_pqrst(pqrst_list)
@@ -93,21 +96,22 @@ with open(output_file, mode='a', newline='') as file:
         quality = "Good" if snr > 10 else "Bad"  # 设定10 dB为良好信号的门限
 
             # 写入结果
-        writer.writerow([i, ecg[i], filtered_ecg[0], snr, quality])
+        writer.writerow([i, ecg[i], ap[i], filtered_ecg[0], snr, rr_interval, quality])
 
         # 记录“Bad”窗口
         if quality == "Bad":
             bad_windows.append(i)
 
-# 绘图
-plt.figure(figsize=(15, 6))
-plt.plot(ecg, label="ECG Signal", alpha=0.7)
-for start in bad_windows:
-    plt.axvspan(start, start + window_length, color='red', alpha=0.3, label="Bad Window" if start == bad_windows[0] else "")
+# # 绘图
+# plt.figure(figsize=(15, 6))
+# plt.plot(ecg, label="ECG Signal", alpha=0.7)
+# for start in bad_windows:
+#     plt.axvspan(start, start + window_length, color='red', alpha=0.3, label="Bad Window" if start == bad_windows[0] else "")
 
-plt.title("ECG Signal with SNR-Based Bad Windows Highlighted")
-plt.xlabel("Sample Index")
-plt.ylabel("Amplitude")
-plt.legend()
-plt.grid()
-plt.show()
+
+# plt.title("ECG Signal with SNR-Based Bad Windows Highlighted")
+# plt.xlabel("Sample Index")
+# plt.ylabel("Amplitude")
+# plt.legend()
+# plt.grid()
+# plt.show()

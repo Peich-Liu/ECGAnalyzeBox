@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
 from sklearn.decomposition import FastICA
 from utilities import *
 from scipy.signal import savgol_filter
@@ -44,4 +45,9 @@ plt.plot(time_stamps, ecg, label='Filtered ECG Signal', color='blue')
 # 在图上标记 "bad" 区间
 for start, end in bad_intervals:
     plt.axvspan(time_stamps[start], time_stamps[end], color='red', alpha=0.3)
+    # 创建 "bad" 区间的图例项
+    bad_patch = mpatches.Patch(color='red', alpha=0.3, label='"Bad" Interval')
+
+    # 添加图例
+    plt.legend(handles=[bad_patch], loc='upper right')
 plt.show()
