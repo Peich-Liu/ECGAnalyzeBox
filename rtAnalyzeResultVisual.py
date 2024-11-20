@@ -9,7 +9,7 @@ from scipy.signal import detrend
 from datetime import timedelta, datetime
 
 
-filePath = r"C:\Document\sc2024\filtered_ecg_with_quality.csv"
+filePath = r"c:\Document\sc2024\filtered_ecg_with_snr.csv"
 data = pd.read_csv(filePath)
 ecg = data['filtered_ecg'].values
 quality = data['quality'].values
@@ -38,10 +38,10 @@ if is_bad:
 
 plt.figure(figsize=(12, 6))
 plt.plot(time_stamps, ecg, label='Filtered ECG Signal', color='blue')
-plt.show()
+# plt.show()
 
 
 # 在图上标记 "bad" 区间
 for start, end in bad_intervals:
-    plt.axvspan(time_stamps[start], time_stamps[end], color='grey', alpha=0.3)
+    plt.axvspan(time_stamps[start], time_stamps[end], color='red', alpha=0.3)
 plt.show()
