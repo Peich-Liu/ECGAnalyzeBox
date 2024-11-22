@@ -43,7 +43,7 @@ def calculate_snr(pqrst_list, average_pqrst):
         snr_values.append(snr)
     return min(snr_values)  # 返回最小SNR
 
-def signalQualityEva(window, thresholds_min, thresholds_max):
+def signalQualityEva(window, pqrst_list, thresholds_min, thresholds_max):
         window = normalize_signal(window)
         peaks, _ = signal.find_peaks(window, distance=200, height=np.mean(window) * 1.2)
         if len(peaks) > 1:
@@ -111,7 +111,7 @@ with open(output_file, mode='a', newline='') as file:
             thresholds_min = mean_snr - 2 * std_snr
             thresholds_max = mean_snr + 2 * std_snr
 
-            snr, quality = signalQualityEva(list(ecgFilteredWindow), thresholds_min, thresholds_max)
+            snr, quality = signalQualityEva(list(ecgFilteredWindow), pqrst_list, thresholds_min, thresholds_max)
         all_snr.append(snr)
 
             # 写入结果
