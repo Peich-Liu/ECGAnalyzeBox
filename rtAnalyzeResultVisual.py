@@ -37,7 +37,9 @@ for i in range(len(quality)):
 if is_bad:
     bad_intervals.append((start_index, len(quality)))
 
-plt.figure(figsize=(12, 6))
+# plt.figure(figsize=(12, 6))
+plt.figure()
+
 plt.plot(time_stamps, ecg, label='Filtered ECG Signal', color='blue')
 # plt.show()
 

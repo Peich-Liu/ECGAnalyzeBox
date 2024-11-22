@@ -24,7 +24,9 @@ def load_data(cba_instance):
 
 def load_rt_data(cba_instance):
     try:
-        data_directory = r'C:\Document\sc2024\filtered_ecg_with_quality.csv'
+        # data_directory = r'C:\Document\sc2024\filtered_ecg_with_quality.csv'
+        data_directory = r'c:\Document\sc2024\filtered_ecg_with_snr.csv'
+
 
         # 加载ECG数据
         ecg, ap, quality = loadRtData(data_directory)
