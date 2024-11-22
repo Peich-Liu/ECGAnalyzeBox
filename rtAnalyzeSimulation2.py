@@ -27,23 +27,38 @@ def normalize_signal(signal):
 
 def signalQualityEva(window, thresholds):
     # Normalize the window to [0, 1]
-    window = normalize_signal(window)  
+    window = normalize_signal(window)
 
     # flat line check
     amplitude_range = np.max(window) - np.min(window)
     if amplitude_range < thresholds["amplitude_range"]:
-        return "Bad"  
-    # pure noise check
+        return "Bad"
+
+    # pure noise check（Zero Crossing Rate (零交叉率)）
     zero_crossings = np.sum(np.diff(window > np.mean(window)) != 0)
     if zero_crossings < thresholds["zero_cross_min"] or zero_crossings > thresholds["zero_cross_max"]:
         return "Bad"
+
     # QRS detection
     peaks, _ = signal.find_peaks(window, height=thresholds["peak_height"], distance=thresholds["beat_length"])
     if len(peaks) < 2:
-        return "Bad" 
+        return "Bad"
+    
+    # Kurtosis (峰度)
+    kurtosis = calc_kurtosis(window)
+    all_kurtosis.append(kurtosis)  # 动态记录
+    if kurtosis < thresholds['kur_min'] or kurtosis > thresholds['kur_max']:
+        return "Bad"
 
+    #Skewness (偏度)
+    skewness = calc_skew(window)
+    all_skewness.append(skewness)  
+    if skewness < thresholds['ske_min'] or skewness > thresholds['ske_max']:
+        return "Bad"
     return "Good"
 
+all_kurtosis = []  
+all_skewness = []  
 low = 0.5
 high = 45
 sos = filter2Sos(low, high)
@@ -56,9 +71,13 @@ thresholds = {
     "zero_cross_max": 50,       
     "peak_height": 0.6,          
     "beat_length": 100,          
+    "kur_min": 2,              
+    "kur_max": 4,             
+    "ske_min": -1,             
+    "ske_max": 1,             
 }
 
-filePath = r"c:\Document\sc2024\250 kun HR.csv"
+filePath = r"C:\Users\60427\Desktop\250 kun HR.csv"
 data = pd.read_csv(filePath, sep=';')
 
 data['ecg'] = data['ecg'].str.replace(',', '.').astype(float)
@@ -72,11 +91,10 @@ overlap_length = 500
 ecgFilteredWindow = deque(maxlen=window_length)
 rrInterval = deque([0] * window_length, maxlen=window_length)
 
-output_file = r"c:\Document\sc2024\filtered_ecg_with_quality.csv"
+output_file = r"C:\Users\60427\Desktop\filtered_ecg_with_quality.csv"
 with open(output_file, mode='w', newline='') as file:
     writer = csv.writer(file)
     writer.writerow(["sample_index", "ecg", "filtered_ecg", "rr_interval", "quality"])
-
 
 bad_windows = []
 r_peaks = []
@@ -90,6 +108,17 @@ with open(output_file, mode='a', newline='') as file:
         filtered_ecg, zi = ziFilter(sos, ecg[i], zi)
         ecgFilteredWindow.append(filtered_ecg[0])
         if(i % overlap_length == 0):
+            #动态阈值, [mu-2sigma, mu+2sigma], 95%
+            mean_kurtosis = np.mean(all_kurtosis)
+            std_kurtosis = np.std(all_kurtosis)
+            thresholds["kur_min"] = mean_kurtosis - 2 * std_kurtosis
+            thresholds["kur_max"] = mean_kurtosis + 2 * std_kurtosis
+
+            mean_skewness = np.mean(all_skewness)
+            std_skewness = np.std(all_skewness)
+            thresholds["ske_min"] = mean_skewness - 2 * std_skewness
+            thresholds["ske_max"] = mean_skewness + 2 * std_skewness
+
             quality = signalQualityEva(list(ecgFilteredWindow), thresholds)
 
         # RR interval calculation
