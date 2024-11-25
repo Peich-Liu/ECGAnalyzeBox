@@ -8,7 +8,21 @@ from utilities import *
 
 def load_data(cba_instance):
     try:
-        data_directory = r'C:\Document\sc2024\250 kun HR.csv'
+        # data_directory = r'/Users/liu/Documents/SC2024fall/250 kun HR.csv'
+                # 创建一个隐藏的根窗口，用于弹出文件选择对话框
+        root = tk.Tk()
+        root.withdraw()  # 隐藏主窗口
+
+        # 弹出文件选择对话框
+        data_directory = filedialog.askopenfilename(
+            title="Select a Data File",
+            filetypes=[("CSV Files", "*.csv"), ("All Files", "*.*")]
+        )
+        
+        # 检查是否选择了文件
+        if not data_directory:
+            print("No file selected.")
+            return
 
         # 加载ECG数据
         ecg, ap = loadData(data_directory)
@@ -25,9 +39,22 @@ def load_data(cba_instance):
 def load_rt_data(cba_instance):
     try:
         # data_directory = r'C:\Document\sc2024\filtered_ecg_with_quality.csv'
-        data_directory = r'c:\Document\sc2024\filtered_ecg_with_snr.csv'
+        # data_directory = r'c:\Document\sc2024\filtered_ecg_with_snr.csv'
+        # data_directory = r'/Users/liu/Documents/SC2024fall/filtered_ecg_with_snr.csv'
+        # 创建一个隐藏的根窗口，用于弹出文件选择对话框
+        root = tk.Tk()
+        root.withdraw()  # 隐藏主窗口
 
-
+        # 弹出文件选择对话框
+        data_directory = filedialog.askopenfilename(
+            title="Select a Data File",
+            filetypes=[("CSV Files", "*.csv"), ("All Files", "*.*")]
+        )
+        
+        # 检查是否选择了文件
+        if not data_directory:
+            print("No file selected.")
+            return
         # 加载ECG数据
         ecg, ap, quality = loadRtData(data_directory)
         if ecg is None:

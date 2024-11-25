@@ -9,7 +9,7 @@ import guiRealtimeDataLoader as rtdl
 import tkinter as tk
 
 from tkinter import ttk
-from pylsl import StreamInfo, StreamOutlet
+# from pylsl import StreamInfo, StreamOutlet
 from utilities import *
 
 
@@ -25,7 +25,7 @@ class CBATools:
         self.ap_signal = None
         self.selected_channel_signal = None 
         self.range = None
-        self.filepath = r'C:\Document\sc2024\250 kun HR.csv'
+        self.filepath = r'/Users/liu/Documents/SC2024fall/250 kun HR.csv'
         self.rtWindowLength = 1000
         self.quality = None
 
@@ -41,7 +41,7 @@ class CBATools:
 
         self.observer.subscribe(self.return_range)
         self.observer.subscribe(self.update_labels_on_change)
-        self.observer.subscribe(show_windowInfo)
+        # self.observer.subscribe(show_windowInfo)
 
         load_data_page_components = self.guiWindow.create_load_data_page(
             lambda: dl.load_data(
@@ -122,7 +122,7 @@ class CBATools:
         self.on_signal_change("ap")
 
     def return_range(self, range):
-        print("return_range observer:",range)
+        # print("return_range observer:",range)
         self.range = range
 
     def on_signal_change(self, signal_type):
@@ -144,7 +144,7 @@ class CBATools:
         self.fs = sampling_rate
 
     def update_quality(self, quality):
-        print(len(quality))
+        # print(len(quality))
         self.quality = quality
 
 

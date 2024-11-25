@@ -6,7 +6,7 @@ from utilities import *
 import matplotlib.patches as mpatches
 
 # 生成示例数据
-filePath = r'c:\Document\sc2024\filtered_ecg_with_snr.csv'
+filePath = r'/Users/liu/Documents/SC2024fall/filtered_ecg_with_snr.csv'
 ecg, ap, rr, quality = loadRtDatawithRR(filePath)
 x = range(len(ecg))  # 采样点序列
 sampling_rate = 250  # 假设采样率为 250 Hz

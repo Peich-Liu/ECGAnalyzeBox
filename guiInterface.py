@@ -8,7 +8,7 @@ from tkinter import ttk
 from collections import deque
 from functools import partial
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
-from pylsl import StreamInlet, resolve_stream
+# from pylsl import StreamInlet, resolve_stream
 # from utilities import *
 
 class guiWindow:
@@ -30,9 +30,9 @@ class guiWindow:
         self.interactive_plot = interactive_plot
 
 
-    def resolve_lsl_stream(self, stream_name):
-        streams = resolve_stream('name', stream_name)
-        return StreamInlet(streams[0])
+    # def resolve_lsl_stream(self, stream_name):
+    #     streams = resolve_stream('name', stream_name)
+    #     return StreamInlet(streams[0])
 
     '''
     =========================================================
@@ -40,48 +40,57 @@ class guiWindow:
     There are 3 buttons, one mode select box, 3 text inputers
     =========================================================
     '''
-    def create_load_data_page(self, load_data, load_rt_data,interact_update):
+    def create_load_data_page(self, load_data, load_rt_data, interact_update):
         '''data loader interface'''
         load_data_page = ttk.Frame(self.notebook)
         self.notebook.add(load_data_page, text="Load Data Page")
 
+        # 顶部控制区域
         ecg_frame = ttk.Frame(load_data_page)
-        ecg_frame.pack(side="top", fill="both", expand=True)
-    
+        ecg_frame.grid(row=0, column=0, sticky="ew", padx=5, pady=5)
+
         ttk.Label(ecg_frame, text="Select Mode:").grid(row=0, column=0, padx=5, pady=5)
 
         self.mode_var = tk.StringVar(value="Select Mode")
-        modes = ["Create Mode", "Drag Mode", "Delete Mode"]
+        modes = ["Window Create Mode", "Window Drag Mode", "Window Delete Mode", "Plot Adoption Mode"]
         self.mode_combobox = ttk.Combobox(ecg_frame, textvariable=self.mode_var, values=modes, state="readonly")
         self.mode_combobox.grid(row=0, column=1, padx=5, pady=5)
 
-        ttk.Label(ecg_frame, text="Patient ID:").grid(row=1, column=0, padx=5, pady=5)
-        ecg_patient_id_entry = ttk.Entry(ecg_frame)
-        ecg_patient_id_entry.grid(row=1, column=1, padx=5, pady=5)
-        ecg_patient_id_entry.insert(0, "f2o01")
-
         load_ecg_button = ttk.Button(ecg_frame, text="Load Offline Data", command=load_data)
-        load_ecg_button.grid(row=1, column=6, padx=5, pady=5)
+        load_ecg_button.grid(row=0, column=3, padx=5, pady=5)
 
-        load_ecg_button = ttk.Button(ecg_frame, text="Load Real-time Data", command=load_rt_data)
-        load_ecg_button.grid(row=1, column=7, padx=5, pady=5)
+        load_rt_data_button = ttk.Button(ecg_frame, text="Load Real-time Data", command=load_rt_data)
+        load_rt_data_button.grid(row=0, column=4, padx=5, pady=5)
 
-        # 创建一个主容器来控制 canvas 和 properties_frame 的布局
+        # 主内容容器
         main_container = ttk.Frame(load_data_page)
-        main_container.pack(side="top", fill="both", expand=True)
+        main_container.grid(row=1, column=0, sticky="nsew")
 
-        # 创建 canvas 并放置在 main_container 顶部
+        # 设置行列权重，确保主内容容器可以动态调整大小
+        load_data_page.grid_rowconfigure(1, weight=1)
+        load_data_page.grid_columnconfigure(0, weight=1)
+
+        # 创建 canvas 并放置在 main_container 中
         canvas = FigureCanvasTkAgg(self.interactive_plot.fig, master=main_container)
-        canvas.get_tk_widget().pack(side="top", fill="both", expand=True)
+        canvas_widget = canvas.get_tk_widget()
+        canvas_widget.grid(row=0, column=0, sticky="nsew")
+
+        # 添加工具栏
+        toolbar_frame = ttk.Frame(main_container)
+        toolbar_frame.grid(row=1, column=0, sticky="ew")
+        self.toolbar = NavigationToolbar2Tk(canvas, toolbar_frame)
+        self.toolbar.update()
+
         canvas.draw()
-        
+
         # 绑定事件
         canvas.mpl_connect("button_press_event", self.interactive_plot.on_press)
         canvas.mpl_connect("motion_notify_event", self.interactive_plot.on_drag)
         canvas.mpl_connect("button_release_event", self.interactive_plot.on_release)
 
+        # 属性框架
         self.dataLoader_properties_frame = ttk.Frame(main_container)
-        self.dataLoader_properties_frame.pack(side="top", fill="x", padx=5, pady=5)
+        self.dataLoader_properties_frame.grid(row=2, column=0, sticky="ew", padx=5, pady=5)
 
         self.ecg_result_label = ttk.Label(self.dataLoader_properties_frame, text="Window Information: ")
         self.ecg_result_label.grid(row=0, column=0)
@@ -89,28 +98,29 @@ class guiWindow:
         self.mode_combobox.bind("<<ComboboxSelected>>", partial(self.mode_changed_load_page, self.interactive_plot))
 
         return {
-            "patient_id_entry": ecg_patient_id_entry,
             "load_ecg_button": load_ecg_button,
             "interactive_plot": self.interactive_plot,
-            "properties_frame":self.dataLoader_properties_frame,
-            "ecg_result_label":self.ecg_result_label,
-            "ap_result_label":self.ap_result_label,
-            # "start_entry": ecg_start_entry,
-            # "end_entry": ecg_end_entry,
+            "properties_frame": self.dataLoader_properties_frame,
+            "ecg_result_label": self.ecg_result_label,
         }
-    
+
     def mode_changed_load_page(self, interactive_plot, event):
         selected_mode = self.mode_var.get()
-        if selected_mode == "Create Mode":
+        if selected_mode == "Window Create Mode":
             interactive_plot.toggle_create_mode()
             print("Create Mode Selected")
 
-        elif selected_mode == "Drag Mode":
+        elif selected_mode == "Window Drag Mode":
             interactive_plot.toggle_drag_mode()
             print("Edit Mode Selected")
 
-        elif selected_mode == "Delete Mode":
+        elif selected_mode == "Window Delete Mode":
+            interactive_plot.toggle_del_mode()
             print("View Mode Selected")
+            
+        elif selected_mode == "Plot Adoption Mode":
+            interactive_plot.toggle_plot_mode()
+            print("Plot Adoption Mode")
 
     '''
     =========================================================

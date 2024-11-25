@@ -35,7 +35,7 @@ def calculateApandEcgTimeDomainValue(cba_instance, fs, properties_frame, selecte
         return
     try:
 
-        print("timeDomainAna, selected_ranges:", selected_ranges)
+        # print("timeDomainAna, selected_ranges:", selected_ranges)
         properties_ecg, sdFigure = calculateEcgSignalRangeProperties(cba_instance.ecg_signal, fs, selected_ranges)
         properties_ap = calculateApSignalRangeProperties(cba_instance.ap_signal, fs, selected_ranges) # The algorithm of the time domain anaylsis is here
         # 假设 properties_ecg 和 properties_ap 的格式是类似上面的字典结构

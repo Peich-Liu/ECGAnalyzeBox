@@ -12,7 +12,7 @@ from scipy import signal
 from collections import deque
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from collections import deque
-from pylsl import StreamInfo, StreamOutlet, StreamInlet, resolve_stream
+# from pylsl import StreamInfo, StreamOutlet, StreamInlet, resolve_stream
 
 class dataAnalyzer:
     def __init__(self, file_path, root):
@@ -78,9 +78,9 @@ class dataAnalyzer:
         # 立即刷新缓冲区，以确保数据被及时写入文件
         self.csv_file.flush()
 
-    def resolve_lsl_stream(self, stream_name):
-        streams = resolve_stream('name', stream_name)
-        return StreamInlet(streams[0])
+    # def resolve_lsl_stream(self, stream_name):
+    #     streams = resolve_stream('name', stream_name)
+    #     return StreamInlet(streams[0])
     def filter2Sos(self, low, high, fs=1000, order=4):
         nyquist = fs / 2
         sos = signal.butter(order, [low / nyquist, high / nyquist], btype='band', output='sos')

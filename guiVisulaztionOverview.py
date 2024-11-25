@@ -18,19 +18,26 @@ class InteractivePlot:
         # self.canvas_frame = canvas_frame
 
         # 初始化交互属性
-        # self.fig = Figure(figsize=(10, 6), dpi=100)
+        self.fig = Figure(figsize=(20, 6), dpi=100)
         self.observer = observer
-        self.fig = Figure()
+        # self.fig = Figure()
         self.ax1 = self.fig.add_subplot(211)
         self.ax2 = self.fig.add_subplot(212, sharex=self.ax1)
+        # self.ax3 = self.fig.add_subplot(313, sharex=self.ax1)
+        
         self.rect1 = None
         self.rect2 = None
         self.is_drawing = False
         self.is_dragging = False
         self.selected_index = None  # 当前被选中的矩形索引
+        self.analyze_window_index = 0
         self.start_x = None
 
         self.create_mode = False  # 控制是否允许创建新矩形
+        self.drag_mode = False  # 控制是否允许拖动新矩形
+        self.del_mode = False
+        
+        
         self.selected_start = {}
         self.selected_end = {}
         self.selection_ranges = {}  # 存储选择的范围
@@ -39,11 +46,15 @@ class InteractivePlot:
 
         self.last_press_time = 0  # 上次鼠标按下事件的时间戳
         self.debounce_interval = 0.5  # 去抖时间间隔（秒）
+        
+
 
     def plot_signals(self, ecg_data, ap_data, quality_data, start_time="00:00:00", sample_interval=0.004):
         """更新绘图内容"""
         self.ax1.clear()
         self.ax2.clear()
+        # self.ax3.clear()
+        
         # 将起始时间转化为 datetime 对象
         start_datetime = datetime.strptime(start_time, "%H:%M:%S")
         
@@ -63,7 +74,6 @@ class InteractivePlot:
 
         # 如果提供了质量数据，标记 "bad" 区间
         if quality_data is not None:
-            print("77777")
             is_bad = False
             start_index = 0
             for i, quality in enumerate(quality_data):
@@ -97,12 +107,32 @@ class InteractivePlot:
     def toggle_create_mode(self):
         """切换创建模式"""
         self.create_mode = True
-        return self.create_mode 
+        self.drag_mode = False
+        self.del_mode = False
+        
+        return self.create_mode
     
     def toggle_drag_mode(self):
         """切换拖动模式"""
         self.create_mode = False
+        self.drag_mode = True
+        self.del_mode = False
+        
         return self.create_mode  
+    def toggle_plot_mode(self):
+        """切换plot模式"""
+        self.create_mode = False
+        self.drag_mode = False
+        self.del_mode = False
+        
+        return
+        # return self.create_mode  
+    def toggle_del_mode(self):
+        self.del_mode = True
+        self.create_mode = False
+        self.drag_mode = False
+        
+        return 
 
     def on_press(self, event):
         """鼠标按下事件处理"""
@@ -117,9 +147,12 @@ class InteractivePlot:
             self.is_drawing = True
             self.start_x = event.xdata
 
-            selected_time = mdates.num2date(event.xdata)
-            self.selected_start[self.current_index] = selected_time.strftime("%H:%M:%S")
-            print("self.selected_start[self.current_index]",self.selected_start[self.current_index])
+            # selected_time = mdates.num2date(event.xdata)
+            # self.selected_start[self.current_index] = selected_time.strftime("%H:%M:%S")
+            selected_time = event.xdata
+            self.selected_start[self.current_index] = selected_time
+            
+            # print("self.selected_start[self.current_index]",self.selected_start[self.current_index])
 
             rect1 = Rectangle((self.start_x, self.ax1.get_ylim()[0]), 0, np.diff(self.ax1.get_ylim())[0],
                               edgecolor='r', facecolor='none')
@@ -130,19 +163,23 @@ class InteractivePlot:
             self.selection_ranges[self.current_index] = (rect1, rect2)
             self.selected_index = self.current_index
 
-
-        else:  
+        elif self.drag_mode:  
             for index, (rect1, rect2) in self.selection_ranges.items():
-                # print("self.selection_ranges = ", self.selection_ranges)
-                # print("rect1,rect2 = ", rect1, rect2)
+                print("event",event.xdata)
                 if rect1.contains(event)[0] or rect2.contains(event)[0]:  # 如果在框框内
                     self.is_dragging = True
                     self.selected_index = index
                     self.start_x = event.xdata - rect1.get_x()  # 记录点击位置相对于矩形的偏移
                     selected_time = mdates.num2date(event.xdata)
                     self.selected_start[self.current_index] = selected_time.strftime("%H:%M:%S")
-                    print("self.selected_start[self.current_index]",self.selected_start[self.current_index])
+                    # print("self.selected_start[self.current_index]",self.selected_start[self.current_index])
                     return
+        
+        elif self.del_mode:
+            pass
+        
+        else:
+            return
 
     def on_drag(self, event):
         """鼠标拖动事件处理"""
@@ -159,7 +196,7 @@ class InteractivePlot:
             self.fig.canvas.draw()
 
 
-        elif self.is_dragging and not self.create_mode:
+        elif self.is_dragging and not self.create_mode and self.drag_mode:
             # 正在拖动已有的矩形
             rect1, rect2 = self.selection_ranges[self.selected_index]
             new_x = event.xdata - self.start_x  # 根据偏移计算新的位置
@@ -170,18 +207,27 @@ class InteractivePlot:
     def on_release(self, event):
         """鼠标松开事件处理"""
 
-        if self.is_drawing:
+        if self.is_drawing and self.create_mode:
             # 完成矩形创建
             self.is_drawing = False
-            selected_time = mdates.num2date(event.xdata)# update end
-            self.selected_end[self.current_index] = selected_time.strftime("%H:%M:%S")
+            # selected_time = mdates.num2date(event.xdata)# update end
+            selected_time = event.xdata# update end
+            # self.selected_end[self.current_index] = selected_time.strftime("%H:%M:%S")
+            self.selected_end[self.current_index] = selected_time
+            
+            self.current_index += 1
+            
 
-        elif self.is_dragging:
+        elif self.is_dragging and self.drag_mode:
             # 完成矩形拖动
             self.is_dragging = False
             self.selected_index = None
-            selected_time = mdates.num2date(event.xdata)# update end
-            self.selected_end[self.current_index] = selected_time.strftime("%H:%M:%S")
+            # selected_time = mdates.num2date(event.xdata)# update end
+            selected_time = event.xdata# update end
+            
+            # self.selected_end[self.current_index] = selected_time.strftime("%H:%M:%S")
+            self.selected_end[self.current_index] = selected_time
+            
         
         # 获取更新的选择范围并通知所有订阅者
         updated_ranges = self.get_selection_ranges()
@@ -189,19 +235,15 @@ class InteractivePlot:
         self.observer.notify(updated_ranges)  # 通知观察者
 
     def get_selection_ranges(self):
-        selection_ranges = {}
-
-
+        # selection_ranges = {}
         # for index, (start, end) in zip(self.selected_start.items(), self.selected_end.items()):
-        for index, start in self.selected_start.items():
-            end = self.selected_end.get(index)
-
+        # for index, start in self.selected_start.items():
+        #     # print("self.selected_start",self.selected_start)
+        #     end = self.selected_end.get(index)
             # 将时间格式化为 HH:MM:SS
-            selection_ranges[index] = (start, end)
-            
-            print("selection_ranges",selection_ranges)
-
-        return selection_ranges
+            # self.selection_ranges[index] = (start, end)
+            # print("selection_ranges1",self.selection_ranges)=
+        return self.selection_ranges
     # def mark_noise_regions(self, time_points, quality_data):
     def mark_noise_regions(self, quality_data):
         """根据 quality 列标记噪音区间"""

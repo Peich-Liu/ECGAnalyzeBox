@@ -15,8 +15,11 @@ from statsmodels.tsa.ar_model import AutoReg
 from tkinter import filedialog, simpledialog, messagebox
 from tkinter import ttk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
+from matplotlib.dates import num2date
 from matplotlib.patches import Rectangle
 from datetime import datetime
+from decimal import Decimal, getcontext
+
 
 def bandPass(data, zi, lowCut, highCut, fs, order=4):
     nyq = fs
@@ -297,12 +300,86 @@ def calculateApSignalProperties(signal, fs):
 #     time_in_seconds = (datetime.strptime(timestamp, time_format) - datetime(1900, 1, 1)).total_seconds()
 #     return int(time_in_seconds * fs)
 
+def x_coord_to_seconds(x_coord, start_time="00:00:00",fs = 250):
+    # Convert the x-coordinate (matplotlib date number) to a datetime object
+    date_time = num2date(x_coord)
+    
+    # Parse the start time into a datetime object
+    start_datetime = datetime.strptime(start_time, "%H:%M:%S")
+    
+    # Ensure both datetime objects have the same timezone information
+    start_datetime = start_datetime.replace(tzinfo=date_time.tzinfo)
+    
+    # Calculate the time difference
+    delta_time = date_time - start_datetime
+    
+    # Get the total seconds from the time difference
+    total_seconds = delta_time.total_seconds()
+    
+    sample = int(total_seconds*fs)
+    
+    return sample
+
+# def transSample(start, end, fs=250):
+#     start_time = datetime.strptime(start, '%H:%M:%S')
+#     end_time = datetime.strptime(end, '%H:%M:%S')
+    
+#     # 转换为秒数
+#     start_seconds = start_time.hour * 3600 + start_time.minute * 60 + start_time.second
+#     end_seconds = end_time.hour * 3600 + end_time.minute * 60 + end_time.second
+
+#     start_sample = int(start_seconds * fs)
+#     end_sample = int(end_seconds * fs)
+#     return start_sample, end_sample
+    # sample_point_ranges[index] = (start_sample, end_sample)
+        
+        # return total_sample
+        
+        
+# def x_coord_to_sample_index(x_coord, start_time="00:00:00", sample_rate=250):
+#     # 设置高精度
+#     getcontext().prec = 28
+    
+#     # 将 x_coord 转换为 Decimal
+#     x_coord_decimal = Decimal(str(x_coord))
+    
+#     # 将 x_coord 转换为 datetime 对象
+#     date_time = num2date(float(x_coord_decimal))
+    
+#     # 解析起始时间
+#     start_datetime = datetime.strptime(start_time, "%H:%M:%S")
+    
+#     # 计算时间差（以秒为单位），并转换为 Decimal
+#     delta_time = Decimal(str((date_time - start_datetime).total_seconds()))
+    
+#     # 计算采样间隔
+#     sample_interval = Decimal('1') / Decimal(str(sample_rate))
+    
+#     # 计算样本索引
+#     sample_index = delta_time / sample_interval
+    
+#     # 四舍五入到最近的整数
+#     sample_index = int(sample_index.to_integral_value(rounding='ROUND_HALF_UP'))
+    
+#     return sample_index
+
 def calculateEcgSignalRangeProperties(signal, fs, selected_ranges):
     # print("selected_ranges",selected_ranges)
     results = {}
+    # selected_ranges[index] = (start, end)
+    
 
-    for index, (start, end) in selected_ranges.items():
+    for index, (rect1, rect2) in selected_ranges.items():
         # 将时间戳转换为索引
+        start = x_coord_to_seconds(rect1.get_x())
+        end = x_coord_to_seconds(rect1.get_x() + rect1.get_width())
+        # 提取整数部分（小时）和小数部分
+        # startPoint = rect1.get_x()
+        # endPoint = rect1.get_x()+ rect1.get_width()
+        # start, end = transSample(startPoint, endPoint)
+        
+        
+        print("start",start,"end",end)
         segment = signal[start:end]
 
 
@@ -344,18 +421,14 @@ def calculateEcgSignalRangeProperties(signal, fs, selected_ranges):
     return results, figure
 
 def calculateApSignalRangeProperties(signal, fs, selected_ranges):
-    print("selected_ranges",selected_ranges)
+    # print("selected_ranges",selected_ranges)
     results = {}
 
-    for index, (start, end) in selected_ranges.items():
+    for index, (rect1, _) in selected_ranges.items():
+        start = x_coord_to_seconds(rect1.get_x())
+        end = x_coord_to_seconds(rect1.get_x() + rect1.get_width())
         # 提取当前选框的信号片段
         segment = signal[start:end]
-        # 将时间戳转换为索引
-        # start_idx = convert_timestamp_to_index(start, fs)
-        # end_idx = convert_timestamp_to_index(end, fs)
-        
-        # segment = signal[start_idx:end_idx]
-
         # 1. Systolic and Diastolic
         sbp = np.max(segment)  # Systolic
         dbp = np.min(segment)  # Diastolic
@@ -604,8 +677,8 @@ def displaySignalProperties(properties, properties_frame):
 # def calculate_variance(ranges):
 #     print("计算方差:", ranges)
 
-def show_windowInfo(ranges):
-    print("show_windowInfo",ranges)
+# def show_windowInfo(ranges):
+#     print("show_windowInfo",ranges)
 
 
 
