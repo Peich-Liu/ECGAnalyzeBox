@@ -9,7 +9,7 @@ from scipy.signal import detrend
 from datetime import timedelta, datetime
 
 
-filePath = r"c:\Document\sc2024\filtered_ecg_with_snr2.csv"
+filePath = r"C:\Users\60427\Desktop\filtered_ecg_with_quality.csv"
 data = pd.read_csv(filePath)
 ecg = data['filtered_ecg'].values
 quality = data['quality'].values

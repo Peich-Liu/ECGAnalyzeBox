@@ -68,7 +68,7 @@ sos = filter2Sos(low, high)
 
 zi = signal.sosfilt_zi(sos)
 
-filePath = r"c:\Document\sc2024\250 kun HR.csv"
+filePath = r"C:\Users\60427\Desktop\250 kun HR.csv"
 data = pd.read_csv(filePath, sep=';')
 
 data['ecg'] = data['ecg'].str.replace(',', '.').astype(float)
@@ -84,7 +84,7 @@ window_length = 1000
 overlap_length = 500
 ecgFilteredWindow = deque(maxlen=window_length)
 
-output_file = r"c:\Document\sc2024\filtered_ecg_with_snr2.csv"
+output_file = r"C:\Users\60427\Desktop\filtered_ecg_with_quality.csv"
 with open(output_file, mode='w', newline='') as file:
     writer = csv.writer(file)
     writer.writerow(["sample_index", "ecg","ap", "filtered_ecg", "snr","threshold_min","threshold_max", "rr", "quality"])
