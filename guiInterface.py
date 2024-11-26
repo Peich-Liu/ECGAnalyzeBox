@@ -52,7 +52,7 @@ class guiWindow:
         ttk.Label(ecg_frame, text="Select Mode:").grid(row=0, column=0, padx=5, pady=5)
 
         self.mode_var = tk.StringVar(value="Select Mode")
-        modes = ["Window Create Mode", "Window Drag Mode", "Window Delete Mode", "Plot Adoption Mode"]
+        modes = ["Window Create Mode", "Window Drag Mode", "Window Delete Mode", "Plot Adoption Mode", "Noise Window Create Mode", "Noise Window Delete Mode"]
         self.mode_combobox = ttk.Combobox(ecg_frame, textvariable=self.mode_var, values=modes, state="readonly")
         self.mode_combobox.grid(row=0, column=1, padx=5, pady=5)
 

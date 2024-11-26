@@ -104,6 +104,35 @@ class InteractivePlot:
         # 自动旋转日期标签
         self.fig.autofmt_xdate()
         self.fig.canvas.draw_idle()
+        # 如果提供了质量数据，标记 "bad" 区间 without interaction
+        # if quality_data is not None:
+        #     is_bad = False
+        #     start_index = 0
+        #     for i, quality in enumerate(quality_data):
+        #         if quality == "Bad" and not is_bad:
+        #             is_bad = True
+        #             start_index = i
+        #         elif quality == "Good" and is_bad:
+        #             is_bad = False
+        #             # 绘制 "bad" 区间
+        #             self.ax1.axvspan(time_points[start_index], time_points[i], color='grey', alpha=0.3)
+        #             self.ax2.axvspan(time_points[start_index], time_points[i], color='grey', alpha=0.3)
+            
+        #     # 如果最后一个点是 "Bad"，处理未关闭的区间
+        #     if is_bad:
+        #         self.ax1.axvspan(time_points[start_index], time_points[-1], color='grey', alpha=0.3)
+        #         self.ax2.axvspan(time_points[start_index], time_points[-1], color='grey', alpha=0.3)
+        # # 设置 x 轴格式
+        # self.ax1.xaxis.set_major_formatter(mdates.DateFormatter("%H:%M:%S"))
+        # self.ax2.xaxis.set_major_formatter(mdates.DateFormatter("%H:%M:%S"))
+        
+        # # 自动格式化 x 轴时间刻度
+        # self.ax1.xaxis.set_major_locator(mdates.SecondLocator(interval=1000))  # 设置为每 10 秒一个刻度
+        # self.ax2.xaxis.set_major_locator(mdates.SecondLocator(interval=1000))  # 设置为每 10 秒一个刻度
+
+        # # 绘图更新
+        # self.fig.autofmt_xdate()  # 自动旋转日期标签
+        # self.fig.canvas.draw()
 
     def toggle_create_mode(self):
         """切换创建模式"""

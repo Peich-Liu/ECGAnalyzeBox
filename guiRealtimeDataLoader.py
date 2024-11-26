@@ -14,7 +14,8 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from collections import deque
 # from pylsl import StreamInfo, StreamOutlet, StreamInlet, resolve_stream
 
-class dataAnalyzer:
+# class dataAnalyzer:
+class rtPlot:
     def __init__(self, file_path, root):
         self.file_path = file_path
         self.root = root
@@ -45,11 +46,6 @@ class dataAnalyzer:
         self.apWindow = deque(maxlen=self.window_length)
         self.ecgFilteredWindow = deque(maxlen=self.window_length)
         self.rrInterval = deque([0] * self.window_length, maxlen=self.window_length)
-
-        # # 初始化 LSL 接收器
-        # print("正在查找 ECG 和 AP 数据流...")
-        # self.ecg_inlet = self.resolve_lsl_stream('ECGStream')
-        # self.ap_inlet = self.resolve_lsl_stream('APStream')
 
         # 在初始化中创建绘图对象，只需要创建一次
         self.line1, = self.ax[0].plot([], [], label='Filtered ECG Signal', color='b')
