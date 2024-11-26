@@ -364,61 +364,64 @@ def x_coord_to_seconds(x_coord, start_time="00:00:00",fs = 250):
 #     return sample_index
 
 def calculateEcgSignalRangeProperties(signal, fs, selected_ranges):
-    # print("selected_ranges",selected_ranges)
+    print("selected_ranges",selected_ranges)
     results = {}
     # selected_ranges[index] = (start, end)
     
+    if len(selected_ranges) != 0:
+        for index, (rect1, rect2) in selected_ranges.items():
+        # for index, (rect1, rect2) in selected_ranges:
+            # 将时间戳转换为索引
+            start = x_coord_to_seconds(rect1.get_x())
+            end = x_coord_to_seconds(rect1.get_x() + rect1.get_width())
+            # 提取整数部分（小时）和小数部分
+            # startPoint = rect1.get_x()
+            # endPoint = rect1.get_x()+ rect1.get_width()
+            # start, end = transSample(startPoint, endPoint)
+            
+            
+            print("start",start,"end",end)
+            segment = signal[start:end]
 
-    for index, (rect1, rect2) in selected_ranges.items():
-        # 将时间戳转换为索引
-        start = x_coord_to_seconds(rect1.get_x())
-        end = x_coord_to_seconds(rect1.get_x() + rect1.get_width())
-        # 提取整数部分（小时）和小数部分
-        # startPoint = rect1.get_x()
-        # endPoint = rect1.get_x()+ rect1.get_width()
-        # start, end = transSample(startPoint, endPoint)
-        
-        
-        print("start",start,"end",end)
-        segment = signal[start:end]
 
+            # start_idx = convert_timestamp_to_index(start, fs)
+            # end_idx = convert_timestamp_to_index(end, fs)
+            # segment = signal[start_idx:end_idx]
 
-        # start_idx = convert_timestamp_to_index(start, fs)
-        # end_idx = convert_timestamp_to_index(end, fs)
-        # segment = signal[start_idx:end_idx]
+            #under constraction
 
-        #under constraction
+            #0. RR interval
+            peaks, _ = find_peaks(segment, distance=200)
+            rrIntervalSamples = np.diff(peaks)
+            samplingRate = fs
+            rrIntervalsSecond = rrIntervalSamples / samplingRate
 
-        #0. RR interval
-        peaks, _ = find_peaks(segment, distance=200)
-        rrIntervalSamples = np.diff(peaks)
-        samplingRate = fs
-        rrIntervalsSecond = rrIntervalSamples / samplingRate
+            # 1. Mean Heart Rate (HR)
+            hr = 60 / rrIntervalsSecond
+            meanHR = np.mean(hr)
 
-        # 1. Mean Heart Rate (HR)
-        hr = 60 / rrIntervalsSecond
-        meanHR = np.mean(hr)
+            # 2. SDNN (Standard deviation of RR intervals)
+            sdnn = np.std(rrIntervalsSecond)
 
-        # 2. SDNN (Standard deviation of RR intervals)
-        sdnn = np.std(rrIntervalsSecond)
+            # 3. RMSSD (Root Mean Square of Successive Differences)
+            rrDiff = np.diff(rrIntervalsSecond)  # Differences between successive RR intervals
+            rmssd = np.sqrt(np.mean(rrDiff**2))
 
-        # 3. RMSSD (Root Mean Square of Successive Differences)
-        rrDiff = np.diff(rrIntervalsSecond)  # Differences between successive RR intervals
-        rmssd = np.sqrt(np.mean(rrDiff**2))
+            # 4. SD1/SD2, put here temporily 
+            sd1, sd2, rr_mean = calculate_sd1_sd2(rrIntervalSamples)
+            figure = plot_poincare(rrIntervalSamples, sd1, sd2, rr_mean)
 
-        # 4. SD1/SD2, put here temporily 
-        sd1, sd2, rr_mean = calculate_sd1_sd2(rrIntervalSamples)
-        figure = plot_poincare(rrIntervalSamples, sd1, sd2, rr_mean)
+            results[index] = {
+                # "RR Interval Second": rrIntervalsSecond,
+                "Heart Rate":f"{meanHR:.2f}",
+                "SDNN":f"{sdnn:.2f}",
+                "RMSSD":f"{rmssd:.2f}",
+            }
 
-        results[index] = {
-            # "RR Interval Second": rrIntervalsSecond,
-            "Heart Rate":f"{meanHR:.2f}",
-            "SDNN":f"{sdnn:.2f}",
-            "RMSSD":f"{rmssd:.2f}",
-        }
-
-        
-    return results, figure
+            
+        return results, figure
+    else:
+        return None, None
 
 def calculateApSignalRangeProperties(signal, fs, selected_ranges):
     # print("selected_ranges",selected_ranges)

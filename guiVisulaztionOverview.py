@@ -9,6 +9,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolb
 from matplotlib.figure import Figure
 from matplotlib.patches import Rectangle
 from datetime import datetime, timedelta
+from collections import deque
 from matplotlib.widgets import Slider
 from utilities import *
 
@@ -37,10 +38,8 @@ class InteractivePlot:
         self.drag_mode = False  # 控制是否允许拖动新矩形
         self.del_mode = False
         
-        
-        self.selected_start = {}
-        self.selected_end = {}
         self.selection_ranges = {}  # 存储选择的范围
+        # self.selection_ranges = deque(max)  # 存储选择的范围
         self.current_index = 0  # 索引计数器
         self.last_update_time = 0  # 初始化最后一次更新的时间戳
 
@@ -146,14 +145,6 @@ class InteractivePlot:
         if self.create_mode:
             self.is_drawing = True
             self.start_x = event.xdata
-
-            # selected_time = mdates.num2date(event.xdata)
-            # self.selected_start[self.current_index] = selected_time.strftime("%H:%M:%S")
-            selected_time = event.xdata
-            self.selected_start[self.current_index] = selected_time
-            
-            # print("self.selected_start[self.current_index]",self.selected_start[self.current_index])
-
             rect1 = Rectangle((self.start_x, self.ax1.get_ylim()[0]), 0, np.diff(self.ax1.get_ylim())[0],
                               edgecolor='r', facecolor='none')
             rect2 = Rectangle((self.start_x, self.ax2.get_ylim()[0]), 0, np.diff(self.ax2.get_ylim())[0],
@@ -170,13 +161,19 @@ class InteractivePlot:
                     self.is_dragging = True
                     self.selected_index = index
                     self.start_x = event.xdata - rect1.get_x()  # 记录点击位置相对于矩形的偏移
-                    selected_time = mdates.num2date(event.xdata)
-                    self.selected_start[self.current_index] = selected_time.strftime("%H:%M:%S")
+                    # selected_time = mdates.num2date(event.xdata)
+                    # self.selected_start[self.current_index] = selected_time.strftime("%H:%M:%S")
                     # print("self.selected_start[self.current_index]",self.selected_start[self.current_index])
                     return
         
         elif self.del_mode:
-            pass
+            for index, (rect1, rect2) in self.selection_ranges.items():
+                print("event",event.xdata)
+                if rect1.contains(event)[0] or rect2.contains(event)[0]:  # 如果在框框内
+                    self.selected_index = index
+                    return
+                else:
+                    self.selected_index = None
         
         else:
             return
@@ -211,9 +208,9 @@ class InteractivePlot:
             # 完成矩形创建
             self.is_drawing = False
             # selected_time = mdates.num2date(event.xdata)# update end
-            selected_time = event.xdata# update end
+            # selected_time = event.xdata# update end
             # self.selected_end[self.current_index] = selected_time.strftime("%H:%M:%S")
-            self.selected_end[self.current_index] = selected_time
+            # self.selected_end[self.current_index] = selected_time
             
             self.current_index += 1
             
@@ -223,15 +220,30 @@ class InteractivePlot:
             self.is_dragging = False
             self.selected_index = None
             # selected_time = mdates.num2date(event.xdata)# update end
-            selected_time = event.xdata# update end
-            
+            # selected_time = event.xdata# update end
             # self.selected_end[self.current_index] = selected_time.strftime("%H:%M:%S")
-            self.selected_end[self.current_index] = selected_time
+            # self.selected_end[self.current_index] = selected_time
+        elif self.del_mode:
+            # self.selection_ranges[self.selected_index]
+            if self.selected_index is not None:
+
+                rect1, rect2 = self.selection_ranges[self.selected_index]
+        
+                # 从图表中移除矩形
+                rect1.remove()
+                rect2.remove()
+
+                del self.selection_ranges[self.selected_index]
+
+                self.fig.canvas.draw()
+
             
         
         # 获取更新的选择范围并通知所有订阅者
         updated_ranges = self.get_selection_ranges()
         # self.selection_ranges = updated_ranges
+        print("self.selection_ranges",self.selection_ranges)
+
         self.observer.notify(updated_ranges)  # 通知观察者
 
     def get_selection_ranges(self):
@@ -242,7 +254,7 @@ class InteractivePlot:
         #     end = self.selected_end.get(index)
             # 将时间格式化为 HH:MM:SS
             # self.selection_ranges[index] = (start, end)
-            # print("selection_ranges1",self.selection_ranges)=
+            # print("selection_ranges1",self.selection_ranges)
         return self.selection_ranges
     # def mark_noise_regions(self, time_points, quality_data):
     def mark_noise_regions(self, quality_data):

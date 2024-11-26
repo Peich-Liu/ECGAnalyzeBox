@@ -38,17 +38,22 @@ def calculateApandEcgTimeDomainValue(cba_instance, fs, properties_frame, selecte
         # print("timeDomainAna, selected_ranges:", selected_ranges)
         properties_ecg, sdFigure = calculateEcgSignalRangeProperties(cba_instance.ecg_signal, fs, selected_ranges)
         properties_ap = calculateApSignalRangeProperties(cba_instance.ap_signal, fs, selected_ranges) # The algorithm of the time domain anaylsis is here
-        # 假设 properties_ecg 和 properties_ap 的格式是类似上面的字典结构
-        combined_results = {}
+        if properties_ecg is not None and properties_ap is not None:
+            # 假设 properties_ecg 和 properties_ap 的格式是类似上面的字典结构
+            combined_results = {}
+            # 遍历每个范围的结果并将 ECG 和 AP 的结果合并
+            for index in properties_ecg.keys():
+                combined_results[f"{index}"] = {
+                    "ECG": properties_ecg[index],
+                    "AP": properties_ap[index],
+                }
+            # cba_instance.hrv_plot.parameters = combined_results
+            displaySignalProperties(combined_results, properties_frame)
+        else:
+            combined_results = {}
+            displaySignalProperties(combined_results, properties_frame)
 
-        # 遍历每个范围的结果并将 ECG 和 AP 的结果合并
-        for index in properties_ecg.keys():
-            combined_results[f"{index}"] = {
-                "ECG": properties_ecg[index],
-                "AP": properties_ap[index],
-            }
-        # cba_instance.hrv_plot.parameters = combined_results
-        displaySignalProperties(combined_results, properties_frame)
+
         # getFigure(sdFigure, sd_canvas_frame)
     except ValueError:
         messagebox.showerror("Input Error", "No signal loaded to filter. Please load data first.")
