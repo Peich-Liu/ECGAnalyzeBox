@@ -55,8 +55,6 @@ class InteractivePlot:
         self.current_bad_index = 0
 
 
-        
-
 
     def plot_signals(self, ecg_data, ap_data, quality_data, start_time="00:00:00", sample_interval=0.004):
         """更新绘图内容"""
@@ -375,6 +373,10 @@ class InteractivePlot:
     def get_selection_ranges(self):
 
         return self.selection_ranges
+    
+    def store_new_file(self):
+        
+        pass
 
 def vis_data(cba_instance, plot_instance):
     plot_instance.plot_signals(cba_instance.ecg_signal, cba_instance.ap_signal)
