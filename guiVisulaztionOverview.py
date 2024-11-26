@@ -34,6 +34,7 @@ class InteractivePlot:
         self.analyze_window_index = 0
         self.start_x = None
 
+
         self.create_mode = False  # 控制是否允许创建新矩形
         self.drag_mode = False  # 控制是否允许拖动新矩形
         self.del_mode = False
@@ -46,7 +47,14 @@ class InteractivePlot:
         self.last_press_time = 0  # 上次鼠标按下事件的时间戳
         self.debounce_interval = 0.5  # 去抖时间间隔（秒）
 
-        self.bad_intervals = []
+        self.bad_intervals = {}
+        self.noise_create = False
+        self.noise_del = False
+        self.noise_start_x = None
+        self.noise_end_x = None
+        self.current_bad_index = 0
+
+
         
 
 
@@ -76,6 +84,7 @@ class InteractivePlot:
         if quality_data is not None:
             is_bad = False
             start_index = 0
+            badIdx = 0
             for i, quality in enumerate(quality_data):
                 if quality == "Bad" and not is_bad:
                     is_bad = True
@@ -83,16 +92,63 @@ class InteractivePlot:
                 elif quality == "Good" and is_bad:
                     is_bad = False
                     # 绘制 "bad" 区间
-                    rect1 = self.ax1.axvspan(time_points[start_index], time_points[i], color='grey', alpha=0.3, picker=True)
-                    rect2 = self.ax2.axvspan(time_points[start_index], time_points[i], color='grey', alpha=0.3, picker=True)
-                    self.bad_intervals.append([time_points[start_index], time_points[i], rect1, rect2])
+                    # rect1 = self.ax1.axvspan(time_points[start_index], time_points[i], color='grey', alpha=0.3, picker=True)
+                    # rect2 = self.ax2.axvspan(time_points[start_index], time_points[i], color='grey', alpha=0.3, picker=True)
+                    # self.bad_intervals.append([time_points[start_index], time_points[i], rect1, rect2])
+                    rect1 = Rectangle(
+                        (time_points[start_index], self.ax1.get_ylim()[0]),  # 左下角的坐标 (x, y)
+                        time_points[i] - time_points[start_index],           # 矩形宽度，代表 x 方向跨度
+                        np.diff(self.ax1.get_ylim())[0],                     # 矩形高度，代表 y 方向跨度
+                        edgecolor='none',                                    # 无边框线条
+                        facecolor='grey',                                    # 填充颜色
+                        alpha=0.3,                                           # 透明度
+                        picker=True                                          # 使该矩形可拾取
+                    )
+                    rect2 = Rectangle(
+                        (time_points[start_index], self.ax2.get_ylim()[0]),
+                        time_points[i] - time_points[start_index],
+                        np.diff(self.ax2.get_ylim())[0],
+                        edgecolor='none',
+                        facecolor='grey',
+                        alpha=0.3,
+                        picker=True
+                    )
+                    self.ax1.add_patch(rect1)
+                    self.ax2.add_patch(rect2)
+                    self.bad_intervals[badIdx] = (rect1, rect2)
+                    badIdx += 1
+
+
             
             # 如果最后一个点是 "Bad"，处理未关闭的区间
             if is_bad:
-                rect1 = self.ax1.axvspan(time_points[start_index], time_points[-1], color='grey', alpha=0.3, picker=True)
-                rect2 = self.ax2.axvspan(time_points[start_index], time_points[-1], color='grey', alpha=0.3, picker=True)
-                self.bad_intervals.append([time_points[start_index], time_points[-1], rect1, rect2])
-        
+                rect1 = Rectangle(
+                    (time_points[start_index], self.ax1.get_ylim()[0]),  # 左下角的坐标 (x, y)
+                    time_points[-1] - time_points[start_index],          # 矩形宽度，代表从 start_index 到末尾的时间跨度
+                    np.diff(self.ax1.get_ylim())[0],                     # 矩形高度，代表 y 方向的跨度
+                    edgecolor='none',                                    # 无边框线条
+                    facecolor='grey',                                    # 填充颜色
+                    alpha=0.3,                                           # 透明度
+                    picker=True                                          # 使该矩形可拾取
+                )
+                self.ax1.add_patch(rect1)
+                rect2 = Rectangle(
+                    (time_points[start_index], self.ax2.get_ylim()[0]),  # 左下角的坐标 (x, y)
+                    time_points[-1] - time_points[start_index],          # 矩形宽度，代表从 start_index 到末尾的时间跨度
+                    np.diff(self.ax2.get_ylim())[0],                     # 矩形高度，代表 y 方向的跨度
+                    edgecolor='none',
+                    facecolor='grey',
+                    alpha=0.3,
+                    picker=True
+                )
+                self.ax2.add_patch(rect2)
+                self.bad_intervals[badIdx] = (rect1, rect2)
+                badIdx += 1
+
+                # self.bad_intervals.append([time_points[start_index], time_points[-1], rect1, rect2])
+                # self.bad_intervals.append(rect1, rect2)
+
+        print("len(self.bad_intervals)", len(self.bad_intervals))
         # 设置 x 轴格式
         self.ax1.xaxis.set_major_formatter(mdates.DateFormatter("%H:%M:%S"))
         self.ax2.xaxis.set_major_formatter(mdates.DateFormatter("%H:%M:%S"))
@@ -105,11 +161,33 @@ class InteractivePlot:
         self.fig.autofmt_xdate()
         self.fig.canvas.draw_idle()
 
+    def toggle_create_noise_mode(self):
+        """切换noise create模式"""
+        self.noise_create = True
+        self.noise_del = False
+        self.create_mode = False
+        self.drag_mode = False
+        self.del_mode = False
+
+        return
+
+    def toggle_del_noise_mode(self):
+        """切换delete create模式"""
+        self.noise_create = False
+        self.noise_del = True
+        self.create_mode = False
+        self.drag_mode = False
+        self.del_mode = False
+        
+        return
+    
     def toggle_create_mode(self):
         """切换创建模式"""
         self.create_mode = True
         self.drag_mode = False
         self.del_mode = False
+        self.noise_create = False
+        self.noise_del = False
         
         return self.create_mode
     
@@ -118,22 +196,29 @@ class InteractivePlot:
         self.create_mode = False
         self.drag_mode = True
         self.del_mode = False
+        self.noise_create = False
+        self.noise_del = False
         
         return self.create_mode  
+
+    def toggle_del_mode(self):
+        self.del_mode = True
+        self.create_mode = False
+        self.drag_mode = False
+        self.noise_create = False
+        self.noise_del = False
+        
+        return 
+    
     def toggle_plot_mode(self):
         """切换plot模式"""
         self.create_mode = False
         self.drag_mode = False
         self.del_mode = False
+        self.noise_create = False
+        self.noise_del = False
         
         return
-        # return self.create_mode  
-    def toggle_del_mode(self):
-        self.del_mode = True
-        self.create_mode = False
-        self.drag_mode = False
-        
-        return 
 
     def on_press(self, event):
         """鼠标按下事件处理"""
@@ -175,6 +260,36 @@ class InteractivePlot:
                 else:
                     self.selected_index = None
         
+        elif self.noise_create:
+
+            self.is_drawing = True
+            self.noise_start_x = event.xdata
+
+            rect1 = Rectangle(
+                (self.noise_start_x, self.ax1.get_ylim()[0]), 0, np.diff(self.ax1.get_ylim())[0],        
+                edgecolor='none', facecolor='grey', alpha=0.3, picker=True                                    
+            )
+            rect2 = Rectangle(
+                (self.noise_start_x, self.ax1.get_ylim()[0]), 0, np.diff(self.ax1.get_ylim())[0],        
+                edgecolor='none', facecolor='grey', alpha=0.3, picker=True                                    
+            )
+
+            self.ax1.add_patch(rect1)
+            self.ax2.add_patch(rect2)
+            self.current_bad_index = len(self.bad_intervals)
+
+            self.bad_intervals[self.current_bad_index] = (rect1, rect2)
+
+        elif self.noise_del:
+            print("789",self.bad_intervals)
+            for index, (rect1, rect2) in self.bad_intervals.items():
+                print("indexNoise",index,"bad_intervals0",len(self.bad_intervals))
+                if rect1.contains(event)[0] or rect2.contains(event)[0]:  # 如果在框框内
+                    self.current_bad_index = index
+                    return
+                else:
+                    self.current_bad_index = None
+        
         else:
             return
 
@@ -192,13 +307,21 @@ class InteractivePlot:
             rect2.set_width(width)
             self.fig.canvas.draw()
 
-
         elif self.is_dragging and not self.create_mode and self.drag_mode:
             # 正在拖动已有的矩形
             rect1, rect2 = self.selection_ranges[self.selected_index]
             new_x = event.xdata - self.start_x  # 根据偏移计算新的位置
             rect1.set_x(new_x)
             rect2.set_x(new_x)
+            self.fig.canvas.draw()
+
+        elif self.is_drawing and self.noise_create:
+            # 正在创建新的矩形
+            width = event.xdata - self.noise_start_x
+            print("self.current_bad_index",self.current_bad_index)
+            rect1, rect2 = self.bad_intervals[self.current_bad_index]
+            rect1.set_width(width)
+            rect2.set_width(width)
             self.fig.canvas.draw()
 
     def on_release(self, event):
@@ -226,6 +349,22 @@ class InteractivePlot:
                 # delete the selected window
                 del self.selection_ranges[self.selected_index]
                 self.fig.canvas.draw()
+                
+        elif self.noise_create:
+            self.is_drawing = False
+
+
+        elif self.noise_del:
+            # self.selection_ranges[self.selected_index]
+            if self.current_bad_index is not None:
+                rect1, rect2 = self.bad_intervals[self.current_bad_index]
+                # 从图表中移除矩形
+                rect1.remove()
+                rect2.remove()
+                # delete the selected window
+                del self.bad_intervals[self.current_bad_index]
+                self.fig.canvas.draw()
+
         # 获取更新的选择范围并通知所有订阅者
         updated_ranges = self.get_selection_ranges()
         # self.selection_ranges = updated_ranges

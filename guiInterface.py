@@ -121,6 +121,15 @@ class guiWindow:
         elif selected_mode == "Plot Adoption Mode":
             interactive_plot.toggle_plot_mode()
             print("Plot Adoption Mode")
+        
+        elif selected_mode == "Noise Window Create Mode":
+            interactive_plot.toggle_create_noise_mode()
+            print("Noise Window Create Mode")
+            
+        elif selected_mode == "Noise Window Delete Mode":
+            interactive_plot.toggle_del_noise_mode()
+            print("Noise Window Delete Mode")
+
 
     '''
     =========================================================
