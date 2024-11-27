@@ -2,6 +2,17 @@ import re
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from scipy import signal
+from utilities import bandpass_filter
+
+def findPeak(filtered_ecg):
+    peaks, _ = signal.find_peaks(filtered_ecg, distance=200, height=np.mean(filtered_ecg) * 1.2)
+
+    if len(peaks) > 1:
+        rr_interval = np.diff(peaks)  # 计算所有相邻 R 波之间的间隔
+    else:
+        rr_interval = [] 
+    return rr_interval
 
 def find_sequences(rr_intervals, sbp_values, min_sequence_length=3):
     rr_intervals = np.array(rr_intervals)
@@ -35,27 +46,52 @@ def find_sequences(rr_intervals, sbp_values, min_sequence_length=3):
         slope, _ = np.polyfit(sbp_seq, rr_seq, 1)
     return sequences
 
-quality_file = r"C:\Users\60427\Desktop\filtered_ecg_with_quality333.csv"
-quality_data = pd.read_csv(quality_file)
+# quality_file = r"C:\Users\60427\Desktop\filtered_ecg_with_quality333.csv"
+# quality_data = pd.read_csv(quality_file)
 
-quality_data['rr_interval'] = quality_data['rr_interval'].apply(
-    lambda x: list(map(int, re.findall(r"\d+", x))) if isinstance(x, str) and "[" in x else []
-)
+# quality_data['rr_interval'] = quality_data['rr_interval'].apply(
+#     lambda x: list(map(int, re.findall(r"\d+", x))) if isinstance(x, str) and "[" in x else []
+# )
 
-filtered_ecg = quality_data['filtered_ecg'].values
-filtered_abp = quality_data['filtered_abp'].values
-rr_intervals = quality_data['rr_interval'].values
+# filtered_ecg = quality_data['filtered_ecg'].values
+# filtered_abp = quality_data['filtered_abp'].values
+# rr_intervals = quality_data['rr_interval'].values
 
-print("Sample RR Intervals:")
-print(rr_intervals[1000])
+# print("Sample RR Intervals:")
+# print(rr_intervals[1000])
+
+filePath = r"C:\Users\60427\Desktop\250 kun HR.csv"
+data = pd.read_csv(filePath, sep=';')
+
+data['ecg'] = data['ecg'].str.replace(',', '.').astype(float)
+data['ecg'] = data['ecg'].fillna(0)
+ecg = data['ecg'].values
+ecg = ecg
+
+data['abp[mmHg]'] = data['abp[mmHg]'].str.replace(',', '.').astype(float)
+data['abp[mmHg]'] = data['abp[mmHg]'].fillna(0)
+abp = data['abp[mmHg]'].values
+abp = abp
+
+low_ecg = 0.5
+high_ecg = 40
+low_abp = 0.5
+high_abp = 20
+overlap = 500
+
+filtered_ecg = bandpass_filter(ecg, low_ecg,high_ecg, 250)
+filtered_abp = bandpass_filter(abp, low_abp,high_abp, 250)
+
 # 选取第 i 个窗口
 i=10
-row = quality_data.iloc[i]
-start_index = int(row['sample_index'])
+# row = quality_data.iloc[i]
+# start_index = int(row['sample_index'])
+start_index = i * overlap
 
 window_ecg = filtered_ecg[start_index:start_index + 1000]
 window_abp = filtered_abp[start_index:start_index + 1000]
-rr_intervals = rr_intervals[start_index]
+rr_intervals = findPeak(window_ecg)
+print(rr_intervals)
 #补全RRI
 
 # 检查 RR 和 SBP 数据长度

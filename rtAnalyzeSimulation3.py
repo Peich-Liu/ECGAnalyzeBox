@@ -101,7 +101,7 @@ ecgFilteredWindow = deque(maxlen=window_length)
 abpFilteredWindow = deque(maxlen=window_length)
 rrInterval = deque([0] * window_length, maxlen=window_length)
 
-output_file = r"C:\Users\60427\Desktop\filtered_ecg_with_quality333.csv"
+output_file = r"C:\Users\60427\Desktop\filtered_ecg_with_quality.csv"
 with open(output_file, mode='w', newline='') as file:
     writer = csv.writer(file)
     writer.writerow(["sample_index", "ecg", "filtered_ecg", "filtered_abp","rr_interval", "quality"])
@@ -109,17 +109,17 @@ with open(output_file, mode='w', newline='') as file:
 bad_windows = []
 r_peaks = []
 
-# filtered_ecg = bandpass_filter(ecg, low_ecg,high_ecg, 250)
-# filtered_abp = bandpass_filter(abp, low_abp,high_abp, 250)
+filtered_ecg = bandpass_filter(ecg, low_ecg,high_ecg, 250)
+filtered_abp = bandpass_filter(abp, low_abp,high_abp, 250)
 with open(output_file, mode='a', newline='') as file:
     writer = csv.writer(file)
     
     for i in range(len(ecg)):
         print("i",i)
         # # Pre-processing
-        filtered_ecg, zi_ecg = ziFilter(sos_ecg, ecg[i], zi_ecg)
+        #filtered_ecg, zi_ecg = ziFilter(sos_ecg, ecg[i], zi_ecg)
         ecgFilteredWindow.append(filtered_ecg[0])
-        filtered_abp, zi_abp = ziFilter(sos_abp, abp[i], zi_abp)
+        #filtered_abp, zi_abp = ziFilter(sos_abp, abp[i], zi_abp)
         abpFilteredWindow.append(filtered_abp[0])
         if(i % overlap_length == 0):
             #动态阈值, [mu-2sigma, mu+2sigma], 95%
