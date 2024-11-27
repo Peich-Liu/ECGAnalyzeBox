@@ -60,7 +60,7 @@ def find_sequences(rr_intervals, sbp_values, min_sequence_length=3):
 # print("Sample RR Intervals:")
 # print(rr_intervals[1000])
 
-filePath = r"C:\Users\60427\Desktop\250 kun HR.csv"
+filePath = r"C:\Document\sc2024\250 kun HR.csv"
 data = pd.read_csv(filePath, sep=';')
 
 data['ecg'] = data['ecg'].str.replace(',', '.').astype(float)

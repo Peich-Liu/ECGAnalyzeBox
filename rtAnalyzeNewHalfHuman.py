@@ -230,7 +230,7 @@ def compute_brs_sequences(rr_intervals, sbp_values, window_size=10, step_size=1)
 sampling_rate = 250
 
 # 读取数据
-quality_file = r"/Users/liu/Documents/SC2024fall/filtered_ecg_with_snr.csv"
+quality_file = r"c:\Document\sc2024\filtered_ecg_with_snr.csv"
 quality_data = pd.read_csv(quality_file)
 
 ecg = quality_data['ecg'].values
