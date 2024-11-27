@@ -9,9 +9,9 @@ from scipy.signal import detrend
 from datetime import timedelta, datetime
 
 
-# filePath = r"/Users/liu/Documents/SC2024fall/filtered_ecg_with_quality333.csv"
+filePath = r"C:\Document\sc2024/filtered_ecg_with_snr333.csv"
 # filePath = r"/Users/liu/Documents/SC2024fall/filtered_ecg_with_quality888.csv"
-filePath = r"/Users/liu/Documents/SC2024fall/filtered_ecg_with_snr333.csv"
+# filePath = r"C:\Document\sc2024/filtered_ecg_with_qualitynew.csv"
 
 
 data = pd.read_csv(filePath)
@@ -39,6 +39,7 @@ for i in range(len(quality)):
 
 if is_bad:
     bad_intervals.append((start_index, min(len(quality) - 1, len(time_stamps) - 1)))
+
 
 
 plt.figure(figsize=(12, 6))

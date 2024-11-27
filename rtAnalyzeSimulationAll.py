@@ -141,7 +141,7 @@ ske_min=-1
 ske_max=1
 
 
-filePath = r"/Users/liu/Documents/SC2024fall/250 kun HR.csv"
+filePath = r"C:\Document\sc2024/250 kun HR.csv"
 data = pd.read_csv(filePath, sep=';')
 
 data['ecg'] = data['ecg'].str.replace(',', '.').astype(float)
@@ -160,7 +160,7 @@ ecgFilteredWindow = deque(maxlen=window_length)
 abpFilteredWindow = deque(maxlen=window_length)
 rrInterval = deque([0] * window_length, maxlen=window_length)
 
-output_file = r"/Users/liu/Documents/SC2024fall/filtered_ecg_with_quality888.csv"
+output_file = r"C:\Document\sc2024/filtered_ecg_with_qualitycombine.csv"
 with open(output_file, mode='w', newline='') as file:
     writer = csv.writer(file)
     writer.writerow(["sample_index", "ecg", "filtered_ecg", "filtered_abp","rr_interval", "quality"])

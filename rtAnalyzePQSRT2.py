@@ -43,7 +43,7 @@ def calculate_snr(pqrst_list, average_pqrst):
         snr_values.append(snr)
     return min(snr_values)  # 返回最小SNR
 
-def signalQualityEva(window, pqrst_list):
+def signalQualityEva(window, pqrst_list, threshold):
         rr = 0
         window = normalize_signal(window)
         peaks, _ = signal.find_peaks(window, distance=200, height=np.mean(window) * 1.2)
@@ -58,7 +58,7 @@ def signalQualityEva(window, pqrst_list):
         else:
             snr = 0  # 若PQRST提取失败
         # 信号质量评估
-        quality = "Good" if (snr > 10) else "Bad"  # 设定10 dB为良好信号的门限
+        quality = "Good" if (snr > threshold) else "Bad"  # 设定10 dB为良好信号的门限
         return snr, quality, rr
 
 
@@ -68,7 +68,7 @@ sos = filter2Sos(low, high)
 
 zi = signal.sosfilt_zi(sos)
 
-filePath = r"/Users/liu/Documents/SC2024fall/250 kun HR.csv"
+filePath = r"C:\Document\sc2024/250 kun HR.csv"
 data = pd.read_csv(filePath, sep=';')
 
 data['ecg'] = data['ecg'].str.replace(',', '.').astype(float)
@@ -84,7 +84,7 @@ window_length = 1000
 overlap_length = 500
 ecgFilteredWindow = deque(maxlen=window_length)
 
-output_file = r"/Users/liu/Documents/SC2024fall/filtered_ecg_with_snr333.csv"
+output_file = r"C:\Document\sc2024/filtered_ecg_with_snr333.csv"
 with open(output_file, mode='w', newline='') as file:
     writer = csv.writer(file)
     writer.writerow(["sample_index", "ecg","ap", "filtered_ecg", "snr", "rr", "quality"])
@@ -107,12 +107,12 @@ with open(output_file, mode='a', newline='') as file:
         # 每个窗口进行SNR计算
         if i % overlap_length == 0:
             # PQRST提取
-            # mean_snr = np.mean(all_snr)
-            # std_snr = np.std(all_snr)
-            # thresholds_min = mean_snr - 2 * std_snr
-            # thresholds_max = mean_snr + 2 * std_snr
+            mean_snr = np.mean(all_snr)
+            std_snr = np.std(all_snr)
+            thresholds_min = max(mean_snr - 2 * std_snr, 0) 
+            thresholds_max = mean_snr + 2 * std_snr
 
-            snr, quality, rr = signalQualityEva(list(ecgFilteredWindow), pqrst_list)
+            snr, quality, rr = signalQualityEva(list(ecgFilteredWindow), pqrst_list, thresholds_min)
         all_snr.append(snr)
 
             # 写入结果
