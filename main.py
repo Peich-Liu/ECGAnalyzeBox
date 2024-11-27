@@ -50,10 +50,13 @@ class CBATools:
             lambda: dl.load_rt_data(
             self,
             ),
-
-            lambda: vo.updateInteract(
-            load_data_page_components["interactive_plot"],
+            lambda: vo.store_new_file(
+            self,
             )
+
+            # lambda: vo.updateInteract(
+            # load_data_page_components["interactive_plot"],
+            # )
         )
 
         signal_processing_page_components = self.guiWindow.create_signal_processing_page(
@@ -146,6 +149,9 @@ class CBATools:
     def update_quality(self, quality):
         # print(len(quality))
         self.quality = quality
+    
+    def get_signal(self):
+        return self.ecg_signal, self.ap_signal
 
 
 if __name__ == "__main__":

@@ -40,7 +40,7 @@ class guiWindow:
     There are 3 buttons, one mode select box, 3 text inputers
     =========================================================
     '''
-    def create_load_data_page(self, load_data, load_rt_data, interact_update):
+    def create_load_data_page(self, load_data, load_rt_data, store_file):
         '''data loader interface'''
         load_data_page = ttk.Frame(self.notebook)
         self.notebook.add(load_data_page, text="Load Data Page")
@@ -61,6 +61,9 @@ class guiWindow:
 
         load_rt_data_button = ttk.Button(ecg_frame, text="Load Real-time Data", command=load_rt_data)
         load_rt_data_button.grid(row=0, column=4, padx=5, pady=5)
+
+        load_rt_data_button = ttk.Button(ecg_frame, text="Store New File", command=store_file)
+        load_rt_data_button.grid(row=0, column=5, padx=5, pady=5)
 
         # 主内容容器
         main_container = ttk.Frame(load_data_page)

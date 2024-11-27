@@ -374,9 +374,14 @@ class InteractivePlot:
 
         return self.selection_ranges
     
-    def store_new_file(self):
-        
-        pass
+    def get_bad_interval(self):
+        return self.bad_intervals
+    
+def store_new_file(cba_instance):
+    quality = cba_instance.interactive_plot.get_bad_interval()
+    ecgSignal, apSignal = cba_instance.get_signal()
+
+
 
 def vis_data(cba_instance, plot_instance):
     plot_instance.plot_signals(cba_instance.ecg_signal, cba_instance.ap_signal)
