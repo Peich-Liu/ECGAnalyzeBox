@@ -3,6 +3,7 @@ import time
 import numpy as np
 import matplotlib.dates as mdates
 import tkinter as tk
+import csv
 
 from tkinter import ttk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
@@ -100,6 +101,7 @@ class InteractivePlot:
                         edgecolor='none',                                    # 无边框线条
                         facecolor='grey',                                    # 填充颜色
                         alpha=0.3,                                           # 透明度
+                        label='Noise Area',  
                         picker=True                                          # 使该矩形可拾取
                     )
                     rect2 = Rectangle(
@@ -111,8 +113,10 @@ class InteractivePlot:
                         alpha=0.3,
                         picker=True
                     )
+                    
                     self.ax1.add_patch(rect1)
                     self.ax2.add_patch(rect2)
+                    # self.ax1.legend(handles=self.ax1.patches[:1])
                     self.bad_intervals[badIdx] = (rect1, rect2)
                     badIdx += 1
 
@@ -380,6 +384,28 @@ class InteractivePlot:
 def store_new_file(cba_instance):
     quality = cba_instance.interactive_plot.get_bad_interval()
     ecgSignal, apSignal = cba_instance.get_signal()
+
+    print(quality)
+
+    # ecgSignal, apSignal = cba_instance.get_signal()
+    # # 写入 CSV 文件
+    # with open('output_data.csv', 'w', newline='') as csvfile:
+    #     csv_writer = csv.writer(csvfile)
+
+    #     # 写入标题行
+    #     csv_writer.writerow(['Quality', 'ECG Signal', 'AP Signal'])
+
+    #     # 获取信号长度，假设信号长度相同
+    #     max_length = max(len(quality), len(ecgSignal), len(apSignal))
+
+    #     for i in range(max_length):
+    #         # 使用列表推导式来获取每列的值
+    #         row = [
+    #             quality[i] if i < len(quality) else '',   # 如果索引超出长度，则为空值
+    #             ecgSignal[i] if i < len(ecgSignal) else '',
+    #             apSignal[i] if i < len(apSignal) else ''
+    #         ]
+    #         csv_writer.writerow(row)
 
 
 

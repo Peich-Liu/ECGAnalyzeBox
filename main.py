@@ -25,7 +25,7 @@ class CBATools:
         self.ap_signal = None
         self.selected_channel_signal = None 
         self.range = None
-        self.filepath = r'/Users/liu/Documents/SC2024fall/250 kun HR.csv'
+        self.filepath = r'C:\Document\sc2024/250 kun HR.csv'
         self.rtWindowLength = 1000
         self.quality = None
 
