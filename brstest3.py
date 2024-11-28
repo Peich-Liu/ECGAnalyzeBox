@@ -231,6 +231,85 @@ def synchronize_rr_sbp_cycle_based(r_peaks_times, rr_intervals, sbp_times, sbp_v
 
     return np.array(rr_intervals_sync), np.array(sbp_values_sync), np.array(rr_times_sync)
 
+# def compute_brs_sequence(rr_intervals, sbp_values, time_array):
+#     rr_intervals = np.asarray(rr_intervals)
+#     sbp_values = np.asarray(sbp_values)
+#     time_array = np.asarray(time_array)
+#     n = len(rr_intervals)
+
+#     brs_sequences = []
+
+#     i = 0
+#     while i < n - 2:
+#         # 检查上升序列和下降序列
+#         if sbp_values[i+1] > sbp_values[i] and rr_intervals[i+1] > rr_intervals[i]:
+#             # 上升序列
+#             seq_sbp = [sbp_values[i], sbp_values[i+1]]
+#             seq_rr = [rr_intervals[i], rr_intervals[i+1]]
+#             seq_time = [time_array[i], time_array[i+1]]
+#             start_idx = i
+#             j = i + 2
+#             while j < n and sbp_values[j] > sbp_values[j-1] and rr_intervals[j] > rr_intervals[j-1]:
+#                 seq_sbp.append(sbp_values[j])
+#                 seq_rr.append(rr_intervals[j])
+#                 seq_time.append(time_array[j])
+#                 j += 1
+#             end_idx = j - 1
+#             if len(seq_sbp) >= 3:
+#                 # 计算斜率和相关系数
+#                 slope_rr_sbp, intercept, r_value, p_value, std_err = stats.linregress(seq_sbp, seq_rr)
+#                 slope_sbp_time, _, _, _, _ = stats.linregress(seq_time, seq_sbp)
+#                 brs_sequences.append({
+#                     'slope_rr_sbp': slope_rr_sbp,
+#                     'r_value': r_value,
+#                     'start_idx': start_idx,
+#                     'end_idx': end_idx,
+#                     'slope_sbp_time': slope_sbp_time,
+#                     'seq_sbp': seq_sbp.copy(),
+#                     'seq_rr': seq_rr.copy(),
+#                     'seq_time': seq_time.copy()
+#                 })
+#             i = end_idx
+#         elif sbp_values[i+1] < sbp_values[i] and rr_intervals[i+1] < rr_intervals[i]:
+#             # 下降序列
+#             seq_sbp = [sbp_values[i], sbp_values[i+1]]
+#             seq_rr = [rr_intervals[i], rr_intervals[i+1]]
+#             seq_time = [time_array[i], time_array[i+1]]
+#             start_idx = i
+#             j = i + 2
+#             while j < n and sbp_values[j] < sbp_values[j-1] and rr_intervals[j] < rr_intervals[j-1]:
+#                 seq_sbp.append(sbp_values[j])
+#                 seq_rr.append(rr_intervals[j])
+#                 seq_time.append(time_array[j])
+#                 j += 1
+#             end_idx = j -1
+#             if len(seq_sbp) >= 3:
+#                 # 计算斜率和相关系数
+#                 slope_rr_sbp, intercept, r_value, p_value, std_err = stats.linregress(seq_sbp, seq_rr)
+#                 slope_sbp_time, _, _, _, _ = stats.linregress(seq_time, seq_sbp)
+#                 brs_sequences.append({
+#                     'slope_rr_sbp': slope_rr_sbp,
+#                     'r_value': r_value,
+#                     'start_idx': start_idx,
+#                     'end_idx': end_idx,
+#                     'slope_sbp_time': slope_sbp_time,
+#                     'seq_sbp': seq_sbp.copy(),
+#                     'seq_rr': seq_rr.copy(),
+#                     'seq_time': seq_time.copy()
+#                 })
+#             i = end_idx
+#         else:
+#             i +=1
+
+#     # 计算平均BRS
+#     slopes = [seq['slope_rr_sbp'] for seq in brs_sequences if abs(seq['r_value']) >= 0.85]
+#     if slopes:
+#         mean_brs = np.mean(slopes)
+#     else:
+#         mean_brs = np.nan
+
+#     return brs_sequences, mean_brs
+
 
 # 以下是完整的流程：
 
@@ -261,23 +340,24 @@ def main():
     # rr_intervals_sync, sbp_values_sync = synchronize_rr_sbp(rr_times, rr_intervals, sbp_times, sbp_values)
 
     # 基于心动周期的同步
-    rr_intervals_sync, sbp_values_sync, rr_times_sync = synchronize_rr_sbp_cycle_based(r_peaks_times, rr_intervals, sbp_times, sbp_values)
+    # rr_intervals_sync, sbp_values_sync, rr_times_sync = synchronize_rr_sbp_cycle_based(r_peaks_times, rr_intervals, sbp_times, sbp_values)
 
 
     # 计算BRS
     # brs_sequences, mean_brs = compute_brs_sequence(rr_intervals_sync, sbp_values_sync)
-    brs_sequences, mean_brs = compute_brs_sequence(r_peaks_times, rr_intervals)
+    brs_sequences, mean_brs = compute_brs_sequence(rr_intervals, sbp_values)
+    rr_intervals -= np.mean(rr_intervals)
 
-    # rr_intervals_sync -= np.mean(rr_intervals_sync)
+    
 
     # 打印结果
-    print("BRS序列：", brs_sequences)
-    print("平均BRS：", mean_brs)
+    # print("BRS序列：", brs_sequences)
+    # print("平均BRS：", mean_brs)
 
     # 可视化
     plt.figure(figsize=(12, 10))
 
-    plt.subplot(4, 1, 1)
+    plt.subplot(3, 1, 1)
     plt.plot(t, ecg_signal, label='ECG signal')
     plt.plot(r_peaks_times, ecg_signal[r_peaks_indices], 'ro', label='R peak')
     plt.title('ECG signal and RR interval')
@@ -285,7 +365,7 @@ def main():
     plt.ylabel('Ampulitude')
     plt.legend()
 
-    plt.subplot(4, 1, 2)
+    plt.subplot(3, 1, 2)
     plt.plot(t, ap_signal, label='AP signal')
     sbp_indices = (sbp_times * fs).astype(int)
     sbp_indices = np.clip(sbp_indices, 0, len(ap_signal) - 1)  # 防止索引越界
@@ -295,22 +375,23 @@ def main():
     plt.ylabel('Pressure (mmHg)')
     plt.legend()
 
-    plt.subplot(4, 1, 3)
-    plt.plot(rr_times, rr_intervals, label='RR interval')
-    plt.plot(sbp_times, sbp_values, label='SBP')
-    plt.legend()
-    plt.xlabel('Time (s)')
-    plt.ylabel('Value')
-    # plt.title('同步前的RR间期和SBP序列')
-    plt.title('RR and SBP before sync')
+    # plt.subplot(4, 1, 3)
+    # plt.plot(rr_times, rr_intervals, label='RR interval')
+    # plt.plot(sbp_times, sbp_values, label='SBP')
+    # plt.legend()
+    # plt.xlabel('Time (s)')
+    # plt.ylabel('Value')
+    # # plt.title('同步前的RR间期和SBP序列')
+    # plt.title('RR and SBP before sync')
 
 
     # 绘制同步后的RR间期和SBP值，并在图中标记BRS序列
-    plt.subplot(4, 1, 4)
-    sync_times = np.arange(len(rr_intervals_sync)) * (rr_times[1] - rr_times[0])
-    plt.plot(sync_times, rr_intervals_sync, label='RR interval (after sync)')
-    plt.plot(sync_times, sbp_values_sync, label='SBP (after sync)')
+    plt.subplot(3, 1, 3)
+    # sync_times = np.arange(len(rr_intervals_sync)) * (rr_times[1] - rr_times[0])
+    plt.plot(rr_times, rr_intervals, label='RR interval')
+    plt.plot(sbp_times, sbp_values, label='SBP')
     plt.title('RR interval and SBP after sync')
+    # plt.ylim(-100,100)
     plt.xlabel('Time (s)')
     plt.ylabel('Value')
 
@@ -319,16 +400,18 @@ def main():
         if abs(seq['r_value']) >= 0.85:
             start_idx = seq['start_idx']
             end_idx = seq['end_idx']
-            plt.plot(sync_times[start_idx:end_idx+1], rr_intervals_sync[start_idx:end_idx+1], 'r', linewidth=2)
-            plt.plot(sync_times[start_idx:end_idx+1], sbp_values_sync[start_idx:end_idx+1], 'g', linewidth=2)
+            plt.plot(rr_times[start_idx:end_idx+1], rr_intervals[start_idx:end_idx+1], 'r', linewidth=2)
+            plt.plot(sbp_times[start_idx:end_idx+1], sbp_values[start_idx:end_idx+1], 'g', linewidth=2)
             # 添加斜率注释
-            # plt.text(sync_times[start_idx], rr_intervals_sync[start_idx], f"Slope: {seq['slope']:.2f}", color='black')
-            # plt.text(sync_times[0], sbp_values_sync[start_idx], f"SBP斜率: {seq['slope_sbp_time']:.2f}", color='blue')
+            # plt.text(sbp_times[start_idx], rr_intervals[start_idx], f"Slope: {seq['slope']:.2f}", color='black')
+            # plt.text(seq_times[0], sbp_values_sync[start_idx], f"SBP斜率: {seq['slope_sbp_time']:.2f}", color='blue')
 
 
     plt.legend()
     plt.tight_layout()
     plt.show()
+
+    print("rr_times",rr_times,"sbp_times",sbp_times)
 
 
 if __name__ == "__main__":
