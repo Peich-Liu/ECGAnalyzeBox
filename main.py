@@ -53,54 +53,53 @@ class CBATools:
             lambda: vo.store_new_file(
             self,
             )
-
             # lambda: vo.updateInteract(
             # load_data_page_components["interactive_plot"],
             # )
         )
 
-        signal_processing_page_components = self.guiWindow.create_signal_processing_page(
-            # notebook,
-            lambda: sp.filter_signal(
-                self,
-                signal_processing_page_components["lowcut_entry"],
-                signal_processing_page_components["highcut_entry"],
-            ),
-            lambda: sp.artifact_process(
-                self.selected_channel_signal,
-                signal_processing_page_components["canvas_frame"]
-            ),
-            lambda: plot_signals(
-            self,
-            signal_processing_page_components["canvas_frame"]
-            )
+        # signal_processing_page_components = self.guiWindow.create_signal_processing_page(
+        #     # notebook,
+        #     lambda: sp.filter_signal(
+        #         self,
+        #         signal_processing_page_components["lowcut_entry"],
+        #         signal_processing_page_components["highcut_entry"],
+        #     ),
+        #     lambda: sp.artifact_process(
+        #         self.selected_channel_signal,
+        #         signal_processing_page_components["canvas_frame"]
+        #     ),
+        #     lambda: plot_signals(
+        #     self,
+        #     signal_processing_page_components["canvas_frame"]
+        #     )
             
-        )
+        # )
 
-        time_domain_page_components = self.guiWindow.create_time_domain_page(
-            lambda: tda.calculateEcgTimeDomainValue(
-                self,
-                self.fs,
-                time_domain_page_components["properties_frame_ecg"],
-                time_domain_page_components["sd_canvas_frame"],
-                self.range
-            ),
-            lambda: tda.calculateApTimeDomainValue(
-                self,
-                self.fs,
-                time_domain_page_components["properties_frame_ap"],
-                self.range
-            )
-        )
+        # time_domain_page_components = self.guiWindow.create_time_domain_page(
+        #     lambda: tda.calculateEcgTimeDomainValue(
+        #         self,
+        #         self.fs,
+        #         time_domain_page_components["properties_frame_ecg"],
+        #         time_domain_page_components["sd_canvas_frame"],
+        #         self.range
+        #     ),
+        #     lambda: tda.calculateApTimeDomainValue(
+        #         self,
+        #         self.fs,
+        #         time_domain_page_components["properties_frame_ap"],
+        #         self.range
+        #     )
+        # )
 
 
-        frequency_domain_page_components = self.guiWindow.create_frequency_domain_page(
-            lambda: fda.perform_frequency_analysis_psd(
-                self,
-                self.fs,
-                frequency_domain_page_components["freq_canvas_frame"]
-            )
-        )
+        # frequency_domain_page_components = self.guiWindow.create_frequency_domain_page(
+        #     lambda: fda.perform_frequency_analysis_psd(
+        #         self,
+        #         self.fs,
+        #         frequency_domain_page_components["freq_canvas_frame"]
+        #     )
+        # )
 
         real_time_page_components = self.guiWindow.create_real_time_page(
             lambda: self.rtDataLoder.openLoadData(),

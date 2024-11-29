@@ -41,6 +41,8 @@ class InteractivePlot:
         self.del_mode = False
         
         self.selection_ranges = {}  # 存储选择的范围
+        self.selection_ranges_text = {}  # 存储选择的范围
+
         # self.selection_ranges = deque(max)  # 存储选择的范围
         self.current_index = 0  # 索引计数器
         self.last_update_time = 0  # 初始化最后一次更新的时间戳
@@ -240,7 +242,14 @@ class InteractivePlot:
                               edgecolor='r', facecolor='none')
             self.ax1.add_patch(rect1)
             self.ax2.add_patch(rect2)
+                # 添加current_index标注到矩形框的左上角
+            text1 = self.ax1.text(self.start_x, self.ax1.get_ylim()[1], str(self.current_index),
+                                fontsize=10, color='blue', ha='left', va='bottom')
+            text2 = self.ax2.text(self.start_x, self.ax2.get_ylim()[1], str(self.current_index),
+                                fontsize=10, color='blue', ha='left', va='bottom')
+
             self.selection_ranges[self.current_index] = (rect1, rect2)
+            self.selection_ranges_text[self.current_index] = (text1, text2)
             self.selected_index = self.current_index
 
         elif self.drag_mode:  
@@ -312,13 +321,19 @@ class InteractivePlot:
         elif self.is_dragging and not self.create_mode and self.drag_mode:
             # 正在拖动已有的矩形
             rect1, rect2 = self.selection_ranges[self.selected_index]
+            text1, text2 = self.selection_ranges_text[self.selected_index]
+
             new_x = event.xdata - self.start_x  # 根据偏移计算新的位置
             rect1.set_x(new_x)
             rect2.set_x(new_x)
+
+            text1.set_x(new_x)
+            text2.set_x(new_x)
+
             self.fig.canvas.draw()
 
         elif self.is_drawing and self.noise_create:
-            # 正在创建新的矩形
+            # create new noise
             width = event.xdata - self.noise_start_x
             print("self.current_bad_index",self.current_bad_index)
             rect1, rect2 = self.bad_intervals[self.current_bad_index]
@@ -345,11 +360,17 @@ class InteractivePlot:
             if self.selected_index is not None:
 
                 rect1, rect2 = self.selection_ranges[self.selected_index]
-                # 从图表中移除矩形
+                text1, text2 = self.selection_ranges_text[self.selected_index]
+                # Delete rect
                 rect1.remove()
                 rect2.remove()
+                # Delete text
+                text1.remove()
+                text2.remove()
+
                 # delete the selected window
                 del self.selection_ranges[self.selected_index]
+                del self.selection_ranges_text[self.selected_index]
                 self.fig.canvas.draw()
                 
         elif self.noise_create:
