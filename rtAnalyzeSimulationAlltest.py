@@ -43,7 +43,6 @@ def compute_z_score(value, mean, std):
     return (value - mean) / std if std > 0 else 0
 
 def normalize_signal(signal):
-    # 避免分母为零
     if np.max(signal) == np.min(signal):
         return np.zeros_like(signal)
     return (signal - np.min(signal)) / (np.max(signal) - np.min(signal))
