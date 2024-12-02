@@ -260,28 +260,3 @@ with open(output_file, mode='a', newline='') as file:
                 all_snr.append(snr)
 
         writer.writerow([i, ecg_signal[i], filtered_ecg[0], qualityResult])
-# print("ECG signal shape:", ecg_signal.shape)
-# print("Annotation samples:", ann_samples)
-# print("Annotation types:", ann_types)
-
-# # 提取所有噪音'A'标记的索引
-# a_indices = [i for i, symbol in enumerate(annotation.symbol) if symbol == '~']
-# a_samples = [annotation.sample[i] for i in a_indices]  # 对应的样本位置
-
-# import matplotlib.pyplot as plt
-
-# # 绘制ECG信号
-# plt.figure(figsize=(12, 4))
-# plt.plot(record.p_signal[:, 0], label='ECG Signal')  # 假设数据在第一个通道
-
-# # 在ECG图上标记'A'注释位置
-# for sample in a_samples:
-#     plt.axvline(x=sample, color='r', linestyle='--', lw=0.5)  # 在噪音位置绘制红色虚线
-
-# plt.title('ECG Signal with Noise Annotations (A)')
-# plt.xlabel('Sample Index')
-# plt.ylabel('Amplitude')
-# plt.legend()
-# plt.show()
-
-
