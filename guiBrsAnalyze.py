@@ -77,16 +77,7 @@ def calculate_brs(ecg_signal, ap_signal, brs_canvas_frame, fs=250):
     plt.xlabel('Time (s)')
     plt.ylabel('Pressure (mmHg)')
     plt.legend()
-
-    # plt.subplot(4, 1, 3)
-    # plt.plot(rr_times, rr_intervals, label='RR interval')
-    # plt.plot(sbp_times, sbp_values, label='SBP')
-    # plt.legend()
-    # plt.xlabel('Time (s)')
-    # plt.ylabel('Value')
-    # plt.title('RR and SBP before sync')
-
-
+    
     # 绘制同步后的RR间期和SBP值，并在图中标记BRS序列
     plt.subplot(3, 1, 3)
     plt.plot(rr_times_sync, rr_intervals_sync, label='RR interval (after sync)')
