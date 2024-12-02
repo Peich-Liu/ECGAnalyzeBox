@@ -1,25 +1,33 @@
-import wfdb
-import os
 import numpy as np
 import pandas as pd 
 import scipy.signal as signal
-import matplotlib.pyplot as plt
-import tkinter as tk
-import neurokit2 as nk
-
+import wfdb
+import os
 from scipy.signal import butter, filtfilt
+from scipy import stats
+
+import matplotlib.pyplot as plt
+import wfdb
+import numpy as np
+import matplotlib.pyplot as plt
 from scipy.signal import find_peaks
 from scipy.signal import welch
 from scipy.integrate import simpson
 from statsmodels.tsa.ar_model import AutoReg
+import neurokit2 as nk
+from scipy.signal import butter, filtfilt
+import numpy as np
+import os
+import wfdb
+import matplotlib.pyplot as plt
+import tkinter as tk
 from tkinter import filedialog, simpledialog, messagebox
 from tkinter import ttk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
-from matplotlib.dates import num2date
 from matplotlib.patches import Rectangle
 from datetime import datetime
-from decimal import Decimal, getcontext
-
+from scipy import signal
+from scipy.stats import kurtosis as calc_kurtosis, skew as calc_skew
 
 def bandPass(data, zi, lowCut, highCut, fs, order=4):
     nyq = fs
@@ -300,138 +308,65 @@ def calculateApSignalProperties(signal, fs):
 #     time_in_seconds = (datetime.strptime(timestamp, time_format) - datetime(1900, 1, 1)).total_seconds()
 #     return int(time_in_seconds * fs)
 
-def x_coord_to_seconds(x_coord, start_time="00:00:00",fs = 250):
-    # Convert the x-coordinate (matplotlib date number) to a datetime object
-    date_time = num2date(x_coord)
-    
-    # Parse the start time into a datetime object
-    start_datetime = datetime.strptime(start_time, "%H:%M:%S")
-    
-    # Ensure both datetime objects have the same timezone information
-    start_datetime = start_datetime.replace(tzinfo=date_time.tzinfo)
-    
-    # Calculate the time difference
-    delta_time = date_time - start_datetime
-    
-    # Get the total seconds from the time difference
-    total_seconds = delta_time.total_seconds()
-    
-    sample = int(total_seconds*fs)
-    
-    return sample
-
-# def transSample(start, end, fs=250):
-#     start_time = datetime.strptime(start, '%H:%M:%S')
-#     end_time = datetime.strptime(end, '%H:%M:%S')
-    
-#     # 转换为秒数
-#     start_seconds = start_time.hour * 3600 + start_time.minute * 60 + start_time.second
-#     end_seconds = end_time.hour * 3600 + end_time.minute * 60 + end_time.second
-
-#     start_sample = int(start_seconds * fs)
-#     end_sample = int(end_seconds * fs)
-#     return start_sample, end_sample
-    # sample_point_ranges[index] = (start_sample, end_sample)
-        
-        # return total_sample
-        
-        
-# def x_coord_to_sample_index(x_coord, start_time="00:00:00", sample_rate=250):
-#     # 设置高精度
-#     getcontext().prec = 28
-    
-#     # 将 x_coord 转换为 Decimal
-#     x_coord_decimal = Decimal(str(x_coord))
-    
-#     # 将 x_coord 转换为 datetime 对象
-#     date_time = num2date(float(x_coord_decimal))
-    
-#     # 解析起始时间
-#     start_datetime = datetime.strptime(start_time, "%H:%M:%S")
-    
-#     # 计算时间差（以秒为单位），并转换为 Decimal
-#     delta_time = Decimal(str((date_time - start_datetime).total_seconds()))
-    
-#     # 计算采样间隔
-#     sample_interval = Decimal('1') / Decimal(str(sample_rate))
-    
-#     # 计算样本索引
-#     sample_index = delta_time / sample_interval
-    
-#     # 四舍五入到最近的整数
-#     sample_index = int(sample_index.to_integral_value(rounding='ROUND_HALF_UP'))
-    
-#     return sample_index
-
 def calculateEcgSignalRangeProperties(signal, fs, selected_ranges):
-    print("selected_ranges",selected_ranges)
-    results = {}
-    # selected_ranges[index] = (start, end)
-    
-    if len(selected_ranges) != 0:
-        for index, (rect1, rect2) in selected_ranges.items():
-        # for index, (rect1, rect2) in selected_ranges:
-            # 将时间戳转换为索引
-            start = x_coord_to_seconds(rect1.get_x())
-            end = x_coord_to_seconds(rect1.get_x() + rect1.get_width())
-            # 提取整数部分（小时）和小数部分
-            # startPoint = rect1.get_x()
-            # endPoint = rect1.get_x()+ rect1.get_width()
-            # start, end = transSample(startPoint, endPoint)
-            
-            
-            print("start",start,"end",end)
-            segment = signal[start:end]
-
-
-            # start_idx = convert_timestamp_to_index(start, fs)
-            # end_idx = convert_timestamp_to_index(end, fs)
-            # segment = signal[start_idx:end_idx]
-
-            #under constraction
-
-            #0. RR interval
-            peaks, _ = find_peaks(segment, distance=200)
-            rrIntervalSamples = np.diff(peaks)
-            samplingRate = fs
-            rrIntervalsSecond = rrIntervalSamples / samplingRate
-
-            # 1. Mean Heart Rate (HR)
-            hr = 60 / rrIntervalsSecond
-            meanHR = np.mean(hr)
-
-            # 2. SDNN (Standard deviation of RR intervals)
-            sdnn = np.std(rrIntervalsSecond)
-
-            # 3. RMSSD (Root Mean Square of Successive Differences)
-            rrDiff = np.diff(rrIntervalsSecond)  # Differences between successive RR intervals
-            rmssd = np.sqrt(np.mean(rrDiff**2))
-
-            # 4. SD1/SD2, put here temporily 
-            sd1, sd2, rr_mean = calculate_sd1_sd2(rrIntervalSamples)
-            figure = plot_poincare(rrIntervalSamples, sd1, sd2, rr_mean)
-
-            results[index] = {
-                # "RR Interval Second": rrIntervalsSecond,
-                "Heart Rate":f"{meanHR:.2f}",
-                "SDNN":f"{sdnn:.2f}",
-                "RMSSD":f"{rmssd:.2f}",
-            }
-
-            
-        return results, figure
-    else:
-        return None, None
-
-def calculateApSignalRangeProperties(signal, fs, selected_ranges):
     # print("selected_ranges",selected_ranges)
     results = {}
 
-    for index, (rect1, _) in selected_ranges.items():
-        start = x_coord_to_seconds(rect1.get_x())
-        end = x_coord_to_seconds(rect1.get_x() + rect1.get_width())
+    for index, (start, end) in selected_ranges.items():
+        # 将时间戳转换为索引
+        segment = signal[start:end]
+
+
+        # start_idx = convert_timestamp_to_index(start, fs)
+        # end_idx = convert_timestamp_to_index(end, fs)
+        # segment = signal[start_idx:end_idx]
+
+        #under constraction
+
+        #0. RR interval
+        peaks, _ = find_peaks(segment, distance=200)
+        rrIntervalSamples = np.diff(peaks)
+        samplingRate = fs
+        rrIntervalsSecond = rrIntervalSamples / samplingRate
+
+        # 1. Mean Heart Rate (HR)
+        hr = 60 / rrIntervalsSecond
+        meanHR = np.mean(hr)
+
+        # 2. SDNN (Standard deviation of RR intervals)
+        sdnn = np.std(rrIntervalsSecond)
+
+        # 3. RMSSD (Root Mean Square of Successive Differences)
+        rrDiff = np.diff(rrIntervalsSecond)  # Differences between successive RR intervals
+        rmssd = np.sqrt(np.mean(rrDiff**2))
+
+        # 4. SD1/SD2, put here temporily 
+        sd1, sd2, rr_mean = calculate_sd1_sd2(rrIntervalSamples)
+        figure = plot_poincare(rrIntervalSamples, sd1, sd2, rr_mean)
+
+        results[index] = {
+            # "RR Interval Second": rrIntervalsSecond,
+            "Heart Rate":f"{meanHR:.2f}",
+            "SDNN":f"{sdnn:.2f}",
+            "RMSSD":f"{rmssd:.2f}",
+        }
+
+        
+    return results, figure
+
+def calculateApSignalRangeProperties(signal, fs, selected_ranges):
+    print("selected_ranges",selected_ranges)
+    results = {}
+
+    for index, (start, end) in selected_ranges.items():
         # 提取当前选框的信号片段
         segment = signal[start:end]
+        # 将时间戳转换为索引
+        # start_idx = convert_timestamp_to_index(start, fs)
+        # end_idx = convert_timestamp_to_index(end, fs)
+        
+        # segment = signal[start_idx:end_idx]
+
         # 1. Systolic and Diastolic
         sbp = np.max(segment)  # Systolic
         dbp = np.min(segment)  # Diastolic
@@ -680,13 +615,13 @@ def displaySignalProperties(properties, properties_frame):
 # def calculate_variance(ranges):
 #     print("计算方差:", ranges)
 
-# def show_windowInfo(ranges):
-#     print("show_windowInfo",ranges)
+def show_windowInfo(ranges):
+    print("show_windowInfo",ranges)
 
 
 
 def loadData(filePath):
-    filePath = filePath
+    filePath = r"C:\Document\sc2024\250 kun HR.csv"
     data = pd.read_csv(filePath, sep=';')
 
     data['ecg'] = data['ecg'].str.replace(',', '.').astype(float)
@@ -698,37 +633,433 @@ def loadData(filePath):
     ap = data['abp[mmHg]'].values
 
     return ecg, ap
+# PQRST波形计算和SNR估计
+def calculate_average_pqrst(pqrst_list):
+    """
+    计算平均PQRST波形
+    """
 
-def loadRtData(filePath):
-    filePath = filePath
-    data = pd.read_csv(filePath)
+    pqrst_array = np.array(pqrst_list)
+    # print("pqrst_list",pqrst_array)
+    return np.mean(pqrst_array, axis=0)
 
-    # data['ecg'] = data['ecg'].str.replace(',', '.').astype(float)
-    # data['ecg'] = data['ecg'].fillna(0)  # 将 NaN 填充为 0
-    # data['abp[mmHg]'] = data['abp[mmHg]'].str.replace(',', '.').astype(float)
+def calculate_snr(pqrst_list, average_pqrst):
+    """
+    计算信噪比SNR
+    """
+    snr_values = []
+    for beat in pqrst_list:
+        noise = beat - average_pqrst
+        signal_power = np.mean(average_pqrst**2)
+        noise_power = np.mean(noise**2)
+        snr = 10 * np.log10(signal_power / noise_power)  # SNR单位为dB
+        snr_values.append(snr)
+    return min(snr_values)  # 返回最小SNR
 
-    # extract ECG signal
-    ecg = data['filtered_ecg'].values
-    ap = data['ap'].values
-    quality = data['quality'].values
+def filter2Sos(low, high, fs=1000, order=4):
+    nyquist = fs / 2
+    sos = signal.butter(order, [low / nyquist, high / nyquist], btype='band', output='sos')
+    return sos
+
+def ziFilter(sos, data_point, zi):
+    filtered_point, zi = signal.sosfilt(sos, [data_point], zi=zi)
+    return filtered_point, zi
+
+def compute_z_score(value, mean, std):
+    # Compute the z-score 
+    return (value - mean) / std if std > 0 else 0
+
+def normalize_signal(signal):
+    if np.max(signal) == np.min(signal):
+        return np.zeros_like(signal)
+    return (signal - np.min(signal)) / (np.max(signal) - np.min(signal))
+def pan_tompkins(ecg_signal, fs):
+    """
+    使用Pan-Tompkins算法检测QRS波。
+
+    参数：
+    ecg_signal : numpy array
+        原始心电信号。
+    fs : int
+        心电信号的采样频率。
+
+    返回：
+    qrs_peaks : numpy array
+        检测到的QRS波的位置索引。
+    """
+
+    # 步骤1：带通滤波（5-15 Hz）
+    lowcut = 5.0
+    highcut = 15.0
+    nyq = 0.5 * fs
+    low = lowcut / nyq
+    high = highcut / nyq
+    b, a = signal.butter(1, [low, high], btype='band')
+    ecg_band = signal.lfilter(b, a, ecg_signal)
+
+    # 步骤2：微分
+    ecg_diff = np.diff(ecg_band)
+
+    # 步骤3：平方
+    ecg_squared = ecg_diff ** 2
+
+    # 步骤4：移动窗口积分
+    window_size = int(0.150 * fs)  # 窗口大小为150毫秒
+    integration_window = np.ones(window_size) / window_size
+    ecg_integrated = np.convolve(ecg_squared, integration_window, mode='same')
+
+    # 步骤5：检测峰值
+    threshold = np.mean(ecg_integrated) * 1.5
+    distance = int(0.2 * fs)  # 相邻QRS波之间的最小距离为200毫秒
+    peaks, _ = signal.find_peaks(ecg_integrated, height=threshold, distance=distance)
+
+    return peaks
+
+def signalQualityEva(window, 
+                        threshold_amplitude_range, 
+                        zero_cross_min, zero_cross_max, 
+                        peak_height, beat_length, 
+                        kur_min, kur_max, 
+                        ske_min, ske_max,
+                        snr_min, snr_max):
+    # Normalize the window to [0, 1]
+    quality = "Good" 
+    window = normalize_signal(window)
+    # quality = "Good" if (snr > snr_min) else "Bad"  # 设定10 dB为良好信号的门限
+    
+
+    # flat line check
+    amplitude_range = np.max(window) - np.min(window)
+    if amplitude_range < threshold_amplitude_range:
+        # return "Bad"
+        print("flat line check")
+        quality = "Bad"
+
+    # pure noise check（Zero Crossing Rate (零交叉率)）
+    zero_crossings = np.sum(np.diff(window > np.mean(window)) != 0)
+    if zero_crossings < zero_cross_min or zero_crossings > zero_cross_max:
+        quality = "Bad"
+        print("Zero Crossing")
+        
+        # return "Bad"
+
+    # # QRS detection
+    # peaks, _ = signal.find_peaks(window, height=peak_height, distance=beat_length)
+    # if len(peaks) < 2:
+    #     print("QRS detection")
+    #     quality = "Bad"
+    #     # return "Bad"
+    
+    # Kurtosis (峰度)
+    kurtosis = calc_kurtosis(window)
+    # all_kurtosis.append(kurtosis)  # 动态记录
+    if kurtosis < kur_min or kurtosis > kur_max:
+        print("kurtosis")
+        quality = "Bad"
+        # return "Bad"
+
+    #Skewness (偏度)
+    skewness = calc_skew(window)
+    # all_skewness.append(skewness)  
+    if skewness < ske_min or skewness > ske_max:
+        print("skewness")
+        quality = "Bad"
+
+    return quality, kurtosis, skewness
+
+def fixThreshold(window):
+    threshold_amplitude_range=0.1     
+    zero_cross_min=5
+    zero_cross_max= 50
+    peak_height=0.6
+    beat_length=100
+
+    quality = "Good" 
+    window = normalize_signal(window)
+    
+    # flat line check
+    amplitude_range = np.max(window) - np.min(window)
+    if amplitude_range < threshold_amplitude_range:
+        print("flat line check")
+        quality = "Bad"
+
+    # pure noise check（Zero Crossing Rate (零交叉率)）
+    zero_crossings = np.sum(np.diff(window > np.mean(window)) != 0)
+    if zero_crossings < zero_cross_min or zero_crossings > zero_cross_max:
+        quality = "Bad"
+        print("Zero Crossing")
+
+    # # QRS detection
+    # peaks, _ = signal.find_peaks(window, height=peak_height, distance=beat_length)
+    # if len(peaks) < 2:
+    #     print("QRS detection")
+    #     quality = "Bad"
+
+    return quality
+
+def dynamicThreshold(window,
+                    kur_min, kur_max, 
+                    ske_min, ske_max,
+                    snr_min, snr_max):
+    
+    quality = "Good"
+    #SNR calculation
+    peaks_snr, _ = signal.find_peaks(window, distance=200, height=np.mean(window) * 1.2)
+    pqrst_list = [list(window)[max(0, peak-50):min(len(window), peak+50)] for peak in peaks_snr]
+    pqrst_list = [wave for wave in pqrst_list if len(wave) == 100]
+    
+    if len(pqrst_list) > 1:
+        average_pqrst = calculate_average_pqrst(pqrst_list)
+        snr = calculate_snr(pqrst_list, average_pqrst)
+    else:
+        snr = 0  # 若PQRST提取失败
+
+    # if snr < snr_min:
+    #     print("snr")
+    #     quality = "Consider"
+
+    # Kurtosis (峰度) calculation
+    kurtosis = calc_kurtosis(window)
+
+    # all_kurtosis.append(kurtosis)
+    if kurtosis < kur_min or kurtosis > kur_max:
+        print("kurtosis")
+        quality = "Consider"
 
 
-    return ecg, ap, quality
+    #Skewness (偏度)
+    skewness = calc_skew(window)
+    # all_skewness.append(skewness)  
+    if skewness < ske_min or skewness > ske_max:
+        print("skewness")
+        quality = "Consider"
 
-def loadRtDatawithRR(filePath):
-    filePath = filePath
-    data = pd.read_csv(filePath)
+    return quality, snr, kurtosis, skewness
 
-    # data['ecg'] = data['ecg'].str.replace(',', '.').astype(float)
-    # data['ecg'] = data['ecg'].fillna(0)  # 将 NaN 填充为 0
-    # data['abp[mmHg]'] = data['abp[mmHg]'].str.replace(',', '.').astype(float)
+def detect_r_peaks(ecg_signal, fs):
+    """
+    从ECG信号中检测R峰。
 
-    # extract ECG signal
-    ecg = data['filtered_ecg'].values
-    ap = data['ap'].values
-    quality = data['quality'].values
-    rr = data['rr'].values
+    参数:
+    ecg_signal : array-like
+        ECG信号数据。
+    fs : float
+        采样频率，单位：Hz。
+
+    返回:
+    r_peaks_indices : array
+        R峰的位置索引。
+    r_peaks_times : array
+        R峰的时间，单位：秒。
+    """
+    # 滤波（带通滤波器，移除低频和高频噪声）
+    sos = signal.butter(2, [0.5, 15], btype='bandpass', fs=fs, output='sos')
+    # filtered_ecg = signal.sosfiltfilt(sos, ecg_signal)
+    filtered_ecg = ecg_signal
+
+    # 寻找R峰
+    distance = int(0.2 * fs)  # 假设心率不低于每分钟50次，两个R峰之间的最小距离为0.2秒
+    # r_peaks_indices, _ = signal.find_peaks(filtered_ecg, distance=distance, height=np.mean(filtered_ecg))
+    r_peaks_indices, _ = signal.find_peaks(filtered_ecg, distance=200, height=np.mean(filtered_ecg) * 1.2)
+
+    r_peaks_times = r_peaks_indices / fs
+    return r_peaks_indices, r_peaks_times
+
+def compute_rr_intervals(r_peaks_times):
+    """
+    计算RR间期。
+
+    参数:
+    r_peaks_times : array
+        R峰的时间，单位：秒。
+
+    返回:
+    rr_intervals : array
+        RR间期序列，单位：毫秒。
+    rr_times : array
+        RR间期对应的时间（取两个R峰的中点），单位：秒。
+    """
+    rr_intervals = np.diff(r_peaks_times) * 1000  # 转换为毫秒
+    rr_times = r_peaks_times[:-1] + np.diff(r_peaks_times) / 2
+    return rr_intervals, rr_times
+
+def detect_sbp(ap_signal, fs):
+    """
+    从AP信号中检测收缩压（SBP）。
+
+    参数:
+    ap_signal : array-like
+        动脉压力信号数据。
+    fs : float
+        采样频率，单位：Hz。
+
+    返回:
+    sbp_values : array
+        收缩压值序列，单位：mmHg。
+    sbp_times : array
+        收缩压对应的时间，单位：秒。
+    """
+    # 寻找收缩压峰值
+    distance = int(0.2 * fs)  # 假设心率不低于每分钟50次
+    sbp_indices, _ = signal.find_peaks(ap_signal, distance=200)
+    sbp_values = ap_signal[sbp_indices]
+    sbp_times = sbp_indices / fs
+    return sbp_values, sbp_times
+
+def synchronize_rr_sbp(rr_times, rr_intervals, sbp_times, sbp_values):
+    """
+    同步RR间期和SBP序列。
+
+    参数:
+    rr_times : array
+        RR间期对应的时间，单位：秒。
+    rr_intervals : array
+        RR间期序列，单位：毫秒。
+    sbp_times : array
+        SBP对应的时间，单位：秒。
+    sbp_values : array
+        SBP值序列，单位：mmHg。
+
+    返回:
+    rr_intervals_sync : array
+        同步后的RR间期序列。
+    sbp_values_sync : array
+        同步后的SBP值序列。
+    """
+    # 使用线性插值对RR间期和SBP进行同步
+    common_times = np.union1d(rr_times, sbp_times)
+    rr_interp = np.interp(common_times, rr_times, rr_intervals)
+    sbp_interp = np.interp(common_times, sbp_times, sbp_values)
+    return rr_interp, sbp_interp
+def compute_brs_sequence(rr_intervals, sbp_values):
+    """
+    使用序列法计算BRS。
+
+    参数:
+    rr_intervals : array-like
+        RR间期时间序列（单位：毫秒）
+    sbp_values : array-like
+        收缩压时间序列（单位：mmHg）
+
+    返回:
+    brs_sequences : list of dictionaries
+        包含每个序列的信息：斜率、相关系数、起始索引、结束索引。
+    mean_brs : float
+        BRS平均值（斜率的平均值）
+    """
+    rr_intervals = np.asarray(rr_intervals)
+    sbp_values = np.asarray(sbp_values)
+    n = len(rr_intervals)
+
+    # 初始化变量
+    brs_sequences = []
+
+    # 遍历信号
+    i = 0
+    while i < n - 2:
+        # 检查上升序列（RR和SBP同时增加）
+        if sbp_values[i+1] > sbp_values[i] and rr_intervals[i+1] > rr_intervals[i]:
+            # 上升序列的起点
+            seq_sbp = [sbp_values[i], sbp_values[i+1]]
+            seq_rr = [rr_intervals[i], rr_intervals[i+1]]
+            start_idx = i
+            j = i + 2
+            while j < n and sbp_values[j] > sbp_values[j-1] and rr_intervals[j] > rr_intervals[j-1]:
+                seq_sbp.append(sbp_values[j])
+                seq_rr.append(rr_intervals[j])
+                j += 1
+            end_idx = j - 1
+            if len(seq_sbp) >= 3:
+                # 线性回归
+                slope, intercept, r_value, p_value, std_err = stats.linregress(seq_sbp, seq_rr)
+                brs_sequences.append({
+                    'slope': slope,
+                    'r_value': r_value,
+                    'start_idx': start_idx,
+                    'end_idx': end_idx
+                })
+            i = end_idx  # 从序列的末尾继续
+        # 检查下降序列（RR和SBP同时减少）
+        elif sbp_values[i+1] < sbp_values[i] and rr_intervals[i+1] < rr_intervals[i]:
+            # 下降序列的起点
+            seq_sbp = [sbp_values[i], sbp_values[i+1]]
+            seq_rr = [rr_intervals[i], rr_intervals[i+1]]
+            start_idx = i
+            j = i + 2
+            while j < n and sbp_values[j] < sbp_values[j-1] and rr_intervals[j] < rr_intervals[j-1]:
+                seq_sbp.append(sbp_values[j])
+                seq_rr.append(rr_intervals[j])
+                j += 1
+            end_idx = j -1
+            if len(seq_sbp) >= 3:
+                # 线性回归
+                slope, intercept, r_value, p_value, std_err = stats.linregress(seq_sbp, seq_rr)
+                brs_sequences.append({
+                    'slope': slope,
+                    'r_value': r_value,
+                    'start_idx': start_idx,
+                    'end_idx': end_idx
+                })
+            i = end_idx  # 从序列的末尾继续
+        else:
+            i +=1
+
+    # 计算平均BRS（相关系数绝对值大于等于0.85的序列的斜率平均值）
+    slopes = [seq['slope'] for seq in brs_sequences if abs(seq['r_value']) >= 0.85]
+    if slopes:
+        mean_brs = np.mean(slopes)
+    else:
+        mean_brs = np.nan  # 如果没有找到有效的序列，返回NaN
+
+    return brs_sequences, mean_brs
+
+def synchronize_rr_sbp_cycle_based(r_peaks_times, rr_intervals, sbp_times, sbp_values):
+    """
+    基于心动周期的同步方法，将RR间期和SBP值同步。
+
+    参数:
+    r_peaks_times : array
+        R峰的时间，单位：秒。
+    rr_intervals : array
+        RR间期序列，单位：毫秒。
+    sbp_times : array
+        SBP对应的时间，单位：秒。
+    sbp_values : array
+        SBP值序列，单位：mmHg。
+
+    返回:
+    rr_intervals_sync : array
+        同步后的RR间期序列。
+    sbp_values_sync : array
+        同步后的SBP值序列。
+    rr_times_sync : array
+        RR间期对应的时间，单位：秒。
+    """
+    rr_intervals_sync = []
+    sbp_values_sync = []
+    rr_times_sync = []
+
+    for i in range(len(rr_intervals)):
+        # 定义心动周期的时间范围
+        start_time = r_peaks_times[i]
+        end_time = r_peaks_times[i+1] if i+1 < len(r_peaks_times) else r_peaks_times[i] + rr_intervals[i]/1000
+
+        # 在该时间范围内寻找SBP峰值
+        mask = (sbp_times >= start_time) & (sbp_times < end_time)
+        sbp_in_cycle = sbp_values[mask]
+        sbp_times_in_cycle = sbp_times[mask]
+
+        if len(sbp_in_cycle) > 0:
+            # 如果有多个SBP峰值，取第一个或平均值
+            sbp_value = sbp_in_cycle[0]  # 或者使用np.mean(sbp_in_cycle)
+            sbp_time = sbp_times_in_cycle[0]
+            rr_intervals_sync.append(rr_intervals[i])
+            sbp_values_sync.append(sbp_value)
+            rr_times_sync.append((start_time + end_time) / 2)
+        else:
+            # # 如果没有找到SBP值，可以选择跳过或插值处理
+            pass
+            # rr_intervals_sync.append()
 
 
-
-    return ecg, ap, rr, quality
+    return np.array(rr_intervals_sync), np.array(sbp_values_sync), np.array(rr_times_sync)

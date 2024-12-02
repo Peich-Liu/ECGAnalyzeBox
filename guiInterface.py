@@ -268,3 +268,31 @@ class guiWindow:
         #     "rt_button":rt_button,
         #     "rt_canvas":self.rt_canvas
         # }
+    
+    '''
+    =========================================================
+    The Time Domain Analysis Page,
+    There are 2 buttons
+    =========================================================
+    '''
+    def create_brs_page(self, brs_command):
+        brs_page = ttk.Frame(self.notebook)
+        self.notebook.add(brs_page, text="BRS Analysis")
+
+        # Frame for frequency analysis controls and visualization
+        brs_frame = ttk.Frame(brs_page)
+        brs_frame.place(x=20, y=20, width=1800, height=1600)
+
+
+        # PSD按钮
+        analyze_button = ttk.Button(brs_frame, text="BRS Visualize", command=brs_command)
+        analyze_button.place(x=10, y=10)
+
+        # Frame for frequency analysis visualization
+        brs_canvas_frame = ttk.Frame(brs_frame)
+        brs_canvas_frame.config(width=150, height=100)
+        brs_canvas_frame.place(x=20, y=100)
+
+        return {
+            "brs_canvas_frame": brs_canvas_frame
+        }

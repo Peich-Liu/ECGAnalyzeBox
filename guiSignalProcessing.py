@@ -1,4 +1,3 @@
-# signal_processing_handlers.py
 import tkinter as tk
 from tkinter import messagebox
 from utilities import *
