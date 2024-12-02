@@ -70,15 +70,12 @@ def main():
     ske_min=-1
     ske_max=1
 
-    window_length = 4000
-    overlap_length = 2000  
+    window_length = 1000
+    overlap_length = 500  
     ecgFilteredWindow = deque(maxlen=window_length)
     qualityResult = "Good"
 
-    # output_file = r"C:\Document\sc2024/filtered_ecg_with_qualitynew.csv"
-    output_file = r"C:\Document\sc2024/filtered_ecg_with_qualitynewwithoutFilter.csv"
-
-    
+    output_file = r"C:\Document\sc2024/filtered_ecg_with_qualitynew.csv"
     with open(output_file, mode='w', newline='') as file:
         writer = csv.writer(file)
         writer.writerow(["sample_index", "ecg", "filtered_ecg", "quality"])
@@ -88,8 +85,8 @@ def main():
         
         for i in range(len(ecg_signal)):
             filtered_ecg, zi_ecg = ziFilter(sos_ecg, ecg_signal[i], zi_ecg)
-            ecgFilteredWindow.append(filtered_ecg[0])
-            # ecgFilteredWindow.append(ecg_signal[i])
+            # ecgFilteredWindow.append(filtered_ecg[0])
+            ecgFilteredWindow.append(ecg_signal[i])
 
 
             if(i % overlap_length == 0):

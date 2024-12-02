@@ -1,7 +1,7 @@
 import wfdb
+import pandas as pd
+import matplotlib.pyplot as plt
 import csv
-from scipy import signal
-
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -9,210 +9,47 @@ from collections import deque
 from scipy import signal
 from scipy.stats import kurtosis as calc_kurtosis, skew as calc_skew
 import csv
-from utilities import *
 
-# PQRST波形计算和SNR估计
-def calculate_average_pqrst(pqrst_list):
-    """
-    计算平均PQRST波形
-    """
+from utilities import signalQualityEva, fixThreshold, dynamicThreshold, bandPass, filter2Sos, ziFilter
+from scipy import signal
 
-    pqrst_array = np.array(pqrst_list)
-    # print("pqrst_list",pqrst_array)
-    return np.mean(pqrst_array, axis=0)
+# Function to load ECG data
+def load_ecg(file_path):
+    record = wfdb.rdrecord(file_path)
+    return record.p_signal[:,0], record.fs  # Assuming ECG is the first channel
 
-def calculate_snr(pqrst_list, average_pqrst):
-    """
-    计算信噪比SNR
-    """
-    snr_values = []
-    for beat in pqrst_list:
-        noise = beat - average_pqrst
-        signal_power = np.mean(average_pqrst**2)
-        noise_power = np.mean(noise**2)
-        snr = 10 * np.log10(signal_power / noise_power)  # SNR单位为dB
-        snr_values.append(snr)
-    return min(snr_values)  # 返回最小SNR
+# Function to read quality annotations
+def read_annotations(file_path):
+    return pd.read_csv(file_path, header=None, names=['start', 'end', 'quality'])
 
-def filter2Sos(low, high, fs=1000, order=4):
-    nyquist = fs / 2
-    sos = signal.butter(order, [low / nyquist, high / nyquist], btype='band', output='sos')
-    return sos
-
-def ziFilter(sos, data_point, zi):
-    filtered_point, zi = signal.sosfilt(sos, [data_point], zi=zi)
-    return filtered_point, zi
-
-def compute_z_score(value, mean, std):
-    # Compute the z-score 
-    return (value - mean) / std if std > 0 else 0
-
-def normalize_signal(signal):
-    if np.max(signal) == np.min(signal):
-        return np.zeros_like(signal)
-    return (signal - np.min(signal)) / (np.max(signal) - np.min(signal))
-
-def signalQualityEva(window, 
-                        threshold_amplitude_range, 
-                        zero_cross_min, zero_cross_max, 
-                        peak_height, beat_length, 
-                        kur_min, kur_max, 
-                        ske_min, ske_max,
-                        snr_min, snr_max):
-    # Normalize the window to [0, 1]
-    quality = "Good" 
-    window = normalize_signal(window)
-    # quality = "Good" if (snr > snr_min) else "Bad"  # 设定10 dB为良好信号的门限
+# Plot ECG with quality annotations
+def plot_ecg(signal, fs, annotations):
+    time_axis = [i / fs for i in range(len(signal))]
+    plt.figure(figsize=(14, 4))
+    plt.plot(time_axis, signal, label='ECG Signal', linewidth=0.5)
     
+    # Highlight different quality segments for quality 1 and 2
+    for _, row in annotations.iterrows():
+        if row['quality'] in [1, 2]:  # Focus only on quality levels 1 and 2
+            start_time = row['start'] / fs
+            end_time = row['end'] / fs
+            color = 'green' if row['quality'] == 1 else 'yellow'
+            plt.axvspan(start_time, end_time, color=color, alpha=0.5, label=f'Quality {row["quality"]}')
 
-    # flat line check
-    amplitude_range = np.max(window) - np.min(window)
-    if amplitude_range < threshold_amplitude_range:
-        # return "Bad"
-        print("flat line check")
-        quality = "Bad"
+    plt.xlabel('Time (seconds)')
+    plt.ylabel('Amplitude')
+    plt.title('ECG Signal with Quality Annotations')
+    plt.show()
 
-    # pure noise check（Zero Crossing Rate (零交叉率)）
-    zero_crossings = np.sum(np.diff(window > np.mean(window)) != 0)
-    if zero_crossings < zero_cross_min or zero_crossings > zero_cross_max:
-        quality = "Bad"
-        print("Zero Crossing")
-        
-        # return "Bad"
-
-    # QRS detection
-    peaks, _ = signal.find_peaks(window, height=peak_height, distance=beat_length)
-    if len(peaks) < 2:
-        print("QRS detection")
-        quality = "Bad"
-        # return "Bad"
+# Main function
+def main():
+    ecg_file_path = r'C:\Document\sc2024\data\testData\100001_ECG'  # without the .dat or .hea extension
+    annotations_file_path = r'c:\Document\sc2024\data\testData\100001_ANN.csv'
     
-    # Kurtosis (峰度)
-    kurtosis = calc_kurtosis(window)
-    # all_kurtosis.append(kurtosis)  # 动态记录
-    if kurtosis < kur_min or kurtosis > kur_max:
-        print("kurtosis")
-        quality = "Bad"
-        # return "Bad"
-
-    #Skewness (偏度)
-    skewness = calc_skew(window)
-    # all_skewness.append(skewness)  
-    if skewness < ske_min or skewness > ske_max:
-        print("skewness")
-        quality = "Bad"
-
-    return quality, kurtosis, skewness
-
-def fixThreshold(window):
-    threshold_amplitude_range=0.1     
-    zero_cross_min=5
-    zero_cross_max= 50
-    peak_height=0.6
-    beat_length=100
-
-    quality = "Good" 
-    window = normalize_signal(window)
-    
-    # flat line check
-    amplitude_range = np.max(window) - np.min(window)
-    if amplitude_range < threshold_amplitude_range:
-        print("flat line check")
-        quality = "Bad"
-
-    # pure noise check（Zero Crossing Rate (零交叉率)）
-    zero_crossings = np.sum(np.diff(window > np.mean(window)) != 0)
-    if zero_crossings < zero_cross_min or zero_crossings > zero_cross_max:
-        quality = "Bad"
-        print("Zero Crossing")
-
-    # QRS detection
-    peaks, _ = signal.find_peaks(window, height=peak_height, distance=beat_length)
-    if len(peaks) < 2:
-        print("QRS detection")
-        quality = "Bad"
-
-    return quality
-
-def dynamicThreshold(window,
-                    kur_min, kur_max, 
-                    ske_min, ske_max,
-                    snr_min, snr_max):
-    
-    quality = "Good"
-    #SNR calculation
-    peaks_snr, _ = signal.find_peaks(window, distance=200, height=np.mean(window) * 1.2)
-    pqrst_list = [list(window)[max(0, peak-50):min(len(window), peak+50)] for peak in peaks_snr]
-    pqrst_list = [wave for wave in pqrst_list if len(wave) == 100]
-    
-    if len(pqrst_list) > 1:
-        average_pqrst = calculate_average_pqrst(pqrst_list)
-        snr = calculate_snr(pqrst_list, average_pqrst)
-    else:
-        snr = 0  # 若PQRST提取失败
-
-    if snr < snr_min:
-        print("snr")
-        quality = "Consider"
-
-    # Kurtosis (峰度) calculation
-    kurtosis = calc_kurtosis(window)
-
-    # all_kurtosis.append(kurtosis)
-    if kurtosis < kur_min or kurtosis > kur_max:
-        print("kurtosis")
-        quality = "Consider"
+    ecg_signal, fs = load_ecg(ecg_file_path)
+    annotations = read_annotations(annotations_file_path)
+    plot_ecg(ecg_signal, fs, annotations)
 
 
-    #Skewness (偏度)
-    skewness = calc_skew(window)
-    # all_skewness.append(skewness)  
-    if skewness < ske_min or skewness > ske_max:
-        print("skewness")
-        quality = "Consider"
-
-    return quality, snr, kurtosis, skewness
-
-# Adjust the path to where your files are located
-record_path = 'c:\Document\sc2024\mit-bih-noise-stress-test-database-1.0.0/118e_6'  # For example '118e00.dat' and '118e00.hea'
-annotation_path = 'c:\Document\sc2024\mit-bih-noise-stress-test-database-1.0.0/118e_6'  # For example '118e00.atr'
-
-# Load the ECG record
-record = wfdb.rdrecord(record_path)
-# Load the annotations
-annotation = wfdb.rdann(annotation_path, 'atr')
-
-# Access the ECG signal data
-ecg_signal = record.p_signal
-ecg_signal = ecg_signal[:,0]
-print(len(ecg_signal))
-
-# Access annotation locations (sample indices) and types
-ann_samples = annotation.sample
-ann_types = annotation.symbol
-
-print("ECG signal shape:", ecg_signal.shape)
-print("Annotation samples:", ann_samples)
-print("Annotation types:", ann_types)
-
-# 提取所有噪音'A'标记的索引
-a_indices = [i for i, symbol in enumerate(annotation.symbol) if symbol != 'R']
-a_samples = [annotation.sample[i] for i in a_indices]  # 对应的样本位置
-
-import matplotlib.pyplot as plt
-
-# 绘制ECG信号
-plt.figure(figsize=(12, 4))
-plt.plot(record.p_signal[:, 0], label='ECG Signal')  # 假设数据在第一个通道
-
-# 在ECG图上标记'A'注释位置
-for sample in a_samples:
-    plt.axvline(x=sample, color='r', linestyle='--', lw=0.5)  # 在噪音位置绘制红色虚线
-
-plt.title('ECG Signal with Noise Annotations (A)')
-plt.xlabel('Sample Index')
-plt.ylabel('Amplitude')
-plt.legend()
-plt.show()
-
-
+if __name__ == '__main__':
+    main()

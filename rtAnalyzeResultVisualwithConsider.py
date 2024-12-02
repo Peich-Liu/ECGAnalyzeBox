@@ -11,18 +11,20 @@ from datetime import timedelta, datetime
 
 # filePath = r"/Users/liu/Documents/SC2024fall/filtered_ecg_with_quality333.csv"
 # filePath = r"/Users/liu/Documents/SC2024fall/filtered_ecg_with_quality888.csv"
-filePath = r"C:\Document\sc2024/filtered_ecg_with_qualitynew.csv"
+filePath = r"c:\Document\sc2024\filtered_ecg_with_qualitynewwithoutFilter.csv"
 
 
 data = pd.read_csv(filePath)
-ecg = data['filtered_ecg'].values
+ecg = data['ecg'].values
 quality = data['quality'].values
 
 #x-axis setting
-sampling_rate = 360 
+sampling_rate = 1000
 total_samples = len(ecg)
 start_time = datetime.strptime("00:00:00", "%H:%M:%S")
-time_stamps = [start_time + timedelta(seconds=i / sampling_rate) for i in range(total_samples)]
+# time_stamps = [start_time + timedelta(seconds=i / sampling_rate) for i in range(total_samples)]
+time_stamps = [i / sampling_rate for i in range(total_samples)]
+
 
 # 找到连续 "bad" 的区间
 bad_intervals = []
@@ -63,6 +65,8 @@ plt.plot(time_stamps, ecg, label='Filtered ECG Signal', color='black')
 # 在图上标记 "consider" 区间
 for start, end in consider_intervals:
     plt.axvspan(time_stamps[start], time_stamps[end], color='blue', alpha=0.3, label='Consider Interval')
+    # plt.axvspan(time_stamps[start], time_stamps[end], color='red', alpha=0.3, label='Consider Interval')
+
 
 # 在图上标记 "bad" 区间
 for start, end in bad_intervals:
