@@ -9,7 +9,7 @@ from scipy.signal import detrend
 from datetime import timedelta, datetime
 
 
-filePath = r"C:\Document\sc2024/filtered_ecg_with_snr333.csv"
+filePath = r"C:\Document\sc2024/filtered_ecg_with_qualitynew.csv"
 # filePath = r"/Users/liu/Documents/SC2024fall/filtered_ecg_with_quality888.csv"
 # filePath = r"C:\Document\sc2024/filtered_ecg_with_qualitynew.csv"
 
@@ -19,7 +19,7 @@ ecg = data['filtered_ecg'].values
 quality = data['quality'].values
 
 #x-axis setting
-sampling_rate = 250 
+sampling_rate = 360 
 total_samples = len(ecg)
 start_time = datetime.strptime("00:00:00", "%H:%M:%S")
 time_stamps = [start_time + timedelta(seconds=i / sampling_rate) for i in range(total_samples)]
