@@ -1773,7 +1773,9 @@ def loadRtData(filePath):
     # data['abp[mmHg]'] = data['abp[mmHg]'].str.replace(',', '.').astype(float)
 
     # extract ECG signal
-    ecg = data['filtered_ecg'].values
+    # ecg = data['filtered_ecg'].values
+    ecg = data['ecg'].values
+
     ap = data['ap'].values
     quality = data['quality'].values
 

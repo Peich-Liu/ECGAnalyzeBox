@@ -53,6 +53,7 @@ class CBATools:
             ),
             lambda: vo.store_new_file(
             self,
+            self.fs
             )
             # lambda: vo.updateInteract(
             # load_data_page_components["interactive_plot"],

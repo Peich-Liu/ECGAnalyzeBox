@@ -402,32 +402,45 @@ class InteractivePlot:
     def get_bad_interval(self):
         return self.bad_intervals
     
-def store_new_file(cba_instance):
+def store_new_file(cba_instance, sampling_rate):
     quality = cba_instance.interactive_plot.get_bad_interval()
     ecgSignal, apSignal = cba_instance.get_signal()
 
+    # 初始化存储 start 和 end
+    intervals = []
+
+    for idx, (rect1, rect2)  in quality.items():
+        start_time = rect1.get_x()
+        end_time = start_time + rect1.get_width()
+        # start_datetime = timedelta(seconds=start_time)
+        # end_datetime = timedelta(seconds=end_time)
+        start_datetime = x_coord_to_seconds(start_time)
+        end_datetime = x_coord_to_seconds(end_time)
+        intervals.append((start_datetime, end_datetime))
+
+        # intervals.append((int(start), int(end)))
+
+    # 初始化所有样本标记为 'good'
+    total_samples = len(ecgSignal)  # 或 len(apSignal)，视情况而定
+    signal_quality = ['Good'] * total_samples
+
+    print("intervals",intervals)
+
+    # 标记 bad 样本
+    for start, end in intervals:
+        for i in range(start, min(end, total_samples)):
+            signal_quality[i] = 'Bad'
+
+    # 保存到 CSV 文件
+    with open('signal_quality.csv', 'w', newline='') as csvfile:
+        csvwriter = csv.writer(csvfile)
+        csvwriter.writerow(['ecg', 'ap', 'quality'])
+
+        for idx, quality in enumerate(signal_quality):
+            csvwriter.writerow([ecgSignal[idx], apSignal[idx], quality])
+    print("CSV file is stored")
+
     print(quality)
-
-    # ecgSignal, apSignal = cba_instance.get_signal()
-    # # 写入 CSV 文件
-    # with open('output_data.csv', 'w', newline='') as csvfile:
-    #     csv_writer = csv.writer(csvfile)
-
-    #     # 写入标题行
-    #     csv_writer.writerow(['Quality', 'ECG Signal', 'AP Signal'])
-
-    #     # 获取信号长度，假设信号长度相同
-    #     max_length = max(len(quality), len(ecgSignal), len(apSignal))
-
-    #     for i in range(max_length):
-    #         # 使用列表推导式来获取每列的值
-    #         row = [
-    #             quality[i] if i < len(quality) else '',   # 如果索引超出长度，则为空值
-    #             ecgSignal[i] if i < len(ecgSignal) else '',
-    #             apSignal[i] if i < len(apSignal) else ''
-    #         ]
-    #         csv_writer.writerow(row)
-
 
 
 def vis_data(cba_instance, plot_instance):
