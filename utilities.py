@@ -849,3 +849,72 @@ def dynamicThreshold(window,fs,
         quality = "Consider"
 
     return quality, snr, kurtosis, skewness
+
+
+
+
+def dynamicThreshold2(window,fs,
+                    kur_lower_99, kur_lower_95, 
+                    kur_upper_99, kur_upper_95,
+                    ske_lower_99, ske_lower_95,
+                    ske_upper_99, ske_upper_95,
+                    snr_lower_99, snr_lower_95):
+    
+    quality = "Good"
+    #SNR calculation
+    max_heart_rate = 220  # 最大心率，单位 bpm
+    min_rr_interval = 60 / max_heart_rate  # 最小 RR 间隔，单位秒
+    distance = min_rr_interval * fs  # 转换为样本点数
+
+    qrs_duration = 0.1  # QRS 持续时间，单位秒
+    qrs_length = int(qrs_duration * fs)  # QRS 长度，单位样本
+    half_qrs_length = qrs_length // 2
+
+    peaks_snr, _ = signal.find_peaks(window, distance=distance, height=np.mean(window) * 1.2)
+    pqrst_list = [list(window)[max(0, peak - half_qrs_length): min(len(window), peak + half_qrs_length)] for peak in peaks_snr]
+    pqrst_list = [wave for wave in pqrst_list if len(wave) == qrs_length]
+    
+    if len(pqrst_list) > 1:
+        average_pqrst = calculate_average_pqrst(pqrst_list)
+        snr = calculate_snr(pqrst_list, average_pqrst)
+    else:
+        snr = 0  # 若PQRST提取失败
+    
+    # if snr < snr_lower_99:
+    #     quality = "Bad"
+    #     print("snr99")
+    # elif snr < snr_lower_95:
+    #     if quality != "Bad":
+    #         quality = "Consider"
+    #         print("snr95")
+            
+
+    # Kurtosis (峰度) calculation
+    kurtosis = calc_kurtosis(window)
+
+    # all_kurtosis.append(kurtosis)
+    # 检查峰度值是否超出阈值
+    if kurtosis < kur_lower_99 or kurtosis > kur_upper_99:
+        quality = "Bad"
+        print("kurtosis99")
+        
+    elif kurtosis < kur_lower_95 or kurtosis > kur_upper_95:
+        if quality != "Bad":
+            quality = "Consider"
+            print("kurtosis95")
+            
+            
+    skewness = calc_skew(window)
+    # 检查偏度值是否超出阈值
+    if skewness < ske_lower_99 or skewness > ske_upper_99:
+        quality = "Bad"
+        print("skewness99")
+        
+    elif skewness < ske_lower_95 or skewness > ske_upper_95:
+        if quality != "Bad":
+            quality = "Consider"
+            print("skewness95")
+            
+
+
+    return quality, snr, kurtosis, skewness

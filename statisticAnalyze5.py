@@ -10,7 +10,7 @@ from scipy import signal
 from scipy.stats import kurtosis as calc_kurtosis, skew as calc_skew
 import csv
 
-from utilities import signalQualityEva, fixThreshold, dynamicThreshold, bandPass, filter2Sos, ziFilter
+from utilities import signalQualityEva, fixThreshold, dynamicThreshold2, bandPass, filter2Sos, ziFilter
 from scipy import signal
 
 # Function to load ECG data
@@ -76,10 +76,7 @@ def main():
     ecgFilteredWindow = deque(maxlen=window_length)
     qualityResult = "Good"
 
-    # output_file = r"C:\Document\sc2024/filtered_ecg_with_qualitynew.csv"
-    output_file = r"/Users/liu/Documents/SC2024fall/filtered_ecg_with_qualitynewwithoutFilter.csv"
-
-    
+    output_file = r"/Users/liu/Documents/SC2024fall/filtered_ecg_with_qualitynew.csv"
     with open(output_file, mode='w', newline='') as file:
         writer = csv.writer(file)
         writer.writerow(["sample_index", "ecg", "filtered_ecg", "quality"])
@@ -91,33 +88,43 @@ def main():
             filtered_ecg, zi_ecg = ziFilter(sos_ecg, ecg_signal[i], zi_ecg)
             ecgFilteredWindow.append(filtered_ecg[0])
             # ecgFilteredWindow.append(ecg_signal[i])
-
-
+            # 计算峰度的均值和标准差
+            kurtosis_mean = np.mean(all_kurtosis)
+            kurtosis_std = np.std(all_kurtosis)
+            
+            # 计算偏度的均值和标准差
+            skewness_mean = np.mean(all_skewness)
+            skewness_std = np.std(all_skewness)
+            
+            # 计算 95% 和 99% 置信区间阈值
+            z_score_95 = 1.96
+            z_score_99 = 3.291
+    
             if(i % overlap_length == 0):
                 #fix threshold
                 qualityResult = fixThreshold(list(ecgFilteredWindow), fs)
                 if qualityResult == "Good":
-                    #动态阈值, [mu-2sigma, mu+2sigma], 95%
-                    mean_kurtosis = np.mean(all_kurtosis)
-                    std_kurtosis = np.std(all_kurtosis)
-                    kur_min = mean_kurtosis - 2 * std_kurtosis
-                    kur_max = mean_kurtosis + 2 * std_kurtosis
-
-                    mean_skewness = np.mean(all_skewness)
-                    std_skewness = np.std(all_skewness)
-                    ske_min = mean_skewness - 2 * std_skewness
-                    ske_max = mean_skewness + 2 * std_skewness
+                    kur_lower_95 = kurtosis_mean - z_score_95 * kurtosis_std
+                    kur_upper_95 = kurtosis_mean + z_score_95 * kurtosis_std
+                    kur_lower_99 = kurtosis_mean - z_score_99 * kurtosis_std
+                    kur_upper_99 = kurtosis_mean + z_score_99 * kurtosis_std
                     
-                    mean_snr = np.mean(all_snr)
-                    std_snr = np.std(all_snr)
-                    # snr_min = mean_snr - 2 * std_snr
-                    snr_min = max(mean_snr - 2 * std_snr, 0)
-                    snr_max = mean_snr + 2 * std_snr
-
-                    qualityResult, snr, kurtosis, skewness = dynamicThreshold(list(ecgFilteredWindow), fs,
-                                                                    kur_min, kur_max, 
-                                                                    ske_min, ske_max,
-                                                                    snr_min, snr_max)
+                    # 偏度阈值
+                    ske_lower_95 = skewness_mean - z_score_95 * skewness_std
+                    ske_upper_95 = skewness_mean + z_score_95 * skewness_std
+                    ske_lower_99 = skewness_mean - z_score_99 * skewness_std
+                    ske_upper_99 = skewness_mean + z_score_99 * skewness_std
+                    
+                    snr_lower_95 = skewness_mean - z_score_95 * skewness_std
+                    snr_lower_99 = skewness_mean - z_score_99 * skewness_std
+                    
+                    # 初始化为 "Good"
+                    qualityResult, snr, kurtosis, skewness = dynamicThreshold2(list(ecgFilteredWindow),fs,
+                                                                    kur_lower_99, kur_lower_95, 
+                                                                    kur_upper_99, kur_upper_95,
+                                                                    ske_lower_99, ske_lower_95,
+                                                                    ske_upper_99, ske_upper_95,
+                                                                    snr_lower_99, snr_lower_95)
                     all_kurtosis.append(kurtosis)  # 动态记录
                     all_skewness.append(skewness)  
                     all_snr.append(snr)
