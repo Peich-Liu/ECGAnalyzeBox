@@ -11,7 +11,8 @@ from datetime import timedelta, datetime
 
 # filePath = r"/Users/liu/Documents/SC2024fall/filtered_ecg_with_quality333.csv"
 # filePath = r"/Users/liu/Documents/SC2024fall/filtered_ecg_with_quality888.csv"
-filePath = r"c:\Document\sc2024\filtered_ecg_with_qualitynewwithoutFilter.csv"
+filePath = r'/Users/liu/Documents/SC2024fall/filtered_ecg_with_qualitynewwithoutFilter.csv'
+
 
 
 data = pd.read_csv(filePath)
@@ -63,8 +64,8 @@ plt.figure(figsize=(12, 6))
 plt.plot(time_stamps, ecg, label='Filtered ECG Signal', color='black')
 
 # 在图上标记 "consider" 区间
-for start, end in consider_intervals:
-    plt.axvspan(time_stamps[start], time_stamps[end], color='blue', alpha=0.3, label='Consider Interval')
+# for start, end in consider_intervals:
+#     plt.axvspan(time_stamps[start], time_stamps[end], color='blue', alpha=0.3, label='Consider Interval')
     # plt.axvspan(time_stamps[start], time_stamps[end], color='red', alpha=0.3, label='Consider Interval')
 
 

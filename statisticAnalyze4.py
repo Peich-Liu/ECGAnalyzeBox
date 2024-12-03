@@ -12,7 +12,45 @@ import csv
 
 from utilities import signalQualityEva, fixThreshold, dynamicThreshold, bandPass, filter2Sos, ziFilter
 from scipy import signal
+def update_stats(mu, std, n, a):
+    """
+    Update the mean and standard deviation when a new number is added to the array.
 
+    Parameters:
+    - mu: float, current mean
+    - std: float, current standard deviation
+    - n: int, current length of the array
+    - a: float, the new number being added
+
+    Returns:
+    - new_mu: float, updated mean
+    - new_std: float, updated standard deviation
+    """
+    # Update mean
+    new_mu = (n * mu + a) / (n + 1)
+
+    # Update standard deviation
+    # Calculate original sum of squares (SS)
+    ss = n * (std**2)
+
+    # Update sum of squares with the new value
+    new_ss = ss + (a - mu) ** 2 + (n / (n + 1)) * (mu - new_mu) ** 2
+
+    # Calculate new standard deviation
+    new_std = (new_ss / (n + 1)) ** 0.5
+
+    return new_mu, new_std
+
+
+# Example usage
+mu = 50    # Original mean
+std = 10   # Original standard deviation
+n = 100    # Original length of the array
+a = 60     # New number to be added
+
+new_mu, new_std = update_stats(mu, std, n, a)
+print(f"New Mean: {new_mu}")
+print(f"New Standard Deviation: {new_std}")
 # Function to load ECG data
 def load_ecg(file_path):
     record = wfdb.rdrecord(file_path)

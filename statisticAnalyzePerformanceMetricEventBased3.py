@@ -3,7 +3,8 @@ import numpy as np
 from sklearn.metrics import confusion_matrix
 
 # Load your first CSV file
-file_path = r'c:\Document\sc2024\filtered_ecg_with_qualitynewwithoutFilter.csv'
+file_path = r'/Users/liu/Documents/SC2024fall/filtered_ecg_with_qualitynewwithoutFilter.csv'
+
 df = pd.read_csv(file_path)
 
 # Process the first DataFrame to get good intervals

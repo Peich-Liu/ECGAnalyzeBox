@@ -1,7 +1,7 @@
 import pandas as pd
 
 # Load the CSV file into a DataFrame
-file_path = r'c:\Document\sc2024\filtered_ecg_with_qualitynewwithoutFilter.csv'
+file_path = r'/Users/liu/Documents/SC2024fall/filtered_ecg_with_qualitynewwithoutFilter.csv'
 df = pd.read_csv(file_path)
 
 # Find the consecutive segments where the 'quality' column is 'good'
@@ -25,7 +25,7 @@ if start_index is not None:
 print(good_intervals)
 
 
-label_file_path = r'c:\Document\sc2024\data\testData\100001_ANN.csv'
+label_file_path = r'/Users/liu/Documents/SC2024fall/testdata/100001_ANN.csv'
 labelDf = pd.read_csv(label_file_path)
 
 # 选择第10, 11, 12列作为 '开始', '结束', 'label'
