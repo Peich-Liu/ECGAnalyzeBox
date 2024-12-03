@@ -33,33 +33,28 @@ def signalQualityEva(window,threshold_amplitude_range, zero_cross_min,zero_cross
     # flat line check
     amplitude_range = np.max(window) - np.min(window)
     if amplitude_range < threshold_amplitude_range:
-        print("flat line check")
         return "Bad"
 
     # pure noise check（Zero Crossing Rate (零交叉率)）
     zero_crossings = np.sum(np.diff(window > np.mean(window)) != 0)
     if zero_crossings < zero_cross_min or zero_crossings > zero_cross_max:
-        print("Zero Crossing")
         return "Bad"
 
     # QRS detection
     peaks, _ = signal.find_peaks(window, height=peak_height, distance=beat_length)
     if len(peaks) < 2:
-        print("QRS detection")
         return "Bad"
     
     # Kurtosis (峰度)
     kurtosis = calc_kurtosis(window)
     all_kurtosis.append(kurtosis)  # 动态记录
     if kurtosis < kur_min or kurtosis > kur_max:
-        print("kurtosis")
         return "Bad"
 
     #Skewness (偏度)
     skewness = calc_skew(window)
     all_skewness.append(skewness)  
     if skewness < ske_min or skewness > ske_max:
-        print("skewness")
         return "Bad"
     return "Good"
 
@@ -81,13 +76,14 @@ zero_cross_min=5
 zero_cross_max= 50
 peak_height=0.6
 beat_length=100
+
 kur_min=2
 kur_max= 4
 ske_min=-1
 ske_max=1
 
 
-filePath = r"/Users/liu/Documents/SC2024fall/250 kun HR.csv"
+filePath = r"C:\Users\60427\Desktop\250 kun HR.csv"
 data = pd.read_csv(filePath, sep=';')
 
 data['ecg'] = data['ecg'].str.replace(',', '.').astype(float)
@@ -100,13 +96,13 @@ data['abp[mmHg]'] = data['abp[mmHg]'].fillna(0)
 abp = data['abp[mmHg]'].values
 abp = abp
 
-window_length = 1000
-overlap_length = 500  
+window_length = 60000
+overlap_length = 30000  
 ecgFilteredWindow = deque(maxlen=window_length)
 abpFilteredWindow = deque(maxlen=window_length)
 rrInterval = deque([0] * window_length, maxlen=window_length)
 
-output_file = r"/Users/liu/Documents/SC2024fall/filtered_ecg_with_quality999.csv"
+output_file = r"C:\Users\60427\Desktop\filtered_ecg_with_quality333.csv"
 with open(output_file, mode='w', newline='') as file:
     writer = csv.writer(file)
     writer.writerow(["sample_index", "ecg", "filtered_ecg", "filtered_abp","rr_interval", "quality"])
@@ -120,6 +116,7 @@ with open(output_file, mode='a', newline='') as file:
     writer = csv.writer(file)
     
     for i in range(len(ecg)):
+        print("i",i)
         # # Pre-processing
         filtered_ecg, zi_ecg = ziFilter(sos_ecg, ecg[i], zi_ecg)
         ecgFilteredWindow.append(filtered_ecg[0])
@@ -139,9 +136,6 @@ with open(output_file, mode='a', newline='') as file:
 
             quality = signalQualityEva(list(ecgFilteredWindow), threshold_amplitude_range, zero_cross_min,zero_cross_max,
                                        peak_height,beat_length,kur_min,kur_max,ske_min,ske_max)
-            if quality == "Bad":
-                print("i",i,"quality",quality)
-            
 
         # RR interval calculation
         ecg_window_data = np.array(ecgFilteredWindow)
@@ -153,3 +147,21 @@ with open(output_file, mode='a', newline='') as file:
             rr_interval = [] 
 
         writer.writerow([i, ecg[i], filtered_ecg[0],filtered_abp[0], rr_interval, quality])
+
+        # 记录“Bad”窗口
+        if quality == "Bad":
+            bad_windows.append(i)
+
+'''
+plt.figure(figsize=(15, 6))
+plt.plot(ecg, label="ECG Signal", alpha=0.7)
+for start in bad_windows:
+    plt.axvspan(start, start + window_length, color='red', alpha=0.3, label="Bad Window" if start == bad_windows[0] else "")
+
+plt.title("ECG Signal with Bad Windows Highlighted")
+plt.xlabel("Sample Index")
+plt.ylabel("Amplitude")
+plt.legend()
+plt.grid()
+plt.show()
+'''

@@ -619,7 +619,7 @@ def show_windowInfo(ranges):
 
 
 def loadData(filePath):
-    filePath = r"C:\Document\sc2024\250 kun HR.csv"
+    filePath = r"C:\Users\60427\Desktop\250 kun HR.csv"
     data = pd.read_csv(filePath, sep=';')
 
     data['ecg'] = data['ecg'].str.replace(',', '.').astype(float)
@@ -765,12 +765,12 @@ def signalQualityEva(window,
 
     return quality, kurtosis, skewness
 
-def fixThreshold(window):
+def fixThreshold(window, fs):
     threshold_amplitude_range=0.1     
     zero_cross_min=5
     zero_cross_max= 50
     peak_height=0.6
-    beat_length=100
+    #beat_length=100
 
     quality = "Good" 
     window = normalize_signal(window)
@@ -788,23 +788,39 @@ def fixThreshold(window):
         print("Zero Crossing")
 
     # # QRS detection
-    # peaks, _ = signal.find_peaks(window, height=peak_height, distance=beat_length)
-    # if len(peaks) < 2:
-    #     print("QRS detection")
-    #     quality = "Bad"
+    max_heart_rate = 220  # 最大心率，单位 bpm
+    min_rr_interval = 60 / max_heart_rate  # 最小 RR 间隔，单位秒
+    distance = min_rr_interval * fs  # 转换为样本点数
+
+    # 在 find_peaks 中使用计算的 distance
+    peaks, _ = signal.find_peaks(window, height=peak_height, distance=distance)
+    if len(peaks) < 2:
+        print("QRS detection")
+        quality = "Bad"
 
     return quality
 
-def dynamicThreshold(window,
+def dynamicThreshold(window,fs,
                     kur_min, kur_max, 
                     ske_min, ske_max,
                     snr_min, snr_max):
     
     quality = "Good"
     #SNR calculation
-    peaks_snr, _ = signal.find_peaks(window, distance=200, height=np.mean(window) * 1.2)
-    pqrst_list = [list(window)[max(0, peak-50):min(len(window), peak+50)] for peak in peaks_snr]
-    pqrst_list = [wave for wave in pqrst_list if len(wave) == 100]
+    max_heart_rate = 220  # 最大心率，单位 bpm
+    min_rr_interval = 60 / max_heart_rate  # 最小 RR 间隔，单位秒
+    distance = min_rr_interval * fs  # 转换为样本点数
+
+    qrs_duration = 0.1  # QRS 持续时间，单位秒
+    qrs_length = int(qrs_duration * fs)  # QRS 长度，单位样本
+    half_qrs_length = qrs_length // 2
+
+    peaks_snr, _ = signal.find_peaks(window, distance=distance, height=np.mean(window) * 1.2)
+    pqrst_list = [list(window)[max(0, peak - half_qrs_length): min(len(window), peak + half_qrs_length)] for peak in peaks_snr]
+    pqrst_list = [wave for wave in pqrst_list if len(wave) == qrs_length]
+    # peaks_snr, _ = signal.find_peaks(window, distance=200, height=np.mean(window) * 1.2)
+    # pqrst_list = [list(window)[max(0, peak-50):min(len(window), peak+50)] for peak in peaks_snr]
+    # pqrst_list = [wave for wave in pqrst_list if len(wave) == 100]
     
     if len(pqrst_list) > 1:
         average_pqrst = calculate_average_pqrst(pqrst_list)
@@ -812,9 +828,9 @@ def dynamicThreshold(window,
     else:
         snr = 0  # 若PQRST提取失败
 
-    # if snr < snr_min:
-    #     print("snr")
-    #     quality = "Consider"
+    if snr < snr_min:
+        print("snr")
+        quality = "Consider"
 
     # Kurtosis (峰度) calculation
     kurtosis = calc_kurtosis(window)

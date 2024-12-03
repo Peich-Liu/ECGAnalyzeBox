@@ -43,8 +43,8 @@ def plot_ecg(signal, fs, annotations):
 
 # Main function
 def main():
-    ecg_file_path = r'C:\Document\sc2024\data\testData\100001_ECG'  # without the .dat or .hea extension
-    annotations_file_path = r'c:\Document\sc2024\data\testData\100001_ANN.csv'
+    ecg_file_path = r'C:\Users\60427\Desktop\100001_ECG'  # without the .dat or .hea extension
+    annotations_file_path = r'C:\Users\60427\Desktop\100001_ANN.csv'
     
     ecg_signal, fs = load_ecg(ecg_file_path)
     annotations = read_annotations(annotations_file_path)
@@ -53,6 +53,7 @@ def main():
     all_kurtosis = []  
     all_skewness = []  
     all_snr = []
+    fs = 1000
     low_ecg = 0.5
     high_ecg = 40
     low_abp = 0.5
@@ -76,7 +77,7 @@ def main():
     qualityResult = "Good"
 
     # output_file = r"C:\Document\sc2024/filtered_ecg_with_qualitynew.csv"
-    output_file = r"C:\Document\sc2024/filtered_ecg_with_qualitynewwithoutFilter.csv"
+    output_file = r"C:\Users\60427\Desktop/filtered_ecg_with_qualitynewwithoutFilter.csv"
 
     
     with open(output_file, mode='w', newline='') as file:
@@ -94,7 +95,7 @@ def main():
 
             if(i % overlap_length == 0):
                 #fix threshold
-                qualityResult = fixThreshold(list(ecgFilteredWindow))
+                qualityResult = fixThreshold(list(ecgFilteredWindow), fs)
                 if qualityResult == "Good":
                     #动态阈值, [mu-2sigma, mu+2sigma], 95%
                     mean_kurtosis = np.mean(all_kurtosis)
@@ -113,7 +114,7 @@ def main():
                     snr_min = max(mean_snr - 2 * std_snr, 0)
                     snr_max = mean_snr + 2 * std_snr
 
-                    qualityResult, snr, kurtosis, skewness = dynamicThreshold(list(ecgFilteredWindow),
+                    qualityResult, snr, kurtosis, skewness = dynamicThreshold(list(ecgFilteredWindow), fs,
                                                                     kur_min, kur_max, 
                                                                     ske_min, ske_max,
                                                                     snr_min, snr_max)
