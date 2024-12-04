@@ -252,22 +252,25 @@ class guiWindow:
     =========================================================
     '''
 
-    def create_real_time_page(self, loadingRtSignal_command):
+    def create_real_time_page(self, loadingRtSignal_command, RtSignalSimulate):
         real_time_page = ttk.Frame(self.notebook)
         self.notebook.add(real_time_page, text="Real Time Analysis")
 
-        rt_button = ttk.Button(real_time_page, text="Start Collect RT Signal", command=loadingRtSignal_command)
-        rt_button.pack(fill='both', expand=True)
-    
-        self.rt_canvas = FigureCanvasTkAgg(self.data_analyzer.fig, master=real_time_page)
+        canvas_frame = ttk.Frame(real_time_page)
+        canvas_frame.place(x=0, y=50, relwidth=1.0, relheight=0.9) 
+
+        rt_sim_button = ttk.Button(real_time_page, text="Start Collect RT Signal", command=loadingRtSignal_command)
+        rt_sim_button.place(x=10, y=10) 
+
+        rt_button = ttk.Button(real_time_page, text="Simluate RT algorithm", command=RtSignalSimulate)
+        rt_button.place(x=150, y=10) 
+
+        self.rt_canvas = FigureCanvasTkAgg(self.data_analyzer.fig, master=canvas_frame)
         self.rt_canvas.get_tk_widget().pack(fill='both', expand=True)
-        # if self.data_analyzer.isLoading:
+
+
         self.data_analyzer.update_plot()
 
-        # return {
-        #     "rt_button":rt_button,
-        #     "rt_canvas":self.rt_canvas
-        # }
     
     '''
     =========================================================

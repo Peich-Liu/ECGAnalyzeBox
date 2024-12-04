@@ -66,6 +66,7 @@ class CBATools:
 
         real_time_page_components = self.guiWindow.create_real_time_page(
             lambda: self.rtDataLoder.openLoadData(),
+            lambda: self.rtDataLoder.openLoadData(),
             # self.rtDataLoder
         )
 
