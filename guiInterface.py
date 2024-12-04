@@ -59,7 +59,7 @@ class guiWindow:
         load_ecg_button = ttk.Button(ecg_frame, text="Load Offline Data", command=load_data)
         load_ecg_button.grid(row=0, column=3, padx=5, pady=5)
 
-        load_rt_data_button = ttk.Button(ecg_frame, text="Load Real-time Data", command=load_rt_data)
+        load_rt_data_button = ttk.Button(ecg_frame, text="Load Data with Noise Mark", command=load_rt_data)
         load_rt_data_button.grid(row=0, column=4, padx=5, pady=5)
 
         load_rt_data_button = ttk.Button(ecg_frame, text="Store New File", command=store_file)
