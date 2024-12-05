@@ -767,8 +767,9 @@ def signalQualityEva(window,
 
 def fixThreshold(window, fs):
     threshold_amplitude_range=0.1     
-    zero_cross_min=5
-    zero_cross_max= 50
+    zero_cross_min=0
+    # zero_cross_max= 50
+    zero_cross_max= 200
     peak_height=0.6
     #beat_length=100
 
@@ -785,7 +786,7 @@ def fixThreshold(window, fs):
     zero_crossings = np.sum(np.diff(window > np.mean(window)) != 0)
     if zero_crossings < zero_cross_min or zero_crossings > zero_cross_max:
         quality = "Bad"
-        print("Zero Crossing")
+        print("Zero Crossing",zero_crossings)
 
     # # QRS detection
     max_heart_rate = 220  # 最大心率，单位 bpm
@@ -829,7 +830,7 @@ def dynamicThreshold(window,fs,
         snr = 0  # 若PQRST提取失败
 
     if snr < snr_min:
-        print("snr")
+        print("snr", snr)
         quality = "Consider"
 
     # Kurtosis (峰度) calculation

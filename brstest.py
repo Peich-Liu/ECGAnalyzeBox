@@ -269,7 +269,7 @@ def main():
 
     # 计算BRS
     brs_sequences, mean_brs = compute_brs_sequence(rr_intervals_sync, sbp_values_sync)
-    # brs_sequences, mean_brs = compute_brs_sequence(r_peaks_times, rr_intervals)
+    # brs_sequences, mean_brs = compute_brs_sequence(rr_intervals, sbp_values)
     # rr_intervals_sync -= np.mean(rr_intervals_sync)
 
     # 打印结果

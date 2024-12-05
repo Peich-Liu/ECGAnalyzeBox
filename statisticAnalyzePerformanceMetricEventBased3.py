@@ -3,7 +3,7 @@ import numpy as np
 from sklearn.metrics import confusion_matrix
 
 # Load your first CSV file
-file_path = r'c:\Document\sc2024\filtered_ecg_with_qualitynewwithoutFilter.csv'
+file_path = r"c:\Document\sc2024\filtered_ecg_with_quality105001.csv"
 df = pd.read_csv(file_path)
 
 # Process the first DataFrame to get good intervals
@@ -25,7 +25,7 @@ print("good_intervals",len(good_intervals))
 
 
 # Load your second CSV file
-label_file_path = r'c:\Document\sc2024\data\testData\100001_ANN.csv'
+label_file_path = r'c:\Document\sc2024\brno-university-of-technology-ecg-quality-database-but-qdb-1.0.0\105001\105001_ANN.csv'
 labelDf = pd.read_csv(label_file_path)
 labelDf = labelDf.iloc[:, [9, 10, 11]]
 labelDf.columns = ['start', 'end', 'label']

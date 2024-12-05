@@ -30,10 +30,16 @@ def plot_ecg(signal, fs, annotations):
     
     # Highlight different quality segments for quality 1 and 2
     for _, row in annotations.iterrows():
-        if row['quality'] in [1, 2]:  # Focus only on quality levels 1 and 2
+        if row['quality'] in [1, 2, 3]:  # Focus only on quality levels 1 and 2
             start_time = row['start'] / fs
             end_time = row['end'] / fs
-            color = 'green' if row['quality'] == 1 else 'yellow'
+            # color = 'green' if row['quality'] == 1 else 'yellow'
+            if row['quality'] == 1:
+                color = 'green'
+            elif row['quality'] == 2:
+                color = 'yellow'
+            elif row['quality'] == 3:
+                color = 'red'
             plt.axvspan(start_time, end_time, color=color, alpha=0.5, label=f'Quality {row["quality"]}')
 
     plt.xlabel('Time (seconds)')
@@ -43,12 +49,13 @@ def plot_ecg(signal, fs, annotations):
 
 # Main function
 def main():
-    ecg_file_path = r'/Users/liu/Documents/SC2024fall/testdata/100001_ECG'  # without the .dat or .hea extension
-    annotations_file_path = r'/Users/liu/Documents/SC2024fall/testdata/100001_ANN.csv'
-    
+    # ecg_file_path = r'C:\Document\sc2024\brno-university-of-technology-ecg-quality-database-but-qdb-1.0.0\100001/100001_ECG'  # without the .dat or .hea extension
+    # annotations_file_path = r'C:\Document\sc2024\brno-university-of-technology-ecg-quality-database-but-qdb-1.0.0\100001/100001_ANN.csv'
+    ecg_file_path = r'C:\Document\sc2024\brno-university-of-technology-ecg-quality-database-but-qdb-1.0.0\105001/105001_ECG'  # without the .dat or .hea extension
+    annotations_file_path = r'C:\Document\sc2024\brno-university-of-technology-ecg-quality-database-but-qdb-1.0.0\105001/105001_ANN.csv'
     ecg_signal, fs = load_ecg(ecg_file_path)
     annotations = read_annotations(annotations_file_path)
-    plot_ecg(ecg_signal[0:2000000], fs, annotations)
+    plot_ecg(ecg_signal, fs, annotations)
 
 
 if __name__ == '__main__':

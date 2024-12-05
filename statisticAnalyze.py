@@ -174,7 +174,7 @@ def dynamicThreshold(window,
     return quality, snr, kurtosis, skewness
 
 # Adjust the path to where your files are located
-record_path = 'c:\Document\sc2024\mit-bih-noise-stress-test-database-1.0.0/118e_6'  # For example '118e00.dat' and '118e00.hea'
+record_path = 'C:\Document\sc2024\brno-university-of-technology-ecg-quality-database-but-qdb-1.0.0\105001/105001_ECG' # For example '118e00.dat' and '118e00.hea'
 annotation_path = 'c:\Document\sc2024\mit-bih-noise-stress-test-database-1.0.0/118e_6'  # For example '118e00.atr'
 
 # Load the ECG record
@@ -216,7 +216,7 @@ overlap_length = 500
 ecgFilteredWindow = deque(maxlen=window_length)
 qualityResult = "Good"
 
-output_file = r"C:\Document\sc2024/filtered_ecg_with_qualitynew.csv"
+output_file = r"C:\Document\sc2024/filtered_ecg_with_quality105001.csv"
 with open(output_file, mode='w', newline='') as file:
     writer = csv.writer(file)
     writer.writerow(["sample_index", "ecg", "filtered_ecg", "quality"])

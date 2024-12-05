@@ -320,10 +320,10 @@ def main():
     quality_data = pd.read_csv(quality_file)
 
     ecg_signal = quality_data['ecg'].values
-    ecg_signal = bandpass_filter(ecg_signal[485000:585000], 0.5, 45, fs)
+    ecg_signal = bandpass_filter(ecg_signal, 0.5, 45, fs)
 
     ap_signal = quality_data['ap'].values
-    ap_signal = bandpass_filter(ap_signal[485000:585000], 0.5, 10, fs)
+    ap_signal = bandpass_filter(ap_signal, 0.5, 10, fs)
     
     t = np.arange(len(ecg_signal)) / fs
 

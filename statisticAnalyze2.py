@@ -43,15 +43,15 @@ def plot_ecg(signal, fs, annotations):
 
 # Main function
 def main():
-    ecg_file_path = r'/Users/liu/Documents/SC2024fall/testdata/100001_ECG'  # without the .dat or .hea extension
-    annotations_file_path = r'/Users/liu/Documents/SC2024fall/testdata/100001_ANN.csv'
+    ecg_file_path = r'C:\Document\sc2024\brno-university-of-technology-ecg-quality-database-but-qdb-1.0.0\105001/105001_ECG'  # without the .dat or .hea extension
+    annotations_file_path = r'C:\Document\sc2024\brno-university-of-technology-ecg-quality-database-but-qdb-1.0.0\105001/105001_ANN.csv'
     
     ecg_signal, fs = load_ecg(ecg_file_path)
     annotations = read_annotations(annotations_file_path)
     # plot_ecg(ecg_signal, fs, annotations)
 
-    all_kurtosis = []  
-    all_skewness = []  
+    all_kurtosis = []
+    all_skewness = []
     all_snr = []
     fs = 1000
     low_ecg = 0.5
@@ -77,7 +77,7 @@ def main():
     qualityResult = "Good"
 
     # output_file = r"C:\Document\sc2024/filtered_ecg_with_qualitynew.csv"
-    output_file = r"/Users/liu/Documents/SC2024fall/filtered_ecg_with_qualitynewwithoutFilter.csv"
+    output_file = r"C:\Document\sc2024\filtered_ecg_with_quality105001.csv"
 
     
     with open(output_file, mode='w', newline='') as file:
