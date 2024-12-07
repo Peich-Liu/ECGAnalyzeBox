@@ -68,8 +68,8 @@ def main():
     annotations = read_annotations(annotations_file_path)
     # plot_ecg(ecg_signal, fs, annotations)
 
-    all_kurtosis = []  
-    all_skewness = []  
+    all_kurtosis = []
+    all_skewness = []
     all_snr = []
     fs = 1000
     low_ecg = 0.5

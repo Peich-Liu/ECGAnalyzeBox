@@ -766,6 +766,7 @@ def signalQualityEva(window,
     return quality, kurtosis, skewness
 
 def fixThreshold(window, fs):
+    #3 -> bad, 2->consider, 1->good
     threshold_amplitude_range=0.1     
     zero_cross_min=0
     # zero_cross_max= 50
@@ -773,19 +774,19 @@ def fixThreshold(window, fs):
     peak_height=0.6
     #beat_length=100
 
-    quality = "Good" 
+    quality = 1
     window = normalize_signal(window)
     
     # flat line check
     amplitude_range = np.max(window) - np.min(window)
     if amplitude_range < threshold_amplitude_range:
         print("flat line check")
-        quality = "Bad"
+        quality = 3
 
     # pure noise check（Zero Crossing Rate (零交叉率)）
     zero_crossings = np.sum(np.diff(window > np.mean(window)) != 0)
     if zero_crossings < zero_cross_min or zero_crossings > zero_cross_max:
-        quality = "Bad"
+        quality = 3
         print("Zero Crossing",zero_crossings)
 
     # # QRS detection
@@ -797,7 +798,7 @@ def fixThreshold(window, fs):
     peaks, _ = signal.find_peaks(window, height=peak_height, distance=distance)
     if len(peaks) < 2:
         print("QRS detection")
-        quality = "Bad"
+        quality = 3
 
     return quality
 
@@ -806,7 +807,7 @@ def dynamicThreshold(window,fs,
                     ske_min, ske_max,
                     snr_min, snr_max):
     
-    quality = "Good"
+    quality = 1
     #SNR calculation
     max_heart_rate = 220  # 最大心率，单位 bpm
     min_rr_interval = 60 / max_heart_rate  # 最小 RR 间隔，单位秒
@@ -831,7 +832,7 @@ def dynamicThreshold(window,fs,
 
     if snr < snr_min:
         print("snr", snr)
-        quality = "Consider"
+        quality = 2
 
     # Kurtosis (峰度) calculation
     kurtosis = calc_kurtosis(window)
@@ -839,7 +840,7 @@ def dynamicThreshold(window,fs,
     # all_kurtosis.append(kurtosis)
     if kurtosis < kur_min or kurtosis > kur_max:
         print("kurtosis")
-        quality = "Consider"
+        quality = 2
 
 
     #Skewness (偏度)
@@ -847,7 +848,7 @@ def dynamicThreshold(window,fs,
     # all_skewness.append(skewness)  
     if skewness < ske_min or skewness > ske_max:
         print("skewness")
-        quality = "Consider"
+        quality = 2
 
     return quality, snr, kurtosis, skewness
 

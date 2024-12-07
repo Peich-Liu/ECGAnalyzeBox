@@ -11,7 +11,7 @@ from datetime import timedelta, datetime
 
 # filePath = r"/Users/liu/Documents/SC2024fall/filtered_ecg_with_quality333.csv"
 # filePath = r"/Users/liu/Documents/SC2024fall/filtered_ecg_with_quality888.csv"
-filePath = r"c:\Document\sc2024\filtered_ecg_with_quality105001.csv"
+filePath = r"c:\Document\sc2024\filtered_ecg_with_quality_new_105001.csv"
 
 
 data = pd.read_csv(filePath)
@@ -32,10 +32,10 @@ is_bad = False
 start_index = 0
 
 for i in range(len(quality)):
-    if quality[i] == "Bad" and not is_bad:
+    if quality[i] == 3 and not is_bad:
         is_bad = True
         start_index = i
-    elif quality[i] != "Bad" and is_bad:
+    elif quality[i] != 3 and is_bad:
         is_bad = False
         bad_intervals.append((start_index, i))
 
@@ -48,10 +48,10 @@ is_consider = False
 start_consider_index = 0
 
 for i in range(len(quality)):
-    if quality[i] == "Consider" and not is_consider:
+    if quality[i] == 2 and not is_consider:
         is_consider = True
         start_consider_index = i
-    elif quality[i] != "Consider" and is_consider:
+    elif quality[i] != 2 and is_consider:
         is_consider = False
         consider_intervals.append((start_consider_index, i))
 
