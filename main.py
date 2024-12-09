@@ -37,7 +37,7 @@ class CBATools:
 
         self.observer = ob.Observer(self.fs)
         self.interactive_plot = vo.InteractivePlot(self.observer)
-        self.rtDataLoder = rtdl.rtPlot(self.filepath, root)
+        self.rtDataLoder = rtdl.rtPlot(root)
         self.guiWindow = gui.guiWindow(self.root, self.observer, self.interactive_plot, self.rtDataLoder)
 
         self.observer.subscribe(self.return_range)

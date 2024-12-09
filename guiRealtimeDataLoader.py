@@ -14,12 +14,13 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from collections import deque
 from scipy.stats import kurtosis as calc_kurtosis, skew as calc_skew
 from utilities import *
+from tkinter import Tk
+from tkinter.filedialog import askopenfilename
 
 
 # class dataAnalyzer:
 class rtPlot:
-    def __init__(self, file_path, root):
-        self.file_path = file_path
+    def __init__(self, root):
         self.root = root
         self.start_time = "00:00:00"
         self.window_length = 1000
@@ -88,7 +89,12 @@ class rtPlot:
         print(self.isLoading)
         if self.isLoading:
             print("rtSignalCollecting")
-            data = pd.read_csv(self.file_path, sep=';')
+                # 打开文件浏览器选择文件
+            Tk().withdraw()  # 隐藏主窗口
+            file_path = askopenfilename(title="Please chosse the simulate file", 
+                                        filetypes=[("CSV file", "*.csv"), ("all file", "*.*")])
+    
+            data = pd.read_csv(file_path, sep=';')
             data['ecg'] = data['ecg'].str.replace(',', '.').astype(float)
             data['ecg'] = data['ecg'].fillna(0)
             data['abp[mmHg]'] = data['abp[mmHg]'].str.replace(',', '.').astype(float)

@@ -263,7 +263,7 @@ class guiWindow:
         rt_sim_button.place(x=10, y=10) 
 
         rt_button = ttk.Button(real_time_page, text="Simluate RT algorithm", command=RtSignalSimulate)
-        rt_button.place(x=150, y=10) 
+        rt_button.place(x=250, y=10) 
 
         self.rt_canvas = FigureCanvasTkAgg(self.data_analyzer.fig, master=canvas_frame)
         self.rt_canvas.get_tk_widget().pack(fill='both', expand=True)
