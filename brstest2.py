@@ -320,10 +320,10 @@ def main():
     quality_data = pd.read_csv(quality_file)
 
     ecg_signal = quality_data['ecg'].values
-    ecg_signal = bandpass_filter(ecg_signal[485000:585000], 0.5, 45, fs)
-
+    ecg_signal = bandpass_filter(ecg_signal[350000:450000], 0.5, 45, fs)
+    #250000 is the problem part
     ap_signal = quality_data['ap'].values
-    ap_signal = bandpass_filter(ap_signal[485000:585000], 0.5, 10, fs)
+    ap_signal = bandpass_filter(ap_signal[350000:450000], 0.5, 10, fs)
     
     t = np.arange(len(ecg_signal)) / fs
 
@@ -403,7 +403,7 @@ def main():
             plt.plot(rr_times[start_idx:end_idx+1], rr_intervals[start_idx:end_idx+1], 'r', linewidth=2)
             plt.plot(sbp_times[start_idx:end_idx+1], sbp_values[start_idx:end_idx+1], 'g', linewidth=2)
             # 添加斜率注释
-            plt.text(sbp_times[start_idx], rr_intervals[start_idx], f"Slope: {seq['slope']:.2f}", color='black')
+            # plt.text(sbp_times[start_idx], rr_intervals[start_idx], f"Slope: {seq['slope']:.2f}", color='black')
             # plt.text(rr_times[0], rr_intervals[start_idx], f"SBP斜率: {seq['slope_sbp_time']:.2f}", color='blue')
 
 

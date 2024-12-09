@@ -209,7 +209,7 @@ abpFilteredWindow = deque(maxlen=window_length)
 rrInterval = deque([0] * window_length, maxlen=window_length)
 qualityResult = "Good"
 
-output_file = r"C:\Document\sc2024/filtered_ecg_with_qualitynew.csv"
+output_file = r"C:\Document\sc2024/filtered_ecg_with_quality_hospital.csv"
 with open(output_file, mode='w', newline='') as file:
     writer = csv.writer(file)
     writer.writerow(["sample_index", "ecg", "filtered_ecg", "filtered_abp","rr_interval", "quality"])
