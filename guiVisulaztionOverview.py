@@ -20,7 +20,9 @@ class InteractivePlot:
         # self.canvas_frame = canvas_frame
 
         # 初始化交互属性
-        self.fig = Figure(figsize=(20, 6), dpi=100)
+        self.fig = Figure(figsize=(15, 6))
+        # self.fig = Figure()
+
         self.observer = observer
         # self.fig = Figure()
         self.ax1 = self.fig.add_subplot(211)
@@ -414,9 +416,14 @@ def store_new_file(cba_instance, sampling_rate):
         end_time = start_time + rect1.get_width()
         # start_datetime = timedelta(seconds=start_time)
         # end_datetime = timedelta(seconds=end_time)
-        start_datetime = x_coord_to_seconds(start_time)
-        end_datetime = x_coord_to_seconds(end_time)
+        # start_datetime = x_coord_to_seconds(start_time)
+        # end_datetime = x_coord_to_seconds(end_time)
+        start_datetime = process_time_input(start_time)
+        end_datetime = process_time_input(end_time)
+        
         intervals.append((start_datetime, end_datetime))
+        print("start_datetime",start_datetime)
+
 
         # intervals.append((int(start), int(end)))
 
@@ -448,6 +455,7 @@ def vis_data(cba_instance, plot_instance):
 
 def updateInteract(plot_instance):
     plot_instance.toggle_create_mode()
+
 
 
 

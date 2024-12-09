@@ -1366,7 +1366,8 @@ def calculateApSignalProperties(signal, fs):
 #     return int(time_in_seconds * fs)
 
 def x_coord_to_seconds(x_coord, start_time="00:00:00",fs = 250):
-    # Convert the x-coordinate (matplotlib date number) to a datetime object
+    # Convert the x-coordinate (matplotlib date number) to a datetime object3
+    print("x_coord",x_coord)
     date_time = num2date(x_coord)
     
     # Parse the start time into a datetime object
@@ -1385,6 +1386,21 @@ def x_coord_to_seconds(x_coord, start_time="00:00:00",fs = 250):
     
     return sample
 
+def datetime_to_seconds(dt, fs=250):
+    # 基准时间：1900-01-01 00:00:00
+    base = datetime(1900, 1, 1, 0, 0, 0)
+    delta = dt - base
+    return int(delta.total_seconds() * fs)
+
+def process_time_input(x_coord):
+    if isinstance(x_coord, (int, float)):
+        # x_coord 是数值型，表示matplotlib的日期格式
+        return x_coord_to_seconds(x_coord)
+    elif isinstance(x_coord, datetime):
+        # x_coord 是 datetime 对象
+        return datetime_to_seconds(x_coord)
+    else:
+        raise TypeError(f"Unsupported type for x_coord: {type(x_coord)}")
 # def transSample(start, end, fs=250):
 #     start_time = datetime.strptime(start, '%H:%M:%S')
 #     end_time = datetime.strptime(end, '%H:%M:%S')

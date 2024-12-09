@@ -1,3 +1,4 @@
+import ctypes
 import guiDataLoader as dl
 import guiSignalProcessing as sp
 import guiTimeDomainAnalysis as tda
@@ -26,7 +27,7 @@ class CBATools:
         self.ap_signal = None
         self.selected_channel_signal = None 
         self.range = None
-        self.filepath = r'C:\Document\sc2024/250 kun HR.csv'
+        # self.filepath = r'C:\Document\sc2024/250 kun HR.csv'
         self.rtWindowLength = 1000
         self.quality = None
 
@@ -161,8 +162,25 @@ class CBATools:
     def get_signal(self):
         return self.ecg_signal, self.ap_signal
 
+def set_dpi_awareness():
+    try:
+        ctypes.windll.shcore.SetProcessDpiAwareness(1)  # 每个监视器的 DPI 感知
+    except Exception:
+        pass
+def get_dpi(root):
+    dpi = ctypes.windll.user32.GetDpiForWindow(root.winfo_id())
+    return dpi
+def force_96_dpi():
+    try:
+        # 强制设置为 DPI Unaware，渲染为 96 DPI
+        ctypes.windll.shcore.SetProcessDpiAwareness(0)
+    except Exception:
+        pass
 
 if __name__ == "__main__":
+    force_96_dpi()
     root = tk.Tk()
     app = CBATools(root)
+    dpi = get_dpi(root)
+    print(f"Current DPI: {dpi}") 
     root.mainloop()
