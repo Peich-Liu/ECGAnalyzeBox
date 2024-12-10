@@ -770,7 +770,7 @@ def fixThreshold(window, fs):
     threshold_amplitude_range=0.1     
     zero_cross_min=0
     # zero_cross_max= 50
-    zero_cross_max= 200
+    zero_cross_max= 300
     peak_height=0.6
     #beat_length=100
 
@@ -780,14 +780,14 @@ def fixThreshold(window, fs):
     # flat line check
     amplitude_range = np.max(window) - np.min(window)
     if amplitude_range < threshold_amplitude_range:
-        print("flat line check")
+        # print("flat line check")
         quality = 3
 
     # pure noise check（Zero Crossing Rate (零交叉率)）
     zero_crossings = np.sum(np.diff(window > np.mean(window)) != 0)
     if zero_crossings < zero_cross_min or zero_crossings > zero_cross_max:
         quality = 3
-        print("Zero Crossing",zero_crossings)
+        # print("Zero Crossing",zero_crossings)
 
     # # QRS detection
     max_heart_rate = 220  # 最大心率，单位 bpm
@@ -797,7 +797,7 @@ def fixThreshold(window, fs):
     # 在 find_peaks 中使用计算的 distance
     peaks, _ = signal.find_peaks(window, height=peak_height, distance=distance)
     if len(peaks) < 2:
-        print("QRS detection")
+        # print("QRS detection")
         quality = 3
 
     return quality
@@ -826,12 +826,12 @@ def dynamicThreshold(window,fs,
     
     if len(pqrst_list) > 1:
         average_pqrst = calculate_average_pqrst(pqrst_list)
-        snr = calculate_snr(pqrst_list, average_pqrst)
+        snr = calculate_snr(pqrst_list, average_pqrst)  * 10
     else:
         snr = 0  # 若PQRST提取失败
-
+    # print("snr",snr)
     if snr < snr_min:
-        print("snr", snr)
+        # print("snr", snr)
         quality = 2
 
     # Kurtosis (峰度) calculation
@@ -839,7 +839,7 @@ def dynamicThreshold(window,fs,
 
     # all_kurtosis.append(kurtosis)
     if kurtosis < kur_min or kurtosis > kur_max:
-        print("kurtosis")
+        # print("kurtosis",kurtosis)
         quality = 2
 
 
@@ -847,12 +847,68 @@ def dynamicThreshold(window,fs,
     skewness = calc_skew(window)
     # all_skewness.append(skewness)  
     if skewness < ske_min or skewness > ske_max:
-        print("skewness")
+        # print("skewness",kurtosis)
         quality = 2
 
     return quality, snr, kurtosis, skewness
 
+def dynamicThresholdwithZc(window,fs,
+                    zc_min, zc_max, 
+                    kur_min, kur_max, 
+                    ske_min, ske_max,
+                    snr_min, snr_max):
+    
+    
+    quality = 1
+    #SNR calculation
+    max_heart_rate = 220  # 最大心率，单位 bpm
+    min_rr_interval = 60 / max_heart_rate  # 最小 RR 间隔，单位秒
+    distance = min_rr_interval * fs  # 转换为样本点数
 
+    qrs_duration = 0.1  # QRS 持续时间，单位秒
+    qrs_length = int(qrs_duration * fs)  # QRS 长度，单位样本
+    half_qrs_length = qrs_length // 2
+
+    peaks_snr, _ = signal.find_peaks(window, distance=distance, height=np.mean(window) * 1.2)
+    pqrst_list = [list(window)[max(0, peak - half_qrs_length): min(len(window), peak + half_qrs_length)] for peak in peaks_snr]
+    pqrst_list = [wave for wave in pqrst_list if len(wave) == qrs_length]
+    # peaks_snr, _ = signal.find_peaks(window, distance=200, height=np.mean(window) * 1.2)
+    # pqrst_list = [list(window)[max(0, peak-50):min(len(window), peak+50)] for peak in peaks_snr]
+    # pqrst_list = [wave for wave in pqrst_list if len(wave) == 100]
+    
+    if len(pqrst_list) > 1:
+        average_pqrst = calculate_average_pqrst(pqrst_list)
+        snr = calculate_snr(pqrst_list, average_pqrst)  * 10
+    else:
+        snr = 0  # 若PQRST提取失败
+    # print("snr",snr)
+    if snr < snr_min:
+        # print("snr", snr)
+        quality = 2
+
+    # Kurtosis (峰度) calculation
+    kurtosis = calc_kurtosis(window)
+
+    # all_kurtosis.append(kurtosis)
+    if kurtosis < kur_min or kurtosis > kur_max:
+        # print("kurtosis",kurtosis)
+        quality = 2
+
+
+    #Skewness (偏度)
+    skewness = calc_skew(window)
+    # all_skewness.append(skewness)  
+    if skewness < ske_min or skewness > ske_max:
+        # print("skewness",kurtosis)
+        quality = 2
+    
+    zero_crossings = np.sum(np.diff(window > np.mean(window)) != 0)
+    if zero_crossings < zc_min or zero_crossings > zc_max:
+        # print("skewness",kurtosis)
+        quality = 2
+
+
+    return quality, snr, kurtosis, skewness, zero_crossings
 
 
 def dynamicThreshold2(window,fs,

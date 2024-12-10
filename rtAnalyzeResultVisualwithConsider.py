@@ -11,11 +11,14 @@ from datetime import timedelta, datetime
 
 # filePath = r"/Users/liu/Documents/SC2024fall/filtered_ecg_with_quality333.csv"
 # filePath = r"/Users/liu/Documents/SC2024fall/filtered_ecg_with_quality888.csv"
-filePath = r"c:\Document\sc2024\filtered_ecg_with_quality_new_105001.csv"
+filePath = r"c:\Document\sc2024\filtered_ecg_with_quality_window_105001.csv"
+# filePath = r"c:\Document\sc2024\filtered_ecg_with_quality_new_100001.csv"
+
 
 
 data = pd.read_csv(filePath)
 ecg = data['ecg'].values
+print(len(ecg))
 quality = data['quality'].values
 
 #x-axis setting

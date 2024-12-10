@@ -10,7 +10,7 @@ from scipy import signal
 from scipy.stats import kurtosis as calc_kurtosis, skew as calc_skew
 import csv
 
-from utilities import signalQualityEva, fixThreshold, dynamicThreshold, bandPass, filter2Sos, ziFilter
+from utilities import signalQualityEva, fixThreshold, dynamicThresholdwithZc, bandPass, filter2Sos, ziFilter
 from scipy import signal
 import numpy as np
 
@@ -54,18 +54,31 @@ def main():
     n_snr = 0
     mean_snr = 0.0
     M2_snr = 0.0
+
+    n_zc = 0
+    mean_zc = 0.0
+    M2_zc = 0.0
+
+    ecg_file_path = r'C:\Document\sc2024\brno-university-of-technology-ecg-quality-database-but-qdb-1.0.0\100002/100002_ECG'  # without the .dat or .hea extension
+    annotations_file_path = r'C:\Document\sc2024\brno-university-of-technology-ecg-quality-database-but-qdb-1.0.0\100002/100002_ANN.csv'
+    output_file = r"C:\Document\sc2024\filtered_ecg_with_quality_window_100002.csv"
+
     # ecg_file_path = r'C:\Document\sc2024\brno-university-of-technology-ecg-quality-database-but-qdb-1.0.0\105001/105001_ECG'  # without the .dat or .hea extension
     # annotations_file_path = r'C:\Document\sc2024\brno-university-of-technology-ecg-quality-database-but-qdb-1.0.0\105001/105001_ANN.csv'
+    # output_file = r"C:\Document\sc2024\filtered_ecg_with_quality_window_105001.csv"
 
-    ecg_file_path = r'c:\Document\sc2024\brno-university-of-technology-ecg-quality-database-but-qdb-1.0.0\111001\111001_ECG'  # without the .dat or .hea extension
-    annotations_file_path = r'c:\Document\sc2024\brno-university-of-technology-ecg-quality-database-but-qdb-1.0.0\111001\111001_ANN.csv'
+    # ecg_file_path = r'c:\Document\sc2024\brno-university-of-technology-ecg-quality-database-but-qdb-1.0.0\111001\111001_ECG'  # without the .dat or .hea extension
+    # annotations_file_path = r'c:\Document\sc2024\brno-university-of-technology-ecg-quality-database-but-qdb-1.0.0\111001\111001_ANN.csv'
+    # output_file = r"C:\Document\sc2024\filtered_ecg_with_quality_window_111001.csv"
+
 
     # ecg_file_path = r'c:\Document\sc2024\brno-university-of-technology-ecg-quality-database-but-qdb-1.0.0\100001\100001_ECG'  # without the .dat or .hea extension
     # annotations_file_path = r'c:\Document\sc2024\brno-university-of-technology-ecg-quality-database-but-qdb-1.0.0\100001\100001_ANN.csv'    
+    # output_file = r"C:\Document\sc2024\filtered_ecg_with_quality_window_100001.csv"
     
     ecg_signal, fs = load_ecg(ecg_file_path)
     # ecg_signal = ecg_signal[47323501:]
-    annotations = read_annotations(annotations_file_path)
+    # annotations = read_annotations(annotations_file_path)
     # plot_ecg(ecg_signal, fs, annotations)
 
     all_kurtosis = []
@@ -83,7 +96,8 @@ def main():
     zi_abp = signal.sosfilt_zi(sos_abp)
 
     #thresholds
-
+    zc_min = 2
+    zc_max = 200
     kur_min=2
     kur_max= 4
     ske_min=-1
@@ -96,50 +110,77 @@ def main():
     ecgFilteredWindow = deque(maxlen=window_length)
     qualityResult = 1
 
-    # output_file = r"C:\Document\sc2024/filtered_ecg_with_qualitynew.csv"
-    output_file = r"C:\Document\sc2024\filtered_ecg_with_quality_new_111001.csv"
+    # 假设您的interval CSV文件为intervals.csv
+    interval_csv = annotations_file_path
+    with open(interval_csv, 'r') as f:
+        reader = csv.reader(f)
+        rows = list(reader)  # 转为列表计算长度
+        total_lines = len(rows)
 
-    
+    # 1. 读取intervals文件
+    with open(interval_csv, 'r', newline='') as f:
+        reader = csv.reader(f)
+        label_intervals = deque(maxlen=total_lines)
+        # label_intervals = deque(maxlen=2912)
+
+        for row in reader:
+            # print(row)
+            # 检查 row 是否有足够的元素，以及最后三列是否有值
+            if len(row) >= 3 and all(row[-3:]):  # 确保最后三列都有值
+                    start = int(row[-3])  # 转换为整数
+                    end = int(row[-2])
+                    label = int(row[-1])
+                    label_intervals.append((start, end, label))
+    print(len(label_intervals))
+
+
+
     with open(output_file, mode='w', newline='') as file:
         writer = csv.writer(file)
-        writer.writerow(["sample_index", "ecg", "quality"])
+        # 增加label列
+        writer.writerow(["sample_index", "ecg", "quality", "label"])
 
     with open(output_file, mode='a', newline='') as file:
         writer = csv.writer(file)
-        
+        (start, end, lbl) = label_intervals.popleft()
+
+        current_label = lbl
         for i in range(len(ecg_signal)):
-            # filtered_ecg, zi_ecg = ziFilter(sos_ecg, ecg_signal[i], zi_ecg)
-            # ecgFilteredWindow.append(filtered_ecg[0])
             ecgFilteredWindow.append(ecg_signal[i])
-
-
-            if(i % overlap_length == 0):
-                #fix threshold
+            if (i % overlap_length == 0):
                 qualityResult = fixThreshold(list(ecgFilteredWindow), fs)
                 if qualityResult == 1:
-                    qualityResult, snr, kurtosis, skewness = dynamicThreshold(list(ecgFilteredWindow), fs,
-                                                                    kur_min, kur_max, 
-                                                                    ske_min, ske_max,
-                                                                    snr_min, snr_max)
-                    # update mean and std
+                    qualityResult, snr, kurtosis, skewness, zc = dynamicThresholdwithZc(
+                        list(ecgFilteredWindow), fs,
+                        zc_min, zc_max, 
+                        kur_min, kur_max, 
+                        ske_min, ske_max,
+                        snr_min, snr_max)
+                    
                     n_kurtosis, mean_kurtosis, M2_kurtosis, std_kurtosis = update_mean_std(
                         n_kurtosis, mean_kurtosis, M2_kurtosis, kurtosis)
                     n_skewness, mean_skewness, M2_skewness, std_skewness = update_mean_std(
                         n_skewness, mean_skewness, M2_skewness, skewness)
                     n_snr, mean_snr, M2_snr, std_snr = update_mean_std(
                         n_snr, mean_snr, M2_snr, snr)
+                    n_zc, mean_zc, M2_zc, std_zc = update_mean_std(
+                        n_zc, mean_zc, M2_zc, zc)
                     
-                    # update the parameter
+
+                    zc_min = mean_zc - 2 * std_zc
+                    zc_max = mean_zc + 2 * std_zc
                     kur_min = mean_kurtosis - 2 * std_kurtosis
                     kur_max = mean_kurtosis + 2 * std_kurtosis
                     ske_min = mean_skewness - 2 * std_skewness
                     ske_max = mean_skewness + 2 * std_skewness
-                    # snr_min = max(mean_snr - 2 * std_snr, 0)
                     snr_min = mean_snr - 2 * std_snr
                     snr_max = mean_snr + 2 * std_snr
 
+                writer.writerow([i, ecg_signal[i], qualityResult, current_label])
+            if (i+1) == end:
+                (start, end, lbl) = label_intervals.popleft()
+                current_label = lbl
 
-            writer.writerow([i, ecg_signal[i], qualityResult])
 
 
 if __name__ == '__main__':

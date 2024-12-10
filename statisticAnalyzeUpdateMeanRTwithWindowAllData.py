@@ -1,0 +1,196 @@
+import wfdb
+import pandas as pd
+import matplotlib.pyplot as plt
+import csv
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from collections import deque
+from scipy import signal
+from scipy.stats import kurtosis as calc_kurtosis, skew as calc_skew
+import os
+
+
+from utilities import signalQualityEva, fixThreshold, dynamicThresholdwithZc, bandPass, filter2Sos, ziFilter
+from scipy import signal
+import numpy as np
+
+def update_mean_std(n_old, mean_old, M2_old, x_new):
+    n_new = n_old + 1
+    delta = x_new - mean_old
+    mean_new = mean_old + delta / n_new
+    delta2 = x_new - mean_new
+    M2_new = M2_old + delta * delta2
+
+    if n_new < 2:
+        std_new = 0.0
+    else:
+        variance_new = M2_new / (n_new - 1)
+        std_new = np.sqrt(variance_new)
+
+    return n_new, mean_new, M2_new, std_new
+
+# Function to load ECG data
+def load_ecg(file_path):
+    record = wfdb.rdrecord(file_path)
+    return record.p_signal[:,0], record.fs  # Assuming ECG is the first channel
+
+# Function to read quality annotations
+def read_annotations(file_path):
+    return pd.read_csv(file_path, header=None, names=['start', 'end', 'quality'])
+
+# Main function
+def main():
+    # 初始化峰度的统计变量
+    n_kurtosis = 0
+    mean_kurtosis = 0.0
+    M2_kurtosis = 0.0
+
+    # 初始化偏度的统计变量
+    n_skewness = 0
+    mean_skewness = 0.0
+    M2_skewness = 0.0
+
+    # 初始化信噪比的统计变量
+    n_snr = 0
+    mean_snr = 0.0
+    M2_snr = 0.0
+
+    n_zc = 0
+    mean_zc = 0.0
+    M2_zc = 0.0
+    # 设置目标文件夹路径
+    target_folder = r'C:\Document\sc2024\brno-university-of-technology-ecg-quality-database-but-qdb-1.0.0'
+    outputRoot = r"C:\Document\sc2024\result/"
+
+    # 遍历文件夹中的所有子文件夹
+    for folder_name in os.listdir(target_folder):
+        folder_path = os.path.join(target_folder, folder_name)
+        if os.path.isdir(folder_path):  # 检查是否是子文件夹
+            signalPath = os.path.join(target_folder, folder_name)
+            ecg_file_path = os.path.join(signalPath, f"{folder_name}_ECG")
+            annotations_file_path = os.path.join(signalPath, f"{folder_name}_ANN.csv")
+            output_file = os.path.join(outputRoot,f"filtered_ecg_with_quality_window_{folder_name}.csv")
+            print(f"子文件夹: {output_file}")
+            if os.path.exists(output_file):
+                print(f"文件已存在，跳过: {output_file}")
+                continue  # 跳过当前子文件夹
+    
+            ecg_signal, fs = load_ecg(ecg_file_path)
+            # ecg_signal = ecg_signal[47323501:]
+            # annotations = read_annotations(annotations_file_path)
+            # plot_ecg(ecg_signal, fs, annotations)
+
+            all_kurtosis = []
+            all_skewness = []
+            all_snr = []
+            fs = 1000
+            low_ecg = 0.5
+            high_ecg = 40
+            low_abp = 0.5
+            high_abp = 20
+            sos_ecg = filter2Sos(low_ecg, high_ecg)
+            sos_abp = filter2Sos(low_abp, high_abp)
+
+            zi_ecg = signal.sosfilt_zi(sos_ecg)
+            zi_abp = signal.sosfilt_zi(sos_abp)
+
+            #thresholds
+            zc_min = 2
+            zc_max = 200
+            kur_min=2
+            kur_max= 4
+            ske_min=-1
+            ske_max=1
+            snr_min = 10
+            snr_max = None
+
+            window_length = 4000
+            overlap_length = 2000  
+            ecgFilteredWindow = deque(maxlen=window_length)
+            qualityResult = 1
+
+            # 假设您的interval CSV文件为intervals.csv
+            interval_csv = annotations_file_path
+            with open(interval_csv, 'r') as f:
+                reader = csv.reader(f)
+                rows = list(reader)  # 转为列表计算长度
+                total_lines = len(rows)
+
+            # 1. 读取intervals文件
+            with open(interval_csv, 'r', newline='') as f:
+                reader = csv.reader(f)
+                label_intervals = deque(maxlen=total_lines)
+                # label_intervals = deque(maxlen=2912)
+
+                for row in reader:
+                    # print(row)
+                    # 检查 row 是否有足够的元素，以及最后三列是否有值
+                    if len(row) >= 3 and all(row[-3:]):  # 确保最后三列都有值
+                            start = int(row[-3])  # 转换为整数
+                            end = int(row[-2])
+                            label = int(row[-1])
+                            label_intervals.append((start, end, label))
+            print(len(label_intervals))
+
+
+
+            with open(output_file, mode='w', newline='') as file:
+                writer = csv.writer(file)
+                # 增加label列
+                writer.writerow(["sample_index", "ecg", "quality", "label"])
+
+            with open(output_file, mode='a', newline='') as file:
+                writer = csv.writer(file)
+                (start, end, lbl) = label_intervals.popleft()
+
+                current_label = lbl
+                for i in range(len(ecg_signal)):
+                    ecgFilteredWindow.append(ecg_signal[i])
+                    if (i % overlap_length == 0):
+                        qualityResult = fixThreshold(list(ecgFilteredWindow), fs)
+                        if qualityResult == 1:
+                            qualityResult, snr, kurtosis, skewness, zc = dynamicThresholdwithZc(
+                                list(ecgFilteredWindow), fs,
+                                zc_min, zc_max, 
+                                kur_min, kur_max, 
+                                ske_min, ske_max,
+                                snr_min, snr_max)
+                            
+                            n_kurtosis, mean_kurtosis, M2_kurtosis, std_kurtosis = update_mean_std(
+                                n_kurtosis, mean_kurtosis, M2_kurtosis, kurtosis)
+                            n_skewness, mean_skewness, M2_skewness, std_skewness = update_mean_std(
+                                n_skewness, mean_skewness, M2_skewness, skewness)
+                            n_snr, mean_snr, M2_snr, std_snr = update_mean_std(
+                                n_snr, mean_snr, M2_snr, snr)
+                            n_zc, mean_zc, M2_zc, std_zc = update_mean_std(
+                                n_zc, mean_zc, M2_zc, zc)
+                            
+
+                            zc_min = mean_zc - 2 * std_zc
+                            zc_max = mean_zc + 2 * std_zc
+                            kur_min = mean_kurtosis - 2 * std_kurtosis
+                            kur_max = mean_kurtosis + 2 * std_kurtosis
+                            ske_min = mean_skewness - 2 * std_skewness
+                            ske_max = mean_skewness + 2 * std_skewness
+                            snr_min = mean_snr - 2 * std_snr
+                            snr_max = mean_snr + 2 * std_snr
+
+                        writer.writerow([i, ecg_signal[i], qualityResult, current_label])
+                    # if (i+1) == end:
+                    #     (start, end, lbl) = label_intervals.popleft()
+                    #     current_label = lbl
+                    if (i + 1) == end:
+                        # 检查是否还有剩余的 label
+                        if label_intervals:
+                            (start, end, lbl) = label_intervals.popleft()
+                            current_label = lbl
+                        else:
+                            # 如果没有 label，跳出当前文件处理
+                            print(f"标签处理完毕，跳出文件处理: {output_file}")
+                            break
+
+
+
+if __name__ == '__main__':
+    main()
