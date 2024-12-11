@@ -1,20 +1,14 @@
 # ECGSignalAnalyzeBox
 **DO NOT** store the data in this repo
-## Update 29.10
-The main.py is updated in this version, which is same with the oldMain.py.
 ## Environment
 Use this code to create your environment:
 ```
 conda env create -f environment.yaml --name YOUROWNNAME
 ```
 ## Test Dataset
-The new dataset test is the Fantasia Database
+A dataset for Brno University of Technology ECG Quality Database as a test, which is the .dat with a .art format. But this dataset does not separate the whole signal into different files.
 ```
-https://physionet.org/content/fantasia/1.0.0/subset/#files-panel
-```
-A dataset for MIT-BIH as a test, which is the .dat with a .art format. But this dataset does not separate the whole signal into different files.
-```
-https://physionet.org/content/mitdb/1.0.0/
+https://physionet.org/content/butqdb/1.0.0/100001/#files-panel
 ```
 ## The tasks
 1. an analysis of arterial pressures
