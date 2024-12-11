@@ -439,7 +439,13 @@ def store_new_file(cba_instance, sampling_rate):
             signal_quality[i] = 'Bad'
 
     # 保存到 CSV 文件
-    with open('signal_quality.csv', 'w', newline='') as csvfile:
+    file_path = filedialog.asksaveasfilename(
+    defaultextension=".csv",
+    filetypes=[("CSV files", "*.csv"), ("All files", "*.*")],
+    title="Select file to save"
+        )
+    # with open('signal_quality.csv', 'w', newline='') as csvfile:
+    with open(file_path, 'w', newline='') as csvfile:
         csvwriter = csv.writer(csvfile)
         csvwriter.writerow(['ecg', 'ap', 'quality'])
 
