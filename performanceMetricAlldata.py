@@ -115,19 +115,22 @@ ax.axhline(y=f1mean, color='red', linestyle='--', label='F1 Score Mean')
 # ax.text(len(allAcc) - 0.5, f1mean, f"F1 Score Mean: {f1mean:.2f}", color='red', fontsize=10, ha='left', va='bottom')
 
 texts = [
-    ax.text(len(allAcc) - 0.5, accmean, f"Accuracy Mean: {accmean:.2f}", color='blue', fontsize=10),
-    ax.text(len(allAcc) - 0.5, recmean, f"Recall Mean: {recmean:.2f}", color='orange', fontsize=10),
-    ax.text(len(allAcc) - 0.5, premean, f"Precision Mean: {premean:.2f}", color='green', fontsize=10),
-    ax.text(len(allAcc) - 0.5, f1mean, f"F1 Score Mean: {f1mean:.2f}", color='red', fontsize=10),
+    ax.text(len(allAcc) - 0.5, accmean, f"Accuracy Mean: {accmean:.2f}", color='blue', fontsize=15),
+    ax.text(len(allAcc) - 0.5, recmean, f"Recall Mean: {recmean:.2f}", color='orange', fontsize=15),
+    ax.text(len(allAcc) - 0.5, premean, f"Precision Mean: {premean:.2f}", color='green', fontsize=15),
+    ax.text(len(allAcc) - 0.5, f1mean, f"F1 Score Mean: {f1mean:.2f}", color='red', fontsize=15),
 ]
 
 adjust_text(texts)
 # Customize plot
-ax.set_title("Line Plot of Metrics with Mean Lines")
-ax.set_xlabel("Patient Index")
-ax.set_ylabel("Metric Value")
+ax.set_title("Line Plot of Metrics with Mean Lines", fontsize=20)
+ax.set_xlabel("Patient Index", fontsize=20)
+ax.set_ylabel("Metric Value", fontsize=20)
 ax.set_xticks(range(len(allAcc)))  # Ensure all indices are marked on the x-axis
-ax.legend()
+ax.set_xticklabels(range(len(allAcc)), fontsize=15)
+ax.tick_params(axis='y', labelsize=15) 
+
+ax.legend(fontsize=15)
 plt.grid(True)
 
 # Display the plot
