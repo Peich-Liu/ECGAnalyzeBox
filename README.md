@@ -1,5 +1,6 @@
 # ECGSignalAnalyzeBox
-**DO NOT** store the data in this repo
+## Branch Intro
+The **Main** branch is the gui code, the **AlgorithmBranch** is the algorithm code.
 ## Environment
 Use this code to create your environment:
 ```
