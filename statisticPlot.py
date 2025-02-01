@@ -51,8 +51,8 @@ def plot_ecg(signal, fs, annotations):
 def main():
     # ecg_file_path = r'C:\Document\sc2024\brno-university-of-technology-ecg-quality-database-but-qdb-1.0.0\100001/100001_ECG'  # without the .dat or .hea extension
     # annotations_file_path = r'C:\Document\sc2024\brno-university-of-technology-ecg-quality-database-but-qdb-1.0.0\100001/100001_ANN.csv'
-    ecg_file_path = r'C:\Document\sc2024\brno-university-of-technology-ecg-quality-database-but-qdb-1.0.0\105001/105001_ECG'  # without the .dat or .hea extension
-    annotations_file_path = r'C:\Document\sc2024\brno-university-of-technology-ecg-quality-database-but-qdb-1.0.0\105001/105001_ANN.csv'
+    ecg_file_path = r'C:\Document\sc2024\brno-university-of-technology-ecg-quality-database-but-qdb-1.0.0\124001/124001_ECG'  # without the .dat or .hea extension
+    annotations_file_path = r'C:\Document\sc2024\brno-university-of-technology-ecg-quality-database-but-qdb-1.0.0\124001/124001_ANN.csv'
     ecg_signal, fs = load_ecg(ecg_file_path)
     annotations = read_annotations(annotations_file_path)
     plot_ecg(ecg_signal, fs, annotations)

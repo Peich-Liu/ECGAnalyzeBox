@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from adjustText import adjust_text
 
 
-folderPath = r"C:\Document\sc2024\result/"
+folderPath = r"C:\Document\sc2024\result3/"
 allAcc = []
 allRec = []
 allPre = []
@@ -36,15 +36,30 @@ for fileName in os.listdir(folderPath):
     print(cm)
 
     # 提取混淆矩阵中的值
-    TP_0, FP_1 = cm[0, 0], cm[0, 1]
-    FN_0, TP_1 = cm[1, 0], cm[1, 1]
+    # TP_0, FP_1 = cm[0, 0], cm[0, 1]
+    # FN_0, TP_1 = cm[1, 0], cm[1, 1]
+
+    TP_0 = cm[0, 0]  # true=0,pred=0
+    FN_0 = cm[0, 1]  # 真实=0,pred=1 对类0来讲是 FN
+    FP_0 = cm[1, 0]  # 真实=1,pred=0 对类0来讲是 FP
+    TN_0 = cm[1, 1]
+
+    TP_1 = cm[1, 1]  # true=1,pred=1
+    FN_1 = cm[1, 0]  # 对类1来讲是 FN
+    FP_1 = cm[0, 1]  # 对类1来讲是 FP
+    TN_1 = cm[0, 0]
 
     # 计算每个类别的 Precision 和 Recall
-    precision_0 = TP_0 / (TP_0 + FN_0)
-    precision_1 = TP_1 / (TP_1 + FP_1)
+    # precision_0 = TP_0 / (TP_0 + FN_0)
+    # precision_1 = TP_1 / (TP_1 + FP_1)
 
-    recall_0 = TP_0 / (TP_0 + FP_1)
-    recall_1 = TP_1 / (TP_1 + FN_0)
+    # recall_0 = TP_0 / (TP_0 + FP_1)
+    # recall_1 = TP_1 / (TP_1 + FN_0)
+    precision_0 = TP_0 / (TP_0 + FP_0)
+    recall_0    = TP_0 / (TP_0 + FN_0)
+
+    precision_1 = TP_1 / (TP_1 + FP_1)
+    recall_1    = TP_1 / (TP_1 + FN_1)
 
     # 样本数
     samples_0 = TP_0 + FN_0
@@ -81,11 +96,18 @@ recmean = np.mean(allRec)
 premean = np.mean(allPre)
 f1mean = np.mean(allF1)
 
-print(f"Weighted Precision: {accmean}")
-print(f"Weighted Recall: {recmean}")
-print(f"Weighted F1 Score: {premean}")
-print(f"Accuracy: {f1mean}")
 
+print(f"Weighted Precision: {premean}")
+print(f"Weighted Recall: {recmean}")
+print(f"Weighted F1 Score: {f1mean}")
+print(f"Accuracy: {accmean}")
+
+# Remove the 7th and 15th data points
+# indices_to_remove = [7, 15]  # Python uses 0-based indexing
+# allAcc = [v for i, v in enumerate(allAcc) if i not in indices_to_remove]
+# allRec = [v for i, v in enumerate(allRec) if i not in indices_to_remove]
+# allPre = [v for i, v in enumerate(allPre) if i not in indices_to_remove]
+# allF1 = [v for i, v in enumerate(allF1) if i not in indices_to_remove]
 
 # Prepare line plot
 fig, ax = plt.subplots(figsize=(12, 8))
@@ -101,18 +123,6 @@ ax.axhline(y=accmean, color='blue', linestyle='--', label='Accuracy Mean')
 ax.axhline(y=recmean, color='orange', linestyle='--', label='Recall Mean')
 ax.axhline(y=premean, color='green', linestyle='--', label='Precision Mean')
 ax.axhline(y=f1mean, color='red', linestyle='--', label='F1 Score Mean')
-
-# Annotate x-axis with sample indices
-# for i in range(len(allAcc)):
-#     ax.text(i, allAcc[i], f"{allAcc[i]:.2f}", ha='center', va='bottom', fontsize=9)
-#     ax.text(i, allRec[i], f"{allRec[i]:.2f}", ha='center', va='bottom', fontsize=9)
-#     ax.text(i, allPre[i], f"{allPre[i]:.2f}", ha='center', va='bottom', fontsize=9)
-#     ax.text(i, allF1[i], f"{allF1[i]:.2f}", ha='center', va='bottom', fontsize=9)
-# Annotate mean values above mean lines
-# ax.text(len(allAcc) - 0.5, accmean, f"Accuracy Mean: {accmean:.2f}", color='blue', fontsize=10, ha='left', va='bottom')
-# ax.text(len(allAcc) - 0.5, recmean, f"Recall Mean: {recmean:.2f}", color='orange', fontsize=10, ha='left', va='bottom')
-# ax.text(len(allAcc) - 0.5, premean, f"Precision Mean: {premean:.2f}", color='green', fontsize=10, ha='left', va='bottom')
-# ax.text(len(allAcc) - 0.5, f1mean, f"F1 Score Mean: {f1mean:.2f}", color='red', fontsize=10, ha='left', va='bottom')
 
 texts = [
     ax.text(len(allAcc) - 0.5, accmean, f"Accuracy Mean: {accmean:.2f}", color='blue', fontsize=15),

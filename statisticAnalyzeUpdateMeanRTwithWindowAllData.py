@@ -61,7 +61,10 @@ def main():
     M2_zc = 0.0
     # 设置目标文件夹路径
     target_folder = r'C:\Document\sc2024\brno-university-of-technology-ecg-quality-database-but-qdb-1.0.0'
-    outputRoot = r"C:\Document\sc2024\result/"
+    outputRoot = r"C:\Document\sc2024\resultOnlyDyn/"
+
+    if not os.path.exists(outputRoot):
+        os.makedirs(outputRoot)
 
     # 遍历文件夹中的所有子文件夹
     for folder_name in os.listdir(target_folder):
@@ -104,6 +107,10 @@ def main():
             ske_max=1
             snr_min = 10
             snr_max = None
+
+            # distribution_para = 2.576
+            distribution_para = 3
+
 
             window_length = 4000
             overlap_length = 2000  
@@ -167,14 +174,14 @@ def main():
                                 n_zc, mean_zc, M2_zc, zc)
                             
 
-                            zc_min = mean_zc - 2 * std_zc
-                            zc_max = mean_zc + 2 * std_zc
-                            kur_min = mean_kurtosis - 2 * std_kurtosis
-                            kur_max = mean_kurtosis + 2 * std_kurtosis
-                            ske_min = mean_skewness - 2 * std_skewness
-                            ske_max = mean_skewness + 2 * std_skewness
-                            snr_min = mean_snr - 2 * std_snr
-                            snr_max = mean_snr + 2 * std_snr
+                            zc_min = mean_zc - distribution_para * std_zc
+                            zc_max = mean_zc + distribution_para * std_zc
+                            kur_min = mean_kurtosis - distribution_para * std_kurtosis
+                            kur_max = mean_kurtosis + distribution_para * std_kurtosis
+                            ske_min = mean_skewness - distribution_para * std_skewness
+                            ske_max = mean_skewness + distribution_para * std_skewness
+                            snr_min = mean_snr - distribution_para * std_snr
+                            snr_max = mean_snr + distribution_para * std_snr
 
                         writer.writerow([i, ecg_signal[i], qualityResult, current_label])
                     # if (i+1) == end:

@@ -7,7 +7,7 @@ from sklearn.metrics import confusion_matrix
 # filePath = r"c:\Document\sc2024\filtered_ecg_with_quality_window_105001.csv"
 # filePath = r"c:\Document\sc2024\filtered_ecg_with_quality_window_100001.csv"
 # filePath = r"c:\Document\sc2024\filtered_ecg_with_quality_window_100002.csv"
-filePath = r"C:\Document\sc2024\result\filtered_ecg_with_quality_window_103003.csv"
+filePath = r"c:\Document\sc2024\result3\filtered_ecg_with_quality_window_124001.csv"
 
 # filePath = r"c:\Document\sc2024\filtered_ecg_with_quality_window_111001.csv"
 
