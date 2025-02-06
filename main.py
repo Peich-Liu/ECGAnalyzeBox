@@ -61,9 +61,9 @@ class CBATools:
             # )
         )
 
-        brs_anaylze = self.guiWindow.create_brs_page(
-            lambda: ba.calculate_brs(self.ecg_signal, self.ap_signal, brs_anaylze['brs_canvas_frame'], fs=self.fs),
-        )
+        # brs_anaylze = self.guiWindow.create_brs_page(
+        #     lambda: ba.calculate_brs(self.ecg_signal, self.ap_signal, brs_anaylze['brs_canvas_frame'], fs=self.fs),
+        # )
 
         real_time_page_components = self.guiWindow.create_real_time_page(
             lambda: self.rtDataLoder.openLoadData(),
@@ -106,13 +106,13 @@ class CBATools:
         # )
 
 
-        frequency_domain_page_components = self.guiWindow.create_frequency_domain_page(
-            lambda: fda.perform_frequency_analysis_psd(
-                self,
-                self.fs,
-                frequency_domain_page_components["freq_canvas_frame"]
-            )
-        )
+        # frequency_domain_page_components = self.guiWindow.create_frequency_domain_page(
+        #     lambda: fda.perform_frequency_analysis_psd(
+        #         self,
+        #         self.fs,
+        #         frequency_domain_page_components["freq_canvas_frame"]
+        #     )
+        # )
 
 
     @property
