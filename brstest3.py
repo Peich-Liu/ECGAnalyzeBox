@@ -320,9 +320,11 @@ def main():
     quality_data = pd.read_csv(quality_file)
 
     ecg_signal = quality_data['ecg'].values
+    ecg_signal = ecg_signal[0:1000000]
     ecg_signal = bandpass_filter(ecg_signal, 0.5, 45, fs)
 
     ap_signal = quality_data['ap'].values
+    ap_signal = ap_signal[0:1000000]
     ap_signal = bandpass_filter(ap_signal, 0.5, 10, fs)
     
     t = np.arange(len(ecg_signal)) / fs
@@ -356,11 +358,12 @@ def main():
 
     # 可视化
     plt.figure(figsize=(12, 10))
+    plt.rcParams.update({'font.size': 20})
 
     plt.subplot(3, 1, 1)
     plt.plot(t, ecg_signal, label='ECG signal')
     plt.plot(r_peaks_times, ecg_signal[r_peaks_indices], 'ro', label='R peak')
-    plt.title('ECG signal and RR interval')
+    # plt.title('ECG signal and RR interval')
     plt.xlabel('Time(sample)')
     plt.ylabel('Ampulitude')
     plt.legend()
@@ -370,7 +373,7 @@ def main():
     sbp_indices = (sbp_times * fs).astype(int)
     sbp_indices = np.clip(sbp_indices, 0, len(ap_signal) - 1)  # 防止索引越界
     plt.plot(sbp_times, ap_signal[sbp_indices], 'go', label='SBP peak')
-    plt.title('AP signal and SBP')
+    # plt.title('AP signal and SBP')
     plt.xlabel('Time (s)')
     plt.ylabel('Pressure (mmHg)')
     plt.legend()
@@ -390,7 +393,7 @@ def main():
     # sync_times = np.arange(len(rr_intervals_sync)) * (rr_times[1] - rr_times[0])
     plt.plot(rr_times, rr_intervals, label='RR interval')
     plt.plot(sbp_times, sbp_values, label='SBP')
-    plt.title('RR interval and SBP after sync')
+    # plt.title('RR interval and SBP after sync')
     # plt.ylim(-100,100)
     plt.xlabel('Time (s)')
     plt.ylabel('Value')
