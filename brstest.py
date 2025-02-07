@@ -278,42 +278,43 @@ def main():
 
     # 可视化
     plt.figure(figsize=(12, 10))
+    plt.rcParams.update({'font.size': 20})
 
-    plt.subplot(4, 1, 1)
+    plt.subplot(3, 1, 1)
     plt.plot(t, ecg_signal, label='ECG signal')
     plt.plot(r_peaks_times, ecg_signal[r_peaks_indices], 'ro', label='R peak')
-    plt.title('ECG signal and RR interval')
+    # plt.title('ECG signal and RR interval')
     plt.xlabel('Time(sample)')
     plt.ylabel('Ampulitude')
     plt.legend()
 
-    plt.subplot(4, 1, 2)
+    plt.subplot(3, 1, 2)
     plt.plot(t, ap_signal, label='AP signal')
     sbp_indices = (sbp_times * fs).astype(int)
     sbp_indices = np.clip(sbp_indices, 0, len(ap_signal) - 1)  # 防止索引越界
     plt.plot(sbp_times, ap_signal[sbp_indices], 'go', label='SBP peak')
-    plt.title('AP signal and SBP')
+    # plt.title('AP signal and SBP')
     plt.xlabel('Time (s)')
     plt.ylabel('Pressure (mmHg)')
     plt.legend()
 
-    plt.subplot(4, 1, 3)
-    plt.plot(rr_times, rr_intervals, label='RR interval')
-    plt.plot(sbp_times, sbp_values, label='SBP')
-    plt.legend()
-    plt.xlabel('Time (s)')
-    plt.ylabel('Value')
-    # plt.title('同步前的RR间期和SBP序列')
-    plt.title('RR and SBP before sync')
+    # plt.subplot(4, 1, 3)
+    # plt.plot(rr_times, rr_intervals, label='RR interval')
+    # plt.plot(sbp_times, sbp_values, label='SBP')
+    # plt.legend()
+    # plt.xlabel('Time (s)')
+    # plt.ylabel('Value')
+    # # plt.title('同步前的RR间期和SBP序列')
+    # plt.title('RR and SBP before sync')
 
 
     # 绘制同步后的RR间期和SBP值，并在图中标记BRS序列
-    plt.subplot(4, 1, 4)
+    plt.subplot(3, 1, 3)
     # sync_times = np.arange(len(rr_intervals_sync)) * (rr_times[1] - rr_times[0])
     # sync_times = range(len(rr_intervals_sync))
     plt.plot(rr_times_sync, rr_intervals_sync, label='RR interval (after sync)')
     plt.plot(rr_times_sync, sbp_values_sync, label='SBP (after sync)')
-    plt.title('RR interval and SBP after sync')
+    # plt.title('RR interval and SBP after sync')
     plt.xlabel('Time (s)')
     plt.ylabel('Value')
 
